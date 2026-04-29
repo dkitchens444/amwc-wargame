@@ -318,7 +318,7 @@ let readyCount=0;
 function onReady(){readyCount++;if(readyCount>=9&&!appRendered){appRendered=true;setSyncDot(true);if(ROLE==='director')renderDirector();else renderTeam(ROLE);}}
 
 dbListen('gameTime',val=>{S.gameTime=val||'D+2 / 1900L';const e=document.getElementById('game-clock')||document.getElementById('team-gametime');if(e&&!e._ended)e.textContent=S.gameTime;onReady();});
-dbListen('turn',val=>{S.turn=val||0;const e=document.getElementById('turn-disp')||document.getElementById('team-turn');if(e)e.textContent=S.turn;if(appRendered&&ROLE==='blue')teamRenderTurnCard('blue');if(appRendered&&ROLE==='red')teamRenderTurnCard('red');onReady();});
+dbListen('turn',val=>{S.turn=val||0;const e=document.getElementById('turn-disp')||document.getElementById('team-turn');if(e)e.textContent=S.turn;if(appRendered&&ROLE==='blue'){teamRenderFeedback('blue');teamRenderTurnCard('blue');}if(appRendered&&ROLE==='red'){teamRenderFeedback('red');teamRenderTurnCard('red');}onReady();});
 dbListen('timerDisplay',val=>{S.timerDisplay=val||'15:00';const e=document.getElementById('turn-timer')||document.getElementById('team-timer');if(e&&!timerRunning)e.textContent=S.timerDisplay;onReady();});
 dbListen('blueSubmit',val=>{S.blueSubmit=val;if(appRendered&&ROLE==='director')dirRenderTeamPanel('blue');onReady();});
 dbListen('redSubmit',val=>{S.redSubmit=val;if(appRendered&&ROLE==='director')dirRenderTeamPanel('red');onReady();});
@@ -506,6 +506,8 @@ window.dirPushResults=async function(team){
   const fb=buildFbObj(team),sub=team==='blue'?S.blueSubmit:S.redSubmit;
   if(sub){const he=S.history[S.turn]||{turn:S.turn,blue:null,red:null,blueFb:null,redFb:null};he[team]=JSON.parse(JSON.stringify(sub));he[team+'Fb']=JSON.parse(JSON.stringify(fb));await dbSet('meta/history/'+S.turn,he);}
   await dbSet(team+'Fb',fb);
+  // Clear the submission so the team card resets cleanly for the next turn
+  await dbSet(team+'Submit',null);
   const s=document.getElementById('status-'+team);if(s){s.textContent=`Results pushed to ${team==='blue'?'Blue':'Red'} — Turn ${S.turn}.`;s.className='status-msg visible ok';}
   resetTimer();
 };
@@ -644,7 +646,8 @@ function teamRenderFeedback(team){
   const myInjects=injectsForTeam(team);
   let injectHtml='';
   if(myInjects.length)injectHtml=`<div class="inject-feed-section"><div class="inject-feed-header"><span class="inject-feed-title">⚡ Director Injects (${myInjects.length})</span><span style="font-size:10px;color:#C8B84A;letter-spacing:0.04em">Most recent first</span></div><div class="inject-feed-body">${[...myInjects].reverse().map(renderInjectCard).join('')}</div></div>`;
-  if(!fb){el.innerHTML=`${injectHtml}<div class="awaiting-feedback"><div class="aw-title">${S.turn===0?'Turn 0 — Awaiting Confirmation':'Awaiting director\'s table'}</div><div class="aw-sub">${S.turn===0?'Submit your initial force laydown on the Turn Card.':'Results will appear here once the director pushes feedback.'}</div></div>`;return;}
+  const fbIsCurrent=fb&&(fb.turn===S.turn||S.turn===0);
+  if(!fbIsCurrent){el.innerHTML=`${injectHtml}<div class="awaiting-feedback"><div class="aw-title">${S.turn===0?'Turn 0 — Awaiting Confirmation':'Awaiting director\'s table'}</div><div class="aw-sub">${S.turn===0?'Submit your initial force laydown on the Turn Card.':'Results will appear here once the director pushes feedback for Turn '+S.turn+'.'}</div></div>`;return;}
   const empty=s=>!s||!s.trim();
   el.innerHTML=`${injectHtml}
   <div class="phase-section"><div class="phase-header"><span class="phase-title">Collections</span></div><div class="phase-body"><div class="feedback-label">ISR results — Turn ${fb.turn}</div><div class="feedback-block ${empty(fb.collections)?'empty':''}">${escHtml(fb.collections)||'No collections feedback provided.'}</div></div></div>
@@ -657,9 +660,23 @@ function teamRenderFeedback(team){
 function teamRenderTurnCard(team){
   const el=document.getElementById('tpanel-turncard');if(!el)return;
   const seeds=team==='blue'?SEED_BLUE:SEED_RED;
-  const prevSub=S.turn>0?(team==='blue'?S.blueSubmit:S.redSubmit):null;
+  const currentSub=team==='blue'?S.blueSubmit:S.redSubmit;
+
+  // If a submission already exists for THIS turn, show confirmation instead of a blank card
+  if(currentSub&&currentSub.turn===S.turn&&S.turn>0){
+    el.innerHTML=`<div style="text-align:center;padding:3rem 1rem;color:var(--page-text-muted)">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;color:#8ACA6A">✓ Turn ${S.turn} submitted</div>
+      <div style="font-size:12px;margin-bottom:1.5rem">Submitted at ${new Date(currentSub.submittedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} · ${escHtml(currentSub.gameTime)}</div>
+      <div style="font-size:12px;color:var(--page-text-muted);margin-bottom:1.5rem">Awaiting director adjudication. Check the Director Feedback tab for results.</div>
+      <button class="btn-secondary" onclick="teamForceReopenCard('${team}')">Re-open card to make changes</button>
+    </div>`;
+    return;
+  }
+
+  // prevSub = submission from the PREVIOUS turn (for pre-filling unit positions)
+  const prevSub=(currentSub&&currentSub.turn===S.turn-1)?currentSub:null;
   const manSource=prevSub?prevSub.maneuver:seeds.map(s=>({unit:s.unit,pos:'',action:'',dest:''}));
-  const collSource=(prevSub&&S.turn>0)?prevSub.collections:[];
+  const collSource=prevSub?prevSub.collections:[];
   const turn0Note=S.turn===0?`<div class="turn0-banner" style="margin-bottom:1rem"><strong>Turn 0 — Initial Laydown.</strong> Enter force positions and commander's intent. Leave fires empty.</div>`:'';
   const manRowsHtml=manSource.map(m=>`<div class="entry-row maneuver-row"><div class="field"><input type="text" class="man-unit" value="${escHtml(m.unit||'')}"></div><div class="field"><input type="text" class="man-pos auto-pop" value="${S.turn===0?'':escHtml(m.dest||m.pos||'')}" placeholder="Grid"></div><div class="field">${makeSelect(MAN_ACTIONS,'select action',S.turn===0?'':m.action||'')}</div><div class="field"><input type="text" class="man-dest" placeholder="Grid or named feature — purpose" value=""></div><button class="remove-btn" onclick="this.parentElement.remove()">×</button></div>`).join('');
   const collRowsHtml=collSource.map(c=>`<div class="entry-row collections-row"><div class="field"><input type="text" class="coll-asset" value="${escHtml(c.asset||'')}"></div><div class="field"><input type="text" class="coll-nai" value="${escHtml(c.nai||'')}"></div><div class="field">${makeSelect(BOX_SIZES,'select size',c.box||'')}</div><div class="field"><input type="text" class="coll-pir" value="${escHtml(c.pir||'')}"></div><button class="remove-btn" onclick="this.parentElement.remove()">×</button></div>`).join('');
@@ -674,6 +691,12 @@ function teamRenderTurnCard(team){
   <div class="section"><div class="section-header"><span class="section-title">Commander's note</span><span class="section-tag">Main effort and key decision this turn</span></div><div class="section-body"><div class="field" style="margin:0"><textarea id="tc-cmdnote" placeholder="${S.turn===0?'State commander\'s intent and initial scheme of maneuver.':'State the main effort and the decision driving it this turn.'}" style="min-height:72px"></textarea></div></div></div>
   <div class="submit-row"><div id="tc-status" class="status-bar"></div><button class="btn-secondary" onclick="tcClearFires()">Clear fires</button><button class="btn-primary" onclick="tcSubmit('${team}')">${S.turn===0?'Submit initial laydown ↗':'Submit to director\'s table ↗'}</button></div>`;
 }
+
+window.teamForceReopenCard=async function(team){
+  if(!confirm('Re-open the turn card? Your previous submission will be cleared so you can resubmit.'))return;
+  await dbSet(team+'Submit',null);
+  teamRenderTurnCard(team);
+};
 
 window.tcAddRow=function(type){
   if(type==='coll'){const d=document.createElement('div');d.className='entry-row collections-row';d.innerHTML=`<div class="field"><input type="text" class="coll-asset" placeholder="RQ-20, MQ-9…"></div><div class="field"><input type="text" class="coll-nai" placeholder="BK 0512 4231"></div><div class="field">${makeSelect(BOX_SIZES,'select size')}</div><div class="field"><input type="text" class="coll-pir" placeholder="Confirm enemy axis IVO…"></div><button class="remove-btn" onclick="this.parentElement.remove()">×</button>`;document.getElementById('tc-coll-rows').appendChild(d);}
