@@ -326,11 +326,32 @@ function setSyncDot(state) { // 'live' | 'off' | 'connecting'
 // ─────────────────────────────────────────────
 // CONNECTION MONITOR  (.info/connected)
 // ─────────────────────────────────────────────
+let _disconnectTimer = null;
+let _wasEverConnected = false;
+
 onValue(ref(db, '.info/connected'), snap => {
   const connected = snap.val() === true;
-  setSyncDot(connected ? 'live' : 'off');
-  const w = document.getElementById('conn-warn');
-  if (w) { w.classList.toggle('visible', !connected); }
+  if (connected) {
+    _wasEverConnected = true;
+    if (_disconnectTimer) { clearTimeout(_disconnectTimer); _disconnectTimer = null; }
+    setSyncDot('live');
+    const w = document.getElementById('conn-warn');
+    if (w) { w.textContent = ''; w.classList.remove('visible'); }
+  } else {
+    setSyncDot(_wasEverConnected ? 'off' : 'connecting');
+    const w = document.getElementById('conn-warn');
+    if (w) {
+      w.textContent = _wasEverConnected
+        ? '⚠ Firebase connection lost — will reload in 8s to reconnect. Or manually reload now.'
+        : '⚠ Connecting to Firebase…';
+      w.classList.add('visible');
+    }
+    if (!_disconnectTimer) {
+      _disconnectTimer = setTimeout(() => {
+        if (_wasEverConnected) location.reload();
+      }, 8000);
+    }
+  }
 });
 
 // ─────────────────────────────────────────────
@@ -513,7 +534,10 @@ async function boot() {
   });
 
   dbOn('injectLog', val => {
-    S.injectLog = val || {};
+    // Filter out the _placeholder key used to keep the node alive
+    const raw = val || {};
+    delete raw._placeholder;
+    S.injectLog = raw;
     dirRenderInjectLogPreview();
     if (ROLE === 'blue') teamRenderFeedback('blue');
     if (ROLE === 'red')  teamRenderFeedback('red');
@@ -524,7 +548,9 @@ async function boot() {
 
   dbOn('meta', val => {
     const m = val || {};
-    S.history       = m.history       ?? {};
+    const rawHist = m.history ?? {};
+    delete rawHist._placeholder;
+    S.history = rawHist;
     S.gameEnded     = m.gameEnded     ?? null;
     S.aarNote       = m.aarNote       ?? '';
     S.historyLocked = m.historyLocked ?? false;
@@ -903,8 +929,9 @@ function dirRenderHistory() {
 
 window.clearHistory = async () => {
   if(!confirm('Clear all turn history and inject log from Firebase?')) return;
-  await dbDel('injectLog');
-  await dbDel('meta/history');
+  // Overwrite with placeholder — never delete nodes, it destabilizes listeners
+  await dbSet('injectLog', { _placeholder: true });
+  await dbSet('meta/history', { _placeholder: true });
 };
 
 function renderHistRows(sub, fb) {
@@ -965,15 +992,31 @@ window.submitAAR = async () => {
 
 window.resetGame = async () => {
   if(!confirm('Reset to Turn 0? Clears ALL Firebase game data. Cannot be undone.')) return;
-  await dbDel('');
-  await dbSet('turn', 0);
-  await dbSet('gameTime', 'D+2 / 1900L');
-  await dbSet('timerDisplay', '15:00');
+
+  // IMPORTANT: never delete the root game/ node (dbDel('')) — it kills all listeners.
+  // Instead, overwrite every key explicitly so the node structure stays intact.
+  const cleared = { _cleared: true, turn: 0, at: new Date().toISOString() };
+  await Promise.all([
+    dbSet('turn', 0),
+    dbSet('gameTime', 'D+2 / 1900L'),
+    dbSet('timerDisplay', '15:00'),
+    dbSet('blueSubmit',  cleared),
+    dbSet('redSubmit',   cleared),
+    dbSet('blueFb',      { turn:0, gameTime:'D+2 / 1900L', nextTime:'D+2 / 1900L',
+                           collections:'', manMov:'', manBDA:'', fireRes:'', fireStat:'', dirNote:'' }),
+    dbSet('redFb',       { turn:0, gameTime:'D+2 / 1900L', nextTime:'D+2 / 1900L',
+                           collections:'', manMov:'', manBDA:'', fireRes:'', fireStat:'', dirNote:'' }),
+    dbSet('injectLog',   { _placeholder: true }),
+    dbSet('meta',        { gameEnded: null, aarNote: '', historyLocked: false, history: { _placeholder: true } }),
+  ]);
+
   const gc=document.getElementById('game-clock');
   if(gc) { gc.textContent='D+2 / 1900L'; gc.style.color=''; gc._ended=false; }
   const ab=document.getElementById('aar-capture-block'); if(ab) ab.style.display='none';
+  const aarInput=document.getElementById('aar-note-input'); if(aarInput) aarInput.value='';
+  const dlBtn=document.getElementById('dl-pdf-btn'); if(dlBtn) dlBtn.style.display='none';
   const s=document.getElementById('status-inject-end');
-  if(s) { s.textContent='Game reset to Turn 0. All Firebase data cleared.'; s.className='status-msg visible warn'; }
+  if(s) { s.textContent='Game reset to Turn 0. All data cleared.'; s.className='status-msg visible warn'; }
   resetTimer();
 };
 
@@ -1090,8 +1133,11 @@ function teamRenderFeedback(team) {
         <div class="inject-feed-body">${[...myInjects].reverse().map(renderInjectCard).join('')}</div>
       </div>` : '';
 
-  // Feedback is only "current" if its turn number matches
-  const fbCurrent = fb && (fb.turn === S.turn || S.turn === 0);
+  // Feedback is only "current" if its turn number matches AND has real content.
+  // Empty fb objects seeded by resetGame should not render as current feedback.
+  const fbHasContent = fb && (fb.collections || fb.manMov || fb.manBDA ||
+                               fb.fireRes || fb.fireStat || fb.dirNote);
+  const fbCurrent = fbHasContent && (fb.turn === S.turn || S.turn === 0);
 
   // Build current-turn feedback block
   let currentHtml;
