@@ -689,7 +689,8 @@ window.dirChangeTurn = async d => await dbSet('turn', Math.max(0, (S.turn||0) + 
 
 function dirRenderBadges() {
   ['blue','red'].forEach(team => {
-    const sub    = team==='blue' ? S.blueSubmit : S.redSubmit;
+    const rawSub = team==='blue' ? S.blueSubmit : S.redSubmit;
+    const sub    = (rawSub && !rawSub._cleared) ? rawSub : null;
     const hasNew = sub && sub.turn === S.turn;
     const badge  = document.getElementById('badge-'+team); if(!badge) return;
     badge.textContent       = hasNew ? 'submitted' : 'awaiting';
@@ -699,7 +700,8 @@ function dirRenderBadges() {
 }
 
 function dirRenderTeamPanel(team) {
-  const sub = team==='blue' ? S.blueSubmit : S.redSubmit;
+  const rawSub = team==='blue' ? S.blueSubmit : S.redSubmit;
+  const sub = (rawSub && !rawSub._cleared) ? rawSub : null; // treat sentinel as null
   const fb  = team==='blue' ? S.blueFb    : S.redFb;
   const el  = document.getElementById('panel-'+team); if(!el) return;
 
@@ -799,17 +801,20 @@ window.dirPushResults = async team => {
   const fb  = buildFb(team);
   const sub = team==='blue' ? S.blueSubmit : S.redSubmit;
 
-  // Archive to turn history
-  if (sub) {
+  // Archive to turn history BEFORE clearing submission
+  if (sub && !sub._cleared) {
     const he = S.history[S.turn] || {turn:S.turn, blue:null, red:null, blueFb:null, redFb:null};
     he[team]        = JSON.parse(JSON.stringify(sub));
     he[team + 'Fb'] = JSON.parse(JSON.stringify(fb));
     await dbSet('meta/history/' + S.turn, he);
   }
 
-  // Push feedback to team, clear their submission so card resets
+  // Push feedback to team
   await dbSet(team+'Fb', fb);
-  await dbSet(team+'Submit', null);
+
+  // IMPORTANT: never set a Firebase node to null — it deletes the node and
+  // destabilizes listeners on the parent. Use a cleared sentinel instead.
+  await dbSet(team+'Submit', { _cleared: true, turn: S.turn, at: new Date().toISOString() });
 
   const s = document.getElementById('status-'+team);
   if(s) { s.textContent=`Results pushed to ${team==='blue'?'Blue':'Red'} — Turn ${S.turn}.`; s.className='status-msg visible ok'; }
@@ -1074,6 +1079,7 @@ function teamRenderFeedback(team) {
   const gtEl=document.getElementById('team-gametime'); if(gtEl) gtEl.textContent=S.gameTime;
   const tiEl=document.getElementById('team-timer');    if(tiEl && !timerRunning) tiEl.textContent=S.timerDisplay;
 
+  // Injects for this team
   const myInjects = injectsForTeam(team);
   const injectHtml = myInjects.length
     ? `<div class="inject-feed-section">
@@ -1084,55 +1090,120 @@ function teamRenderFeedback(team) {
         <div class="inject-feed-body">${[...myInjects].reverse().map(renderInjectCard).join('')}</div>
       </div>` : '';
 
-  // Feedback is only current if its turn number matches the current turn
+  // Feedback is only "current" if its turn number matches
   const fbCurrent = fb && (fb.turn === S.turn || S.turn === 0);
 
+  // Build current-turn feedback block
+  let currentHtml;
   if (!fbCurrent) {
-    el.innerHTML = `${injectHtml}<div class="awaiting-feedback">
+    currentHtml = `<div class="awaiting-feedback">
       <div class="aw-title">${S.turn===0?'Turn 0 — Awaiting Confirmation':'Awaiting director\'s table'}</div>
       <div class="aw-sub">${S.turn===0
         ? 'Submit your initial force laydown on the Turn Card. The director will confirm positions before Turn 1 begins.'
         : 'Results will appear here once the director pushes feedback for Turn ' + S.turn + '.'}</div>
     </div>`;
-    return;
+  } else {
+    const empty = s => !s || !s.trim();
+    currentHtml = `
+    <div class="phase-section">
+      <div class="phase-header"><span class="phase-title">Collections</span></div>
+      <div class="phase-body">
+        <div class="feedback-label">ISR results — Turn ${fb.turn}</div>
+        <div class="feedback-block ${empty(fb.collections)?'empty':''}">${esc(fb.collections)||'No collections feedback provided.'}</div>
+      </div>
+    </div>
+    <div class="phase-section">
+      <div class="phase-header"><span class="phase-title">Maneuver</span></div>
+      <div class="phase-body">
+        <div class="adj-row">
+          <div><div class="feedback-label">Movement results</div><div class="feedback-block ${empty(fb.manMov)?'empty':''}">${esc(fb.manMov)||'No movement feedback provided.'}</div></div>
+          <div><div class="feedback-label">Contact / BDA</div><div class="feedback-block ${empty(fb.manBDA)?'empty':''}">${esc(fb.manBDA)||'No contact or BDA this turn.'}</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="phase-section">
+      <div class="phase-header"><span class="phase-title">Fires</span></div>
+      <div class="phase-body">
+        <div class="adj-row">
+          <div><div class="feedback-label">Fire mission results / BDA</div><div class="feedback-block ${empty(fb.fireRes)?'empty':''}">${esc(fb.fireRes)||'No fires feedback provided.'}</div></div>
+          <div><div class="feedback-label">Asset status</div><div class="feedback-block ${empty(fb.fireStat)?'empty':''}">${esc(fb.fireStat)||'No asset status update.'}</div></div>
+        </div>
+      </div>
+    </div>
+    ${fb.dirNote ? `<div class="director-note"><div class="director-note-label">Director's note</div>${esc(fb.dirNote).replace(/\n/g,'<br>')}</div>` : ''}
+    <div style="margin-top:0.5rem;text-align:right">
+      <button class="btn-primary" onclick="teamTab('turncard')">Proceed to turn card →</button>
+    </div>`;
   }
 
-  const empty = s => !s || !s.trim();
-  el.innerHTML = `${injectHtml}
-  <div class="phase-section">
-    <div class="phase-header"><span class="phase-title">Collections</span></div>
-    <div class="phase-body">
-      <div class="feedback-label">ISR results — Turn ${fb.turn}</div>
-      <div class="feedback-block ${empty(fb.collections)?'empty':''}">${esc(fb.collections)||'No collections feedback provided.'}</div>
-    </div>
-  </div>
-  <div class="phase-section">
-    <div class="phase-header"><span class="phase-title">Maneuver</span></div>
-    <div class="phase-body">
-      <div class="adj-row">
-        <div><div class="feedback-label">Movement results</div><div class="feedback-block ${empty(fb.manMov)?'empty':''}">${esc(fb.manMov)||'No movement feedback provided.'}</div></div>
-        <div><div class="feedback-label">Contact / BDA</div><div class="feedback-block ${empty(fb.manBDA)?'empty':''}">${esc(fb.manBDA)||'No contact or BDA this turn.'}</div></div>
-      </div>
-    </div>
-  </div>
-  <div class="phase-section">
-    <div class="phase-header"><span class="phase-title">Fires</span></div>
-    <div class="phase-body">
-      <div class="adj-row">
-        <div><div class="feedback-label">Fire mission results / BDA</div><div class="feedback-block ${empty(fb.fireRes)?'empty':''}">${esc(fb.fireRes)||'No fires feedback provided.'}</div></div>
-        <div><div class="feedback-label">Asset status</div><div class="feedback-block ${empty(fb.fireStat)?'empty':''}">${esc(fb.fireStat)||'No asset status update.'}</div></div>
-      </div>
-    </div>
-  </div>
-  ${fb.dirNote ? `<div class="director-note"><div class="director-note-label">Director's note</div>${esc(fb.dirNote).replace(/\n/g,'<br>')}</div>` : ''}
-  <div style="margin-top:0.5rem;text-align:right">
-    <button class="btn-primary" onclick="teamTab('turncard')">Proceed to turn card →</button>
-  </div>`;
+  // Build team-specific turn history (most recent first, collapsed)
+  const pastTurns = Object.values(S.history||{})
+    .filter(h => h[team] || h[team+'Fb'])
+    .sort((a,b) => b.turn - a.turn);
+
+  let historyHtml = '';
+  if (pastTurns.length) {
+    const turnBlocks = pastTurns.map(h => {
+      const sub = h[team];
+      const hfb = h[team+'Fb'];
+      const gt  = hfb?.gameTime || sub?.gameTime || '';
+      const empty = s => !s || !s.trim();
+
+      // Submission summary
+      let subHtml = '';
+      if (sub && !sub._cleared) {
+        if(sub.collections?.length) subHtml+=`<div class="history-entry"><strong>Collections</strong>${sub.collections.map(c=>[c.asset,c.nai,c.box,c.pir].filter(Boolean).join(' / ')).join(' | ')}</div>`;
+        if(sub.maneuver?.length)    subHtml+=`<div class="history-entry"><strong>Maneuver</strong>${sub.maneuver.map(m=>`${m.unit}: ${m.action||'—'} → ${m.dest||'—'}`).join(' | ')}</div>`;
+        if(sub.fires?.length)       subHtml+=`<div class="history-entry"><strong>Fires</strong>${sub.fires.map(f=>`${f.asset} on ${f.grid} (${f.effect})`).join(' | ')}</div>`;
+        if(sub.cmdNote)             subHtml+=`<div class="history-entry"><strong>Cmd Note</strong>"${esc(sub.cmdNote)}"</div>`;
+      }
+
+      // Feedback summary
+      let fbHtml = '';
+      if (hfb) {
+        if(!empty(hfb.collections)) fbHtml+=`<div class="feedback-label" style="margin-top:10px;margin-bottom:4px">ISR Results</div><div class="feedback-block${empty(hfb.collections)?' empty':''}">${esc(hfb.collections)}</div>`;
+        if(!empty(hfb.manMov)||!empty(hfb.manBDA)) {
+          fbHtml+=`<div class="adj-row" style="margin-top:10px">`;
+          fbHtml+=`<div><div class="feedback-label" style="margin-bottom:4px">Movement results</div><div class="feedback-block${empty(hfb.manMov)?' empty':''}">${esc(hfb.manMov)||'—'}</div></div>`;
+          fbHtml+=`<div><div class="feedback-label" style="margin-bottom:4px">Contact / BDA</div><div class="feedback-block${empty(hfb.manBDA)?' empty':''}">${esc(hfb.manBDA)||'—'}</div></div>`;
+          fbHtml+=`</div>`;
+        }
+        if(!empty(hfb.fireRes)||!empty(hfb.fireStat)) {
+          fbHtml+=`<div class="adj-row" style="margin-top:10px">`;
+          fbHtml+=`<div><div class="feedback-label" style="margin-bottom:4px">Fire results / BDA</div><div class="feedback-block${empty(hfb.fireRes)?' empty':''}">${esc(hfb.fireRes)||'—'}</div></div>`;
+          fbHtml+=`<div><div class="feedback-label" style="margin-bottom:4px">Asset status</div><div class="feedback-block${empty(hfb.fireStat)?' empty':''}">${esc(hfb.fireStat)||'—'}</div></div>`;
+          fbHtml+=`</div>`;
+        }
+        if(!empty(hfb.dirNote)) fbHtml+=`<div class="director-note" style="margin-top:10px"><div class="director-note-label">Director's note</div>${esc(hfb.dirNote).replace(/\n/g,'<br>')}</div>`;
+      }
+
+      return `<div class="history-turn">
+        <div class="history-turn-header" onclick="this.nextElementSibling.classList.toggle('open')">
+          <span class="phase-title">Turn ${h.turn}${gt?' — '+gt:''}</span>
+          <span class="section-tag" style="font-size:11px">click to expand</span>
+        </div>
+        <div class="history-turn-body">
+          ${subHtml ? `<div style="margin-bottom:10px"><div class="feedback-label" style="margin-bottom:6px">Your submission</div>${subHtml}</div>` : ''}
+          ${fbHtml ? `<div style="padding-top:${subHtml?'10px':'0'};${subHtml?'border-top:1px solid var(--page-border)':''}"><div class="feedback-label" style="margin-bottom:6px">Director feedback</div>${fbHtml}</div>` : ''}
+          ${!subHtml && !fbHtml ? '<em style="font-size:12px;color:var(--page-text-muted)">No data recorded for this turn.</em>' : ''}
+        </div>
+      </div>`;
+    }).join('');
+
+    historyHtml = `
+    <div style="margin-top:1.5rem;padding-top:1rem;border-top:2px solid var(--page-border)">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--page-text-muted);margin-bottom:1rem">Turn History — Your submissions &amp; feedback</div>
+      ${turnBlocks}
+    </div>`;
+  }
+
+  el.innerHTML = injectHtml + currentHtml + historyHtml;
 }
 
 function teamRenderTurnCard(team) {
   const el = document.getElementById('tpanel-turncard'); if(!el) return;
-  const sub = team==='blue' ? S.blueSubmit : S.redSubmit;
+  const rawSub = team==='blue' ? S.blueSubmit : S.redSubmit;
+  const sub = (rawSub && !rawSub._cleared) ? rawSub : null;
 
   // Already submitted this turn — show confirmation state
   if (sub && sub.turn === S.turn) {
@@ -1145,11 +1216,14 @@ function teamRenderTurnCard(team) {
     return;
   }
 
-  // prevSub = last submission (for carrying forward unit positions)
-  // Only use it if it's from the previous turn
-  const prevSub = (sub && sub.turn === S.turn - 1) ? sub : null;
-  const seeds   = team==='blue' ? SEED_BLUE : SEED_RED;
-  const manSource  = prevSub ? prevSub.maneuver  : seeds.map(s=>({unit:s.unit,pos:'',action:'',dest:''}));
+  // Pull previous turn data for pre-fill — check live submit first, then history archive
+  const seeds = team==='blue' ? SEED_BLUE : SEED_RED;
+  let prevSub = (sub && sub.turn === S.turn - 1) ? sub : null;
+  if (!prevSub && S.turn > 0) {
+    const prevHist = S.history[S.turn - 1];
+    if (prevHist && prevHist[team] && !prevHist[team]._cleared) prevSub = prevHist[team];
+  }
+  const manSource  = prevSub ? prevSub.maneuver   : seeds.map(s=>({unit:s.unit,pos:'',action:'',dest:''}));
   const collSource = prevSub ? prevSub.collections : [];
 
   const t0Banner = S.turn===0
@@ -1231,7 +1305,7 @@ function teamRenderTurnCard(team) {
 
 window.teamForceReopenCard = async team => {
   if(!confirm('Re-open the turn card? Your previous submission will be cleared so you can resubmit.')) return;
-  await dbSet(team+'Submit', null);
+  await dbSet(team+'Submit', { _cleared: true, turn: S.turn, at: new Date().toISOString() });
   teamRenderTurnCard(team);
 };
 
