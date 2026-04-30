@@ -9,8 +9,7 @@
 html,body{height:100%;font-family:'Courier New',Courier,monospace}
 :root{
   --mil-green:#3B4A2F;--mil-green-mid:#4E6238;--mil-green-light:#7A8F64;
-  --mil-gold:#7A6A2A;
-  --mil-ok-border:#8A9E72;--mil-warn-border:#C8B84A;
+  --mil-gold:#7A6A2A;--mil-ok-border:#8A9E72;--mil-warn-border:#C8B84A;
 }
 body.role-director{
   --page-bg:#1A1E16;--page-surface:#22271C;--page-surface2:#2C3224;
@@ -39,8 +38,10 @@ body.role-red{
 .loading-screen .ls-sub{font-size:11px;letter-spacing:0.05em}
 .spinner{width:28px;height:28px;border:3px solid var(--page-border);border-top-color:var(--page-accent,#7A8F64);border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.sync-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#8ACA6A;margin-left:8px;vertical-align:middle;box-shadow:0 0 4px #8ACA6A}
+.sync-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#8ACA6A;margin-left:8px;vertical-align:middle;transition:background 0.3s,box-shadow 0.3s}
+.sync-dot.live{background:#8ACA6A;box-shadow:0 0 6px #8ACA6A}
 .sync-dot.off{background:#C04A4A;box-shadow:0 0 4px #C04A4A}
+.sync-dot.connecting{background:#C8B84A;box-shadow:0 0 4px #C8B84A}
 .top-bar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:2px solid var(--page-accent)}
 .top-left{display:flex;flex-direction:column;gap:8px}
 .top-title{font-size:17px;font-weight:700;color:var(--page-text);letter-spacing:0.1em;text-transform:uppercase}
@@ -100,7 +101,6 @@ body.role-red{
 .inject-feed-body{padding:14px}
 .inject-feed-empty{font-size:12px;color:var(--page-text-muted);font-style:italic}
 .inject-pill{font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:2px 8px;border-radius:2px;background:rgba(122,106,42,0.25);color:#C8B84A;border:1px solid rgba(200,184,74,0.4);margin-left:8px}
-/* doc repo */
 .doc-repo-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
 .doc-repo-meta{font-size:11px;color:var(--page-text-muted);letter-spacing:0.04em}
 .doc-search-bar{display:flex;align-items:center;gap:8px;margin-bottom:1rem}
@@ -132,7 +132,6 @@ body.role-red{
 .doc-refresh-btn{font-size:11px;padding:5px 12px;border:1px solid var(--page-border);border-radius:3px;background:var(--btn-surface);color:var(--page-text-muted);cursor:pointer;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;font-family:inherit}
 .doc-refresh-btn:hover{background:var(--btn-hover);color:var(--page-text)}
 .doc-repo-note{font-size:11px;color:var(--page-text-muted);line-height:1.5;margin-top:1rem;padding:8px 12px;border:1px solid var(--page-border);border-radius:3px;background:var(--page-surface2)}
-/* forms */
 .field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
 .field label,.adj-label{font-size:10px;color:var(--page-text-muted);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;display:block}
 .field input,.field select,.field textarea,.adj-input{font-size:13px;border:1px solid var(--input-border);border-radius:3px;padding:7px 10px;background:var(--input-bg);color:var(--page-text);width:100%;font-family:inherit}
@@ -200,12 +199,18 @@ body.role-red{
 .awaiting-feedback{text-align:center;padding:3rem 1rem;color:var(--page-text-muted)}
 .awaiting-feedback .aw-title{font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px}
 .awaiting-feedback .aw-sub{font-size:12px}
+.submitted-confirm{text-align:center;padding:3rem 1rem}
+.submitted-confirm .sc-icon{font-size:28px;margin-bottom:10px}
+.submitted-confirm .sc-title{font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;color:#8ACA6A}
+.submitted-confirm .sc-sub{font-size:12px;color:var(--page-text-muted);margin-bottom:1.5rem}
 .meta-label{font-size:11px;color:var(--page-text-muted);font-weight:700;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap}
 .timer-dur-row{display:flex;align-items:center;gap:6px;margin-top:4px}
 .timer-dur-row label{font-size:10px;color:var(--page-text-muted);font-weight:500;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap}
 .timer-dur-row input{font-size:12px;border:1px solid var(--page-border);border-radius:3px;padding:3px 7px;width:52px;background:var(--input-bg);color:var(--page-text);font-family:inherit}
 .turn0-banner{background:rgba(122,106,42,0.15);border:1px solid #C8B84A;border-radius:3px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#C8B84A;line-height:1.6}
 .turn0-banner strong{text-transform:uppercase;letter-spacing:0.05em}
+.conn-warn{background:rgba(192,74,74,0.12);border:1px solid #C04A4A;border-radius:3px;padding:8px 14px;font-size:12px;color:#C04A4A;margin-bottom:1rem;display:none}
+.conn-warn.visible{display:block}
 </style>
 </head>
 <body>
@@ -213,140 +218,354 @@ body.role-red{
   <div class="loading-screen">
     <div class="spinner"></div>
     <div class="ls-title">Connecting to Firebase…</div>
-    <div class="ls-sub">Establishing shared data link</div>
+    <div class="ls-sub" id="ls-sub">Loading game state</div>
   </div>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getDatabase, ref, set, get, onValue, remove }
-  from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+import { initializeApp }      from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, remove, serverTimestamp }
+                               from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
-// ── FIREBASE ──────────────────────────────────
+// ─────────────────────────────────────────────
+// FIREBASE
+// ─────────────────────────────────────────────
 const firebaseConfig = {
-  apiKey:"AIzaSyBdKRyZWpmr0YgZhrwI97WSH5ZG0ER_bAg",
-  authDomain:"amwc-wargame.firebaseapp.com",
-  databaseURL:"https://amwc-wargame-default-rtdb.firebaseio.com",
-  projectId:"amwc-wargame",
-  storageBucket:"amwc-wargame.firebasestorage.app",
-  messagingSenderId:"1044419739959",
-  appId:"1:1044419739959:web:486d7dbc673b5cb5ebdab2"
+  apiKey:            "AIzaSyBdKRyZWpmr0YgZhrwI97WSH5ZG0ER_bAg",
+  authDomain:        "amwc-wargame.firebaseapp.com",
+  databaseURL:       "https://amwc-wargame-default-rtdb.firebaseio.com",
+  projectId:         "amwc-wargame",
+  storageBucket:     "amwc-wargame.firebasestorage.app",
+  messagingSenderId: "1044419739959",
+  appId:             "1:1044419739959:web:486d7dbc673b5cb5ebdab2"
 };
 const fbApp = initializeApp(firebaseConfig);
-const db = getDatabase(fbApp);
+const db    = getDatabase(fbApp);
 
-function dbRef(path){ return ref(db,'game/'+path); }
-async function dbSet(path,val){ await set(dbRef(path),val); }
-function dbListen(path,cb){ return onValue(dbRef(path),snap=>cb(snap.exists()?snap.val():null)); }
-async function dbRemove(path){ await remove(dbRef(path)); }
+// Thin helpers
+const gRef  = path => ref(db, path ? 'game/' + path : 'game');
+const dbSet = async (path, val) => set(gRef(path), val);
+const dbGet = async path => { const s = await get(gRef(path)); return s.exists() ? s.val() : null; };
+const dbDel = async path => remove(gRef(path));
+// onValue wrapper — returns unsubscribe fn
+const dbOn  = (path, cb) => { const u = onValue(gRef(path), s => cb(s.exists() ? s.val() : null)); return u; };
 
-// ── ROLE ─────────────────────────────────────
+// ─────────────────────────────────────────────
+// ROLE
+// ─────────────────────────────────────────────
 const params = new URLSearchParams(location.search);
-const ROLE = params.get('role')||'director';
-document.body.classList.add('role-'+ROLE);
-document.title = ROLE==='director'?"Director's Table":ROLE==='blue'?'Blue Force':'Red Force';
+const ROLE   = params.get('role') || 'director';
+document.body.classList.add('role-' + ROLE);
+document.title = ROLE === 'director' ? "Director's Table"
+               : ROLE === 'blue'     ? 'Blue Force' : 'Red Force';
 
-// ── CONSTANTS ────────────────────────────────
-const MAN_ACTIONS=['Move to','Occupy','Hold','Withdraw','Attack','Defend','Bypass','Screen','Support by fire','On order'];
-const EFFECTS=['Suppress','Destroy','Neutralize','Obscure','Illuminate','Interdict'];
-const BOX_SIZES=['1 x 1km','2 x 2km','4 x 4km','6 x 6km','8 x 8km','Custom'];
-const SEED_BLUE=[{unit:'Co A (-)',pos:''},{unit:'Co B (-)',pos:''},{unit:'Co C (-)',pos:''},{unit:'Wpns Co / CAAT',pos:''}];
-const SEED_RED=[{unit:'1st Mech Co',pos:''},{unit:'2nd Mech Co',pos:''},{unit:'Assault Gun Co',pos:''},{unit:'Firepower Co',pos:''}];
-const INJECT_TYPES=['Intelligence update','Early contact — mid-turn','Weather / environment change','Higher HQ order','Asset availability change','Force structure change','Other'];
-const GITHUB_OWNER='dkitchens444',GITHUB_REPO='amwc-wargame';
-const GITHUB_PATHS=['','references','docs','documents'];
-const FILE_ICONS={pdf:'📄',doc:'📝',docx:'📝',ppt:'📊',pptx:'📊',xls:'📋',xlsx:'📋',txt:'📃',md:'📃',png:'🖼',jpg:'🖼',jpeg:'🖼',gif:'🖼',zip:'🗜'};
-const SKIP_EXT=new Set(['html','htm','js','css','json','gitignore','xml','yaml','yml']);
+// ─────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────
+const MAN_ACTIONS  = ['Move to','Occupy','Hold','Withdraw','Attack','Defend','Bypass','Screen','Support by fire','On order'];
+const EFFECTS      = ['Suppress','Destroy','Neutralize','Obscure','Illuminate','Interdict'];
+const BOX_SIZES    = ['1 x 1km','2 x 2km','4 x 4km','6 x 6km','8 x 8km','Custom'];
+const SEED_BLUE    = [{unit:'Co A (-)'},{unit:'Co B (-)'},{unit:'Co C (-)'},{unit:'Wpns Co / CAAT'}];
+const SEED_RED     = [{unit:'1st Mech Co'},{unit:'2nd Mech Co'},{unit:'Assault Gun Co'},{unit:'Firepower Co'}];
+const INJECT_TYPES = ['Intelligence update','Early contact — mid-turn','Weather / environment change','Higher HQ order','Asset availability change','Force structure change','Other'];
+const GH_OWNER = 'dkitchens444', GH_REPO = 'amwc-wargame';
+const GH_PATHS = ['','references','docs','documents'];
+const FILE_ICONS   = {pdf:'📄',doc:'📝',docx:'📝',ppt:'📊',pptx:'📊',xls:'📋',xlsx:'📋',txt:'📃',md:'📃',png:'🖼',jpg:'🖼',jpeg:'🖼',gif:'🖼',zip:'🗜'};
+const SKIP_EXT     = new Set(['html','htm','js','css','json','gitignore','xml','yaml','yml']);
 
-// ── SHARED STATE ─────────────────────────────
-const S={gameTime:'D+2 / 1900L',turn:0,blueSubmit:null,redSubmit:null,blueFb:null,redFb:null,
-  history:{},timerDisplay:'15:00',gameEnded:null,aarNote:'',historyLocked:false,injectLog:{}};
+// ─────────────────────────────────────────────
+// SHARED STATE  (single source of truth — always reflects Firebase)
+// ─────────────────────────────────────────────
+const S = {
+  gameTime:      'D+2 / 1900L',
+  turn:          0,
+  blueSubmit:    null,
+  redSubmit:     null,
+  blueFb:        null,
+  redFb:         null,
+  injectLog:     {},
+  history:       {},
+  timerDisplay:  '15:00',
+  gameEnded:     null,
+  aarNote:       '',
+  historyLocked: false,
+};
 
-// ── UTILS ────────────────────────────────────
-function pad(n){return String(n).padStart(2,'0');}
-function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function makeSelect(opts,ph,val=''){
-  let s=`<select><option value="" disabled ${val?'':'selected'}>${ph}</option>`;
-  opts.forEach(o=>s+=`<option${o===val?' selected':''}>${o}</option>`);
-  return s+'</select>';
+// ─────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────
+const pad = n => String(n).padStart(2, '0');
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const mkSel = (opts, ph, val='') => {
+  let s = `<select><option value="" disabled ${val?'':'selected'}>${ph}</option>`;
+  opts.forEach(o => s += `<option${o===val?' selected':''}>${o}</option>`);
+  return s + '</select>';
+};
+const fExt  = n => { const p = n.split('.'); return p.length>1 ? p[p.length-1].toLowerCase() : ''; };
+const fIcon = n => FILE_ICONS[fExt(n)] || '📁';
+const fSize = b => !b?'': b<1024?b+'B': b<1048576?(b/1024).toFixed(0)+'KB':(b/1048576).toFixed(1)+'MB';
+const vEl   = id => { const e = document.getElementById(id); return e ? e.value : ''; };
+const parseGT = s => { const m = s.match(/D\+(\d+)\s*\/\s*(\d{1,2})(\d{2})L/i); return m?{day:+m[1],hour:+m[2],min:+m[3]}:null; };
+const fmtGT   = (d,h,m) => `D+${d} / ${pad(h)}${pad(m)}L`;
+const injectArr = () => Object.values(S.injectLog||{}).sort((a,b)=>a.id-b.id);
+const injectsForTeam = t => injectArr().filter(i =>
+  i.recipients==='Both teams' ||
+  (i.recipients==='Blue only' && t==='blue') ||
+  (i.recipients==='Red only'  && t==='red'));
+
+// ─────────────────────────────────────────────
+// SYNC DOT
+// ─────────────────────────────────────────────
+function setSyncDot(state) { // 'live' | 'off' | 'connecting'
+  document.querySelectorAll('.sync-dot').forEach(d => {
+    d.className = 'sync-dot ' + state;
+    d.title = state==='live'?'Connected to Firebase':state==='connecting'?'Reconnecting…':'Disconnected';
+  });
 }
-function fileExt(n){const p=n.split('.');return p.length>1?p[p.length-1].toLowerCase():'';}
-function fileIcon(n){return FILE_ICONS[fileExt(n)]||'📁';}
-function fileSizeStr(b){if(!b)return'';if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(0)+'KB';return(b/1048576).toFixed(1)+'MB';}
-function injectArr(){return Object.values(S.injectLog||{}).sort((a,b)=>a.id-b.id);}
-function injectsForTeam(team){return injectArr().filter(i=>i.recipients==='Both teams'||(i.recipients==='Blue only'&&team==='blue')||(i.recipients==='Red only'&&team==='red'));}
 
-function renderInjectCard(inj){
-  const st=inj.struct?`<div class="inject-entry-struct"><div class="inject-entry-struct-label">Structural change</div>${escHtml(inj.struct)}</div>`:'';
-  return `<div class="inject-entry"><div class="inject-entry-header"><span class="inject-entry-label">⚡ Director Inject — ${escHtml(inj.type||'Note')}</span><span class="inject-entry-meta">Turn ${inj.turn} · ${escHtml(inj.gameTime)} · ${escHtml(inj.recipients)} · ${new Date(inj.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div><div class="inject-entry-note">${escHtml(inj.note).replace(/\n/g,'<br>')}</div>${st}</div>`;
-}
-function parseGameTime(s){const m=s.match(/D\+(\d+)\s*\/\s*(\d{1,2})(\d{2})L/i);if(m)return{day:parseInt(m[1]),hour:parseInt(m[2]),min:parseInt(m[3])};return null;}
-function fmtGT(day,hour,min){return `D+${day} / ${pad(hour)}${pad(min)}L`;}
-function setSyncDot(ok){const d=document.getElementById('sync-dot');if(d){d.className='sync-dot'+(ok?'':' off');d.title=ok?'Connected to Firebase':'Disconnected';}}
-function v(id){const el=document.getElementById(id);return el?el.value:'';}
-
-// ── TIMER ────────────────────────────────────
-let timerSec=900,timerRunning=false,timerInterval=null;
-window.startTimer=function(){
-  if(timerRunning){clearInterval(timerInterval);timerRunning=false;const b=document.getElementById('timer-btn');if(b)b.textContent='Start';}
-  else{
-    timerRunning=true;const b=document.getElementById('timer-btn');if(b)b.textContent='Pause';
-    timerInterval=setInterval(()=>{
-      if(timerSec>0){timerSec--;const d=pad(Math.floor(timerSec/60))+':'+pad(timerSec%60);const e=document.getElementById('turn-timer');if(e)e.textContent=d;dbSet('timerDisplay',d);}
-      else{clearInterval(timerInterval);timerRunning=false;const b=document.getElementById('timer-btn');if(b)b.textContent='Start';const e=document.getElementById('turn-timer');if(e){e.textContent='00:00';e.style.color='#C04A4A';}dbSet('timerDisplay','00:00');}
-    },1000);
-  }
-};
-window.resetTimer=function(){
-  clearInterval(timerInterval);timerRunning=false;
-  const mins=parseInt(document.getElementById('timer-dur-input')?.value)||15;
-  timerSec=mins*60;const d=pad(mins)+':00';
-  const e=document.getElementById('turn-timer');if(e){e.textContent=d;e.style.color='';}
-  const b=document.getElementById('timer-btn');if(b)b.textContent='Start';
-  dbSet('timerDisplay',d);
-};
-window.updateTimerDur=function(){
-  const mins=parseInt(document.getElementById('timer-dur-input').value)||15;
-  if(!timerRunning){timerSec=mins*60;const d=pad(mins)+':00';const e=document.getElementById('turn-timer');if(e){e.textContent=d;e.style.color='';}dbSet('timerDisplay',d);}
-};
-window.setGameTime=async function(){const val=document.getElementById('game-time-input').value.trim();if(!val)return;const p=parseGameTime(val);if(!p)return;await dbSet('gameTime',fmtGT(p.day,p.hour,p.min));document.getElementById('game-time-input').value='';};
-window.advanceGameTime=async function(){const p=parseGameTime(S.gameTime)||{day:2,hour:19,min:0};const hrs=parseInt(document.getElementById('advance-hrs').value)||6;p.hour+=hrs;while(p.hour>=24){p.hour-=24;p.day++;}await dbSet('gameTime',fmtGT(p.day,p.hour,p.min));};
-
-// ── BOOT — subscribe then render ─────────────
-let appRendered=false;
-let readyCount=0;
-function onReady(){readyCount++;if(readyCount>=9&&!appRendered){appRendered=true;setSyncDot(true);if(ROLE==='director')renderDirector();else renderTeam(ROLE);}}
-
-dbListen('gameTime',val=>{S.gameTime=val||'D+2 / 1900L';const e=document.getElementById('game-clock')||document.getElementById('team-gametime');if(e&&!e._ended)e.textContent=S.gameTime;onReady();});
-dbListen('turn',val=>{S.turn=val||0;const e=document.getElementById('turn-disp')||document.getElementById('team-turn');if(e)e.textContent=S.turn;if(appRendered&&ROLE==='blue'){teamRenderFeedback('blue');teamRenderTurnCard('blue');}if(appRendered&&ROLE==='red'){teamRenderFeedback('red');teamRenderTurnCard('red');}onReady();});
-dbListen('timerDisplay',val=>{S.timerDisplay=val||'15:00';const e=document.getElementById('turn-timer')||document.getElementById('team-timer');if(e&&!timerRunning)e.textContent=S.timerDisplay;onReady();});
-dbListen('blueSubmit',val=>{S.blueSubmit=val;if(appRendered&&ROLE==='director')dirRenderTeamPanel('blue');onReady();});
-dbListen('redSubmit',val=>{S.redSubmit=val;if(appRendered&&ROLE==='director')dirRenderTeamPanel('red');onReady();});
-dbListen('blueFb',val=>{S.blueFb=val;if(appRendered&&ROLE==='blue')teamRenderFeedback('blue');if(appRendered&&ROLE==='director')dirRenderTeamPanel('blue');onReady();});
-dbListen('redFb',val=>{S.redFb=val;if(appRendered&&ROLE==='red')teamRenderFeedback('red');if(appRendered&&ROLE==='director')dirRenderTeamPanel('red');onReady();});
-dbListen('injectLog',val=>{S.injectLog=val||{};if(appRendered){dirRenderInjectLogPreview();dirRenderHistory();if(ROLE==='blue')teamRenderFeedback('blue');if(ROLE==='red')teamRenderFeedback('red');}onReady();});
-dbListen('meta',val=>{
-  const m=val||{};S.gameEnded=m.gameEnded||null;S.aarNote=m.aarNote||'';S.historyLocked=m.historyLocked||false;S.history=m.history||{};
-  if(appRendered){
-    const banner=document.getElementById('team-ended-banner');
-    if(banner)banner.classList.toggle('visible',!!(S.gameEnded?.ended));
-    if(S.gameEnded?.ended){const sub=document.getElementById('team-ended-sub');if(sub)sub.textContent=`End of game called at ${S.gameEnded.time}. Submit final tasks and report to Director's Table.`;const gc=document.getElementById('game-clock');if(gc&&!gc._ended){gc.textContent=S.gameEnded.time+' — END';gc.style.color='#C04A4A';gc._ended=true;}}
-    dirRenderHistory();dirRenderBadges();
-  }
-  onReady();
+// ─────────────────────────────────────────────
+// CONNECTION MONITOR  (.info/connected)
+// ─────────────────────────────────────────────
+onValue(ref(db, '.info/connected'), snap => {
+  const connected = snap.val() === true;
+  setSyncDot(connected ? 'live' : 'off');
+  const w = document.getElementById('conn-warn');
+  if (w) { w.classList.toggle('visible', !connected); }
 });
 
-// ═══════════════════════════════════════════════
+// ─────────────────────────────────────────────
+// TIMER  (director-local; display pushed to Firebase)
+// ─────────────────────────────────────────────
+let timerSec = 900, timerRunning = false, timerInterval = null;
+
+window.startTimer = () => {
+  if (timerRunning) {
+    clearInterval(timerInterval); timerRunning = false;
+    const b = document.getElementById('timer-btn'); if(b) b.textContent = 'Start';
+  } else {
+    timerRunning = true;
+    const b = document.getElementById('timer-btn'); if(b) b.textContent = 'Pause';
+    timerInterval = setInterval(() => {
+      timerSec = Math.max(0, timerSec - 1);
+      const d = pad(Math.floor(timerSec/60)) + ':' + pad(timerSec%60);
+      const e = document.getElementById('turn-timer'); if(e) e.textContent = d;
+      dbSet('timerDisplay', d);
+      if (timerSec === 0) {
+        clearInterval(timerInterval); timerRunning = false;
+        if(b) b.textContent = 'Start';
+        if(e) e.style.color = '#C04A4A';
+      }
+    }, 1000);
+  }
+};
+
+window.resetTimer = () => {
+  clearInterval(timerInterval); timerRunning = false;
+  const mins = parseInt(document.getElementById('timer-dur-input')?.value) || 15;
+  timerSec = mins * 60;
+  const d = pad(mins) + ':00';
+  const e = document.getElementById('turn-timer');
+  if(e) { e.textContent = d; e.style.color = ''; }
+  const b = document.getElementById('timer-btn'); if(b) b.textContent = 'Start';
+  dbSet('timerDisplay', d);
+};
+
+window.updateTimerDur = () => {
+  const mins = parseInt(document.getElementById('timer-dur-input').value) || 15;
+  if (!timerRunning) {
+    timerSec = mins * 60;
+    const d = pad(mins) + ':00';
+    const e = document.getElementById('turn-timer');
+    if(e) { e.textContent = d; e.style.color = ''; }
+    dbSet('timerDisplay', d);
+  }
+};
+
+window.setGameTime = async () => {
+  const val = document.getElementById('game-time-input').value.trim(); if(!val) return;
+  const p = parseGT(val); if(!p) return;
+  await dbSet('gameTime', fmtGT(p.day, p.hour, p.min));
+  document.getElementById('game-time-input').value = '';
+};
+
+window.advanceGameTime = async () => {
+  const p = parseGT(S.gameTime) || {day:2, hour:19, min:0};
+  const hrs = parseInt(document.getElementById('advance-hrs').value) || 6;
+  p.hour += hrs;
+  while(p.hour >= 24) { p.hour -= 24; p.day++; }
+  await dbSet('gameTime', fmtGT(p.day, p.hour, p.min));
+};
+
+// ─────────────────────────────────────────────
+// INJECT CARD RENDERER
+// ─────────────────────────────────────────────
+function renderInjectCard(inj) {
+  const st = inj.struct
+    ? `<div class="inject-entry-struct"><div class="inject-entry-struct-label">Structural change</div>${esc(inj.struct)}</div>` : '';
+  return `<div class="inject-entry">
+    <div class="inject-entry-header">
+      <span class="inject-entry-label">⚡ Director Inject — ${esc(inj.type||'Note')}</span>
+      <span class="inject-entry-meta">Turn ${inj.turn} · ${esc(inj.gameTime)} · ${esc(inj.recipients)} · ${new Date(inj.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+    </div>
+    <div class="inject-entry-note">${esc(inj.note).replace(/\n/g,'<br>')}</div>${st}
+  </div>`;
+}
+
+// ─────────────────────────────────────────────
+// BOOT  — fetch ALL state in ONE round-trip, then render, then attach live listeners
+// ─────────────────────────────────────────────
+async function boot() {
+  setSyncDot('connecting');
+  const sub = document.getElementById('ls-sub');
+  if(sub) sub.textContent = 'Loading game state…';
+
+  // One get() fetches the entire game node at once — single network round-trip
+  let snap;
+  try {
+    snap = await Promise.race([
+      dbGet(''),            // fetch entire game/ node
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))
+    ]);
+  } catch(e) {
+    // Timeout or network error — render with defaults and warn
+    console.warn('Firebase initial fetch failed:', e.message);
+    snap = null;
+  }
+
+  // Populate S from snapshot (or keep defaults if null)
+  if (snap) {
+    S.gameTime      = snap.gameTime      ?? S.gameTime;
+    S.turn          = snap.turn          ?? S.turn;
+    S.blueSubmit    = snap.blueSubmit    ?? null;
+    S.redSubmit     = snap.redSubmit     ?? null;
+    S.blueFb        = snap.blueFb        ?? null;
+    S.redFb         = snap.redFb         ?? null;
+    S.injectLog     = snap.injectLog     ?? {};
+    S.timerDisplay  = snap.timerDisplay  ?? S.timerDisplay;
+    if (snap.meta) {
+      S.history       = snap.meta.history       ?? {};
+      S.gameEnded     = snap.meta.gameEnded      ?? null;
+      S.aarNote       = snap.meta.aarNote        ?? '';
+      S.historyLocked = snap.meta.historyLocked  ?? false;
+    }
+  }
+
+  // Render UI immediately with loaded state
+  if (ROLE === 'director') renderDirector();
+  else                     renderTeam(ROLE);
+
+  setSyncDot('live');
+
+  // Now attach targeted live listeners — each updates only its own slice of S
+  // and re-renders only the affected component
+
+  dbOn('gameTime', val => {
+    S.gameTime = val || 'D+2 / 1900L';
+    document.querySelectorAll('#game-clock,#team-gametime').forEach(e => { if(e && !e._ended) e.textContent = S.gameTime; });
+    // Update game-time display in open turn cards
+    const tc = document.getElementById('tc-gametime'); if(tc && !tc._userEdited) tc.value = S.gameTime;
+    // Update next-turn labels on director panels
+    document.querySelectorAll('.nt-val').forEach(e => e.textContent = S.gameTime);
+  });
+
+  dbOn('turn', val => {
+    const prev = S.turn;
+    S.turn = val ?? 0;
+    document.querySelectorAll('#turn-disp,#team-turn').forEach(e => { if(e) e.textContent = S.turn; });
+    if (S.turn !== prev) {
+      // Turn changed — re-render the panels that depend on turn number
+      if (ROLE === 'director') { dirRenderTeamPanel('blue'); dirRenderTeamPanel('red'); }
+      if (ROLE === 'blue')     { teamRenderFeedback('blue'); teamRenderTurnCard('blue'); }
+      if (ROLE === 'red')      { teamRenderFeedback('red');  teamRenderTurnCard('red');  }
+    }
+  });
+
+  dbOn('timerDisplay', val => {
+    S.timerDisplay = val || '15:00';
+    // Only update display if local timer isn't running (director controls it locally)
+    if (!timerRunning) {
+      document.querySelectorAll('#turn-timer,#team-timer').forEach(e => { if(e) e.textContent = S.timerDisplay; });
+    }
+  });
+
+  dbOn('blueSubmit', val => {
+    S.blueSubmit = val;
+    if (ROLE === 'director') dirRenderTeamPanel('blue');
+    if (ROLE === 'blue')     teamRenderTurnCard('blue');
+  });
+
+  dbOn('redSubmit', val => {
+    S.redSubmit = val;
+    if (ROLE === 'director') dirRenderTeamPanel('red');
+    if (ROLE === 'red')      teamRenderTurnCard('red');
+  });
+
+  dbOn('blueFb', val => {
+    S.blueFb = val;
+    if (ROLE === 'director') dirRenderTeamPanel('blue');
+    if (ROLE === 'blue')     teamRenderFeedback('blue');
+  });
+
+  dbOn('redFb', val => {
+    S.redFb = val;
+    if (ROLE === 'director') dirRenderTeamPanel('red');
+    if (ROLE === 'red')      teamRenderFeedback('red');
+  });
+
+  dbOn('injectLog', val => {
+    S.injectLog = val || {};
+    dirRenderInjectLogPreview();
+    if (ROLE === 'blue') teamRenderFeedback('blue');
+    if (ROLE === 'red')  teamRenderFeedback('red');
+    // Update history panel if open
+    const hp = document.getElementById('panel-history');
+    if (hp && hp.classList.contains('active')) dirRenderHistory();
+  });
+
+  dbOn('meta', val => {
+    const m = val || {};
+    S.history       = m.history       ?? {};
+    S.gameEnded     = m.gameEnded     ?? null;
+    S.aarNote       = m.aarNote       ?? '';
+    S.historyLocked = m.historyLocked ?? false;
+
+    // Team: ended banner
+    const banner = document.getElementById('team-ended-banner');
+    if (banner) banner.classList.toggle('visible', !!(S.gameEnded?.ended));
+    if (S.gameEnded?.ended) {
+      const sub = document.getElementById('team-ended-sub');
+      if(sub) sub.textContent = `End of game called at ${S.gameEnded.time}. Submit final tasks and report to Director's Table.`;
+    }
+
+    // Director: game-clock ended state
+    if (S.gameEnded?.ended) {
+      const gc = document.getElementById('game-clock');
+      if(gc && !gc._ended) { gc.textContent = S.gameEnded.time + ' — END'; gc.style.color = '#C04A4A'; gc._ended = true; }
+    }
+
+    // History panel if open
+    const hp = document.getElementById('panel-history');
+    if (hp && hp.classList.contains('active')) dirRenderHistory();
+
+    dirRenderBadges();
+  });
+}
+
+// Kick off boot
+boot();
+
+// ═══════════════════════════════════════════════════════
 // DIRECTOR
-// ═══════════════════════════════════════════════
-function renderDirector(){
-  document.getElementById('app').innerHTML=`
+// ═══════════════════════════════════════════════════════
+function renderDirector() {
+  document.getElementById('app').innerHTML = `
+  <div id="conn-warn" class="conn-warn">⚠ Firebase connection lost — attempting to reconnect. Data may be stale.</div>
   <div class="top-bar">
     <div class="top-left">
       <div style="display:flex;align-items:center;gap:12px">
         <span class="top-title">Director's Table</span>
         <span class="role-badge dir">Director</span>
-        <span class="sync-dot" id="sync-dot" title="Connected"></span>
+        <span class="sync-dot connecting" id="sync-dot" title="Connecting…"></span>
       </div>
       <div class="turn-controls">
         <span class="tc-label">Turn</span>
@@ -374,16 +593,16 @@ function renderDirector(){
   </div>
   <div class="team-tabs">
     <button class="tab active" id="tab-blue" onclick="dirTab('blue')">Blue Force <span class="sub-badge" id="badge-blue">awaiting</span></button>
-    <button class="tab" id="tab-red" onclick="dirTab('red')">Red Force <span class="sub-badge" id="badge-red">awaiting</span></button>
-    <button class="tab" id="tab-inject" onclick="dirTab('inject')">Director Inject</button>
+    <button class="tab" id="tab-red"  onclick="dirTab('red')">Red Force <span class="sub-badge" id="badge-red">awaiting</span></button>
+    <button class="tab" id="tab-inject"  onclick="dirTab('inject')">Director Inject</button>
     <button class="tab" id="tab-history" onclick="dirTab('history')">Turn History</button>
-    <button class="tab" id="tab-refs" onclick="dirTab('refs')">References</button>
+    <button class="tab" id="tab-refs"    onclick="dirTab('refs')">References</button>
   </div>
   <div class="panel active" id="panel-blue"></div>
   <div class="panel" id="panel-red"></div>
   <div class="panel" id="panel-inject">
     <div class="phase-section">
-      <div class="phase-header"><span class="phase-title">Director Inject</span><span class="section-tag">Pushed to teams in real-time via Firebase</span></div>
+      <div class="phase-header"><span class="phase-title">Director Inject</span><span class="section-tag">Pushed to teams in real-time</span></div>
       <div class="phase-body">
         <div class="adj-row">
           <div class="field"><label>Inject type</label><select id="inject-type">${INJECT_TYPES.map(t=>`<option>${t}</option>`).join('')}</select></div>
@@ -403,21 +622,21 @@ function renderDirector(){
     </div>
     <div class="end-block">
       <div class="end-block-title">Game Control</div>
-      <div class="end-block-desc">Call end of game when the training objective is met. Teams are notified instantly via Firebase. Reset wipes all game data from Firebase and returns to Turn 0.</div>
+      <div class="end-block-desc">Call end of game when the training objective is met. Teams are notified instantly. Reset wipes all game data from Firebase and returns to Turn 0.</div>
       <div class="end-block-btns">
-        <button class="btn-end" onclick="endGame()">Call end of game</button>
+        <button class="btn-end"   onclick="endGame()">Call end of game</button>
         <button class="btn-reset" onclick="resetGame()">Reset to Turn 0</button>
       </div>
       <div id="status-inject-end" class="status-msg" style="margin-top:10px"></div>
     </div>
-    <div class="end-block" id="aar-capture-block" style="display:none;border-color:#C04A4A;margin-top:1rem">
+    <div class="end-block" id="aar-capture-block" style="display:${S.gameEnded?.ended?'':'none'};border-color:#C04A4A;margin-top:1rem">
       <div class="end-block-title" style="color:#C04A4A">AAR — Debrief Points</div>
       <div class="end-block-desc" style="margin-bottom:10px">Capture key debrief discussion points. Submitting locks turn history and enables AAR download.</div>
-      <div class="field" style="margin-bottom:10px"><label>Director's AAR notes</label><textarea id="aar-note-input" placeholder="Key decisions, training points, themes, observations…" style="min-height:120px"></textarea></div>
+      <div class="field" style="margin-bottom:10px"><label>Director's AAR notes</label><textarea id="aar-note-input" placeholder="Key decisions, training points, themes, observations…" style="min-height:120px">${esc(S.aarNote)}</textarea></div>
       <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
         <div id="status-aar" class="status-msg" style="margin-top:0;margin-right:auto"></div>
         <button class="btn-primary" onclick="submitAAR()" style="border-color:#C04A4A;background:#C04A4A">Lock history &amp; save AAR ↗</button>
-        <button class="btn-secondary" onclick="downloadPDF()" id="dl-pdf-btn" style="display:none">Download AAR PDF</button>
+        <button class="btn-secondary" onclick="downloadPDF()" id="dl-pdf-btn" style="display:${S.historyLocked?'':'none'}">Download AAR PDF</button>
       </div>
     </div>
   </div>
@@ -429,66 +648,117 @@ function renderDirector(){
     </div>
   </div>`;
 
-  setInterval(()=>{const e=document.getElementById('real-clock');if(e)e.textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});},1000);
-  dirRenderTeamPanel('blue');dirRenderTeamPanel('red');dirRenderHistory();dirRenderInjectLogPreview();dirRenderBadges();
-  if(S.gameEnded?.ended){const gc=document.getElementById('game-clock');if(gc){gc.textContent=S.gameEnded.time+' — END';gc.style.color='#C04A4A';gc._ended=true;}const ab=document.getElementById('aar-capture-block');if(ab)ab.style.display='';const ai=document.getElementById('aar-note-input');if(ai&&S.aarNote)ai.value=S.aarNote;if(S.historyLocked){const db2=document.getElementById('dl-pdf-btn');if(db2)db2.style.display='';const sa=document.getElementById('status-aar');if(sa){sa.textContent='AAR note saved. Turn history locked.';sa.className='status-msg visible ok';}}}
+  // Real-time clock
+  setInterval(() => {
+    const e = document.getElementById('real-clock');
+    if(e) e.textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }, 1000);
+
+  // Restore ended game clock display
+  if (S.gameEnded?.ended) {
+    const gc = document.getElementById('game-clock');
+    if(gc) { gc.textContent = S.gameEnded.time + ' — END'; gc.style.color = '#C04A4A'; gc._ended = true; }
+    if(S.historyLocked) {
+      const s = document.getElementById('status-aar');
+      if(s) { s.textContent = 'AAR note saved. Turn history locked.'; s.className = 'status-msg visible ok'; }
+    }
+  }
+
+  dirRenderTeamPanel('blue');
+  dirRenderTeamPanel('red');
+  dirRenderInjectLogPreview();
+  dirRenderBadges();
 }
 
-window.dirTab=function(t){
-  ['blue','red','inject','history','refs'].forEach(id=>{document.getElementById('tab-'+id)?.classList.remove('active');document.getElementById('panel-'+id)?.classList.remove('active');});
-  document.getElementById('tab-'+t)?.classList.add('active');document.getElementById('panel-'+t)?.classList.add('active');
-  if(t==='history')dirRenderHistory();
-  if(t==='inject')dirRenderInjectLogPreview();
-  if(t==='refs'){const e=document.getElementById('dir-doc-repo');if(e&&!e._loaded){e._loaded=true;renderDocRepo('dir-doc-repo');}}
+window.dirTab = t => {
+  ['blue','red','inject','history','refs'].forEach(id => {
+    document.getElementById('tab-'+id)?.classList.remove('active');
+    document.getElementById('panel-'+id)?.classList.remove('active');
+  });
+  document.getElementById('tab-'+t)?.classList.add('active');
+  document.getElementById('panel-'+t)?.classList.add('active');
+  if (t === 'history') dirRenderHistory();
+  if (t === 'inject')  dirRenderInjectLogPreview();
+  if (t === 'refs') {
+    const e = document.getElementById('dir-doc-repo');
+    if (e && !e._loaded) { e._loaded = true; renderDocRepo('dir-doc-repo'); }
+  }
 };
-window.dirChangeTurn=async function(d){await dbSet('turn',Math.max(0,(S.turn||0)+d));};
 
-function dirRenderBadges(){
-  ['blue','red'].forEach(team=>{
-    const sub=team==='blue'?S.blueSubmit:S.redSubmit;const hasNew=sub&&sub.turn===S.turn;
-    const badge=document.getElementById('badge-'+team);if(!badge)return;
-    badge.textContent=hasNew?'submitted':'awaiting';
-    badge.style.background=hasNew?(team==='blue'?'rgba(74,138,192,0.2)':'rgba(192,74,74,0.2)'):'';
-    badge.style.color=hasNew?(team==='blue'?'#4A8AC0':'#C04A4A'):'';
+window.dirChangeTurn = async d => await dbSet('turn', Math.max(0, (S.turn||0) + d));
+
+function dirRenderBadges() {
+  ['blue','red'].forEach(team => {
+    const sub    = team==='blue' ? S.blueSubmit : S.redSubmit;
+    const hasNew = sub && sub.turn === S.turn;
+    const badge  = document.getElementById('badge-'+team); if(!badge) return;
+    badge.textContent       = hasNew ? 'submitted' : 'awaiting';
+    badge.style.background  = hasNew ? (team==='blue'?'rgba(74,138,192,0.2)':'rgba(192,74,74,0.2)') : '';
+    badge.style.color       = hasNew ? (team==='blue'?'#4A8AC0':'#C04A4A') : '';
   });
 }
 
-function dirRenderTeamPanel(team){
-  const sub=team==='blue'?S.blueSubmit:S.redSubmit,fb=team==='blue'?S.blueFb:S.redFb;
-  const el=document.getElementById('panel-'+team);if(!el)return;
-  const hasNew=sub&&sub.turn===S.turn;dirRenderBadges();
-  function subRows(rows){if(!rows||!rows.length)return`<div class="no-submission">No entries submitted.</div>`;return rows.map(r=>`<div class="sub-row">${r.map(c=>`<span>${escHtml(c||'—')}</span>`).join('')}</div>`).join('');}
-  const turn0Banner=S.turn===0?`<div class="turn0-banner"><strong>Turn 0 — Initial Laydown.</strong> Teams submitting initial positions. Review and push to begin Turn 1.</div>`:'';
-  const collRows=sub?subRows(sub.collections.map(c=>[c.asset,c.nai,c.box,c.pir])):`<div class="no-submission">Awaiting submission.</div>`;
-  const manRows=sub?subRows(sub.maneuver.map(m=>[m.unit,m.pos,m.action,m.dest])):`<div class="no-submission">Awaiting submission.</div>`;
-  const firesRows=sub?subRows(sub.fires.map(f=>[f.asset,f.grid,f.desc,f.effect,f.timing])):`<div class="no-submission">Awaiting submission.</div>`;
-  const cmdNote=sub?(sub.cmdNote||'—'):'—';
-  el.innerHTML=`
-  ${turn0Banner}
+function dirRenderTeamPanel(team) {
+  const sub = team==='blue' ? S.blueSubmit : S.redSubmit;
+  const fb  = team==='blue' ? S.blueFb    : S.redFb;
+  const el  = document.getElementById('panel-'+team); if(!el) return;
+
+  const hasNew = sub && sub.turn === S.turn;
+  dirRenderBadges();
+
+  const subRows = rows => {
+    if (!rows||!rows.length) return `<div class="no-submission">No entries submitted.</div>`;
+    return rows.map(r => `<div class="sub-row">${r.map(c=>`<span>${esc(c||'—')}</span>`).join('')}</div>`).join('');
+  };
+
+  const t0Banner = S.turn===0 ? `<div class="turn0-banner"><strong>Turn 0 — Initial Laydown.</strong> Teams submitting initial positions. Review and push to begin Turn 1.</div>` : '';
+  const collRows  = sub ? subRows(sub.collections.map(c=>[c.asset,c.nai,c.box,c.pir]))  : `<div class="no-submission">Awaiting submission.</div>`;
+  const manRows   = sub ? subRows(sub.maneuver.map(m=>[m.unit,m.pos,m.action,m.dest]))   : `<div class="no-submission">Awaiting submission.</div>`;
+  const firesRows = sub ? subRows(sub.fires.map(f=>[f.asset,f.grid,f.desc,f.effect,f.timing])) : `<div class="no-submission">Awaiting submission.</div>`;
+  const cmdNote   = sub ? (sub.cmdNote||'—') : '—';
+
+  el.innerHTML = `
+  ${t0Banner}
   <div class="recv-bar ${hasNew?'received':'waiting'}" id="recv-bar-${team}">
-    <span>${hasNew?`${team==='blue'?'Blue':'Red'} submission received — Turn ${S.turn}`:`Awaiting ${team==='blue'?'Blue':'Red'} submission — Turn ${S.turn}`}</span>
-    ${hasNew?`<button class="recv-btn" disabled>Received ✓</button>`:`<button class="recv-btn confirm" onclick="dirMarkReceived('${team}')">Mark received</button>`}
+    <span>${hasNew ? `${team==='blue'?'Blue':'Red'} submission received — Turn ${S.turn}` : `Awaiting ${team==='blue'?'Blue':'Red'} submission — Turn ${S.turn}`}</span>
+    ${hasNew ? `<button class="recv-btn" disabled>Received ✓</button>` : `<button class="recv-btn confirm" onclick="dirMarkReceived('${team}')">Mark received</button>`}
   </div>
-  <div class="phase-section"><div class="phase-header"><span class="phase-title">Collections</span><button class="phase-toggle" onclick="togglePhase('${team}-coll')">collapse</button></div>
-  <div class="phase-body" id="${team}-coll"><div class="submission-block">${collRows}</div>
-  <div class="adj-label">Adjudication — collections result</div>
-  <textarea class="adj-input" id="fb-${team}-coll" placeholder="What did ISR find?">${escHtml(fb?.collections||'')}</textarea></div></div>
-  <div class="phase-section"><div class="phase-header"><span class="phase-title">Maneuver</span><button class="phase-toggle" onclick="togglePhase('${team}-man')">collapse</button></div>
-  <div class="phase-body" id="${team}-man"><div class="submission-block">${manRows}</div>
-  <div class="adj-row">
-    <div><div class="adj-label">Movement results</div><textarea class="adj-input" id="fb-${team}-manmov" placeholder="Did elements reach objectives?">${escHtml(fb?.manMov||'')}</textarea></div>
-    <div><div class="adj-label">Contact / BDA</div><textarea class="adj-input" id="fb-${team}-manbda" placeholder="BDA, subsequent unit actions.">${escHtml(fb?.manBDA||'')}</textarea></div>
-  </div></div></div>
-  <div class="phase-section"><div class="phase-header"><span class="phase-title">Fires</span><button class="phase-toggle" onclick="togglePhase('${team}-fires')">collapse</button></div>
-  <div class="phase-body" id="${team}-fires"><div class="submission-block">${firesRows}</div>
-  <div class="adj-row">
-    <div><div class="adj-label">Fire mission results / BDA</div><textarea class="adj-input" id="fb-${team}-fireres" placeholder="Mission executed, effects achieved.">${escHtml(fb?.fireRes||'')}</textarea></div>
-    <div><div class="adj-label">Asset status after execution</div><textarea class="adj-input" id="fb-${team}-firestat" placeholder="Availability, rounds remaining.">${escHtml(fb?.fireStat||'')}</textarea></div>
-  </div></div></div>
-  <div class="phase-section"><div class="phase-header"><span class="phase-title">Commander's note</span></div>
-  <div class="phase-body"><div class="submission-block" style="font-style:italic">"${escHtml(cmdNote)}"</div></div></div>
-  <div class="phase-section"><div class="phase-header"><span class="phase-title">Director's note to team</span></div>
-  <div class="phase-body"><div class="field" style="margin:0"><textarea class="adj-input" id="fb-${team}-dirnote" placeholder="Optional note — injects, structural changes, clarifications." style="min-height:48px">${escHtml(fb?.dirNote||'')}</textarea></div></div></div>
+  <div class="phase-section">
+    <div class="phase-header"><span class="phase-title">Collections</span><button class="phase-toggle" onclick="togglePhase('${team}-coll')">collapse</button></div>
+    <div class="phase-body" id="${team}-coll">
+      <div class="submission-block">${collRows}</div>
+      <div class="adj-label">Adjudication — collections result</div>
+      <textarea class="adj-input" id="fb-${team}-coll" placeholder="What did ISR find?">${esc(fb?.collections||'')}</textarea>
+    </div>
+  </div>
+  <div class="phase-section">
+    <div class="phase-header"><span class="phase-title">Maneuver</span><button class="phase-toggle" onclick="togglePhase('${team}-man')">collapse</button></div>
+    <div class="phase-body" id="${team}-man">
+      <div class="submission-block">${manRows}</div>
+      <div class="adj-row">
+        <div><div class="adj-label">Movement results</div><textarea class="adj-input" id="fb-${team}-manmov" placeholder="Did elements reach objectives?">${esc(fb?.manMov||'')}</textarea></div>
+        <div><div class="adj-label">Contact / BDA</div><textarea class="adj-input" id="fb-${team}-manbda" placeholder="BDA, subsequent unit actions.">${esc(fb?.manBDA||'')}</textarea></div>
+      </div>
+    </div>
+  </div>
+  <div class="phase-section">
+    <div class="phase-header"><span class="phase-title">Fires</span><button class="phase-toggle" onclick="togglePhase('${team}-fires')">collapse</button></div>
+    <div class="phase-body" id="${team}-fires">
+      <div class="submission-block">${firesRows}</div>
+      <div class="adj-row">
+        <div><div class="adj-label">Fire mission results / BDA</div><textarea class="adj-input" id="fb-${team}-fireres" placeholder="Mission executed, effects achieved.">${esc(fb?.fireRes||'')}</textarea></div>
+        <div><div class="adj-label">Asset status after execution</div><textarea class="adj-input" id="fb-${team}-firestat" placeholder="Availability, rounds remaining.">${esc(fb?.fireStat||'')}</textarea></div>
+      </div>
+    </div>
+  </div>
+  <div class="phase-section">
+    <div class="phase-header"><span class="phase-title">Commander's note</span></div>
+    <div class="phase-body"><div class="submission-block" style="font-style:italic">"${esc(cmdNote)}"</div></div>
+  </div>
+  <div class="phase-section">
+    <div class="phase-header"><span class="phase-title">Director's note to team</span></div>
+    <div class="phase-body"><div class="field" style="margin:0"><textarea class="adj-input" id="fb-${team}-dirnote" placeholder="Optional note — injects, structural changes, clarifications." style="min-height:48px">${esc(fb?.dirNote||'')}</textarea></div></div>
+  </div>
   <div class="push-row">
     <div class="next-time-block"><label>Next turn game time</label><span class="nt-val">${S.gameTime}</span></div>
     <div id="status-${team}" class="status-msg"></div>
@@ -498,111 +768,250 @@ function dirRenderTeamPanel(team){
   </div>`;
 }
 
-window.dirMarkReceived=function(team){const bar=document.getElementById('recv-bar-'+team);if(!bar)return;bar.className='recv-bar received';const btn=bar.querySelector('button');if(btn){btn.textContent='Received ✓';btn.className='recv-btn';btn.disabled=true;}};
-function buildFbObj(team){return{turn:S.turn,nextTime:S.gameTime,gameTime:S.gameTime,collections:v('fb-'+team+'-coll'),manMov:v('fb-'+team+'-manmov'),manBDA:v('fb-'+team+'-manbda'),fireRes:v('fb-'+team+'-fireres'),fireStat:v('fb-'+team+'-firestat'),dirNote:v('fb-'+team+'-dirnote')};}
-window.dirSaveDraft=async function(team){await dbSet(team+'Fb',buildFbObj(team));const s=document.getElementById('status-'+team);if(s){s.textContent='Draft saved.';s.className='status-msg visible ok';}};
-window.dirClearNote=function(team){const e=document.getElementById('fb-'+team+'-dirnote');if(e)e.value='';};
-window.dirPushResults=async function(team){
-  const fb=buildFbObj(team),sub=team==='blue'?S.blueSubmit:S.redSubmit;
-  if(sub){const he=S.history[S.turn]||{turn:S.turn,blue:null,red:null,blueFb:null,redFb:null};he[team]=JSON.parse(JSON.stringify(sub));he[team+'Fb']=JSON.parse(JSON.stringify(fb));await dbSet('meta/history/'+S.turn,he);}
-  await dbSet(team+'Fb',fb);
-  // Clear the submission so the team card resets cleanly for the next turn
-  await dbSet(team+'Submit',null);
-  const s=document.getElementById('status-'+team);if(s){s.textContent=`Results pushed to ${team==='blue'?'Blue':'Red'} — Turn ${S.turn}.`;s.className='status-msg visible ok';}
-  resetTimer();
-};
-window.pushInject=async function(){
-  const note=document.getElementById('inject-note').value.trim();
-  if(!note){const s=document.getElementById('status-inject');s.textContent='Director note is required.';s.className='status-msg visible warn';return;}
-  const struct=document.getElementById('inject-struct').value.trim(),rcpt=document.getElementById('inject-recipients').value,type=document.getElementById('inject-type').value;
-  const id=Date.now();
-  await dbSet('injectLog/'+id,{id,at:new Date().toISOString(),gameTime:S.gameTime,turn:S.turn,recipients:rcpt,type,note,struct});
-  const shortNotice=`[INJECT — ${type} — ${S.gameTime}] ${note}${struct?'\n\nStructural change: '+struct:''}`;
-  async function applyToFb(fbKey){const ex=(fbKey==='blueFb'?S.blueFb:S.redFb)||{turn:S.turn,gameTime:S.gameTime,nextTime:S.gameTime,collections:'',manMov:'',manBDA:'',fireRes:'',fireStat:'',dirNote:''};ex.dirNote=(ex.dirNote?ex.dirNote+'\n\n':'')+shortNotice;await dbSet(fbKey,ex);}
-  if(rcpt==='Both teams'||rcpt==='Blue only')await applyToFb('blueFb');
-  if(rcpt==='Both teams'||rcpt==='Red only')await applyToFb('redFb');
-  const s=document.getElementById('status-inject');s.textContent=`Inject pushed to ${rcpt} — Turn ${S.turn} / ${S.gameTime}.`;s.className='status-msg visible ok';
-  document.getElementById('inject-note').value='';document.getElementById('inject-struct').value='';
-};
-function dirRenderInjectLogPreview(){const el=document.getElementById('inject-log-preview');if(!el)return;const log=injectArr();el.innerHTML=log.length?[...log].reverse().map(renderInjectCard).join(''):`<div class="inject-feed-empty">No injects pushed yet.</div>`;}
-function dirRenderHistory(){
-  const el=document.getElementById('panel-history');if(!el)return;
-  const hist=Object.values(S.history||{}).sort((a,b)=>a.turn-b.turn),injects=injectArr();
-  if(!hist.length&&!injects.length){el.innerHTML=`<div class="awaiting-feedback"><div class="aw-title">No turn history yet</div><div class="aw-sub">Completed turns appear here after results are pushed.</div></div>`;return;}
-  const items=[];hist.forEach(h=>items.push({type:'turn',sortKey:h.turn*1e13,data:h}));injects.forEach(inj=>items.push({type:'inject',sortKey:inj.id,inj}));
-  items.sort((a,b)=>b.sortKey-a.sortKey);
-  const hdr=`<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn-secondary" onclick="clearHistory()">Clear history &amp; inject log</button></div>`;
-  const body=items.map(item=>{
-    if(item.type==='inject')return`<div class="history-inject-block"><div class="history-inject-block-header" onclick="this.nextElementSibling.classList.toggle('open')"><span style="display:flex;align-items:center;gap:8px"><span class="inject-pill">⚡ Inject</span><span class="phase-title" style="font-size:11px">${escHtml(item.inj.type||'Note')}</span></span><span class="section-tag" style="font-size:11px">Turn ${item.inj.turn} · ${escHtml(item.inj.gameTime)} · ${escHtml(item.inj.recipients)}</span></div><div class="history-inject-block-body">${renderInjectCard(item.inj)}</div></div>`;
-    const h=item.data,br=h.blue?renderHistoryRows(h.blue,h.blueFb):'<em style="font-size:12px;color:var(--page-text-muted)">No submission recorded.</em>',rr=h.red?renderHistoryRows(h.red,h.redFb):'<em style="font-size:12px;color:var(--page-text-muted)">No submission recorded.</em>',gt=h.blueFb?.gameTime||h.redFb?.gameTime||'';
-    return`<div class="history-turn"><div class="history-turn-header" onclick="this.nextElementSibling.classList.toggle('open')"><span class="phase-title">Turn ${h.turn}${gt?' — '+gt:''}</span><span class="section-tag" style="font-size:11px">click to expand</span></div><div class="history-turn-body"><div class="history-team"><span class="history-team-label blue">Blue Force</span><div style="margin-top:6px">${br}</div></div><div class="history-team" style="margin-top:12px"><span class="history-team-label red">Red Force</span><div style="margin-top:6px">${rr}</div></div></div></div>`;
-  }).join('');
-  el.innerHTML=hdr+body;
-}
-window.clearHistory=async function(){if(!confirm('Clear all turn history and inject log from Firebase?'))return;await dbRemove('injectLog');await dbRemove('meta/history');};
-function renderHistoryRows(sub,fb){
-  let out='';
-  if(sub.collections?.length)out+=`<div class="history-entry"><strong>Collections</strong>${sub.collections.map(c=>[c.asset,c.nai,c.box,c.pir].filter(Boolean).join(' / ')).join(' | ')}</div>`;
-  if(sub.maneuver?.length)out+=`<div class="history-entry"><strong>Maneuver</strong>${sub.maneuver.map(m=>`${m.unit}: ${m.action||'—'} → ${m.dest||'—'}`).join(' | ')}</div>`;
-  if(sub.fires?.length)out+=`<div class="history-entry"><strong>Fires</strong>${sub.fires.map(f=>`${f.asset} on ${f.grid} (${f.effect})`).join(' | ')}</div>`;
-  if(sub.cmdNote)out+=`<div class="history-entry"><strong>Cmd Note</strong>"${escHtml(sub.cmdNote)}"</div>`;
-  if(fb){if(fb.collections)out+=`<div class="history-entry" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--page-border)"><strong>Adj — Collections</strong>${escHtml(fb.collections)}</div>`;if(fb.manMov)out+=`<div class="history-entry"><strong>Adj — Maneuver</strong>${escHtml(fb.manMov)}</div>`;if(fb.manBDA)out+=`<div class="history-entry"><strong>Adj — BDA</strong>${escHtml(fb.manBDA)}</div>`;if(fb.fireRes)out+=`<div class="history-entry"><strong>Adj — Fires</strong>${escHtml(fb.fireRes)}</div>`;if(fb.dirNote)out+=`<div class="history-entry"><strong>Dir Note</strong>${escHtml(fb.dirNote)}</div>`;}
-  return out||'<em style="font-size:12px;color:var(--page-text-muted)">Empty submission.</em>';
-}
-window.togglePhase=function(id){const el=document.getElementById(id);if(!el)return;const btn=el.previousElementSibling?.querySelector('.phase-toggle');if(el.style.display==='none'){el.style.display='';if(btn)btn.textContent='collapse';}else{el.style.display='none';if(btn)btn.textContent='expand';}};
-window.endGame=async function(){
-  if(!confirm('Call end of game? Teams will be notified instantly.'))return;
-  const gt=S.gameTime;await dbSet('meta/gameEnded',{ended:true,time:gt,at:new Date().toISOString()});
-  const notice=`[GAME ENDED] End of game called at ${gt}. Submit final tasks and report to Director's Table.`;
-  async function applyEnd(fbKey){const ex=(fbKey==='blueFb'?S.blueFb:S.redFb)||{turn:S.turn,gameTime:gt,nextTime:gt,collections:'',manMov:'',manBDA:'',fireRes:'',fireStat:'',dirNote:''};ex.dirNote=(ex.dirNote?ex.dirNote+'\n\n':'')+notice;await dbSet(fbKey,ex);}
-  await applyEnd('blueFb');await applyEnd('redFb');
-  const gc=document.getElementById('game-clock');if(gc){gc.textContent=gt+' — END';gc.style.color='#C04A4A';gc._ended=true;}
-  const s=document.getElementById('status-inject-end');if(s){s.textContent='End of game called. Teams notified.';s.className='status-msg visible ok';}
-  const ab=document.getElementById('aar-capture-block');if(ab){ab.style.display='';setTimeout(()=>ab.scrollIntoView({behavior:'smooth',block:'nearest'}),100);}
-};
-window.submitAAR=async function(){
-  const note=document.getElementById('aar-note-input').value.trim();
-  if(!note){const s=document.getElementById('status-aar');s.textContent='Enter at least one debrief point before locking.';s.className='status-msg visible warn';return;}
-  await dbSet('meta/aarNote',note);await dbSet('meta/historyLocked',true);
-  const s=document.getElementById('status-aar');s.textContent='AAR note saved. Turn history locked.';s.className='status-msg visible ok';
-  const db2=document.getElementById('dl-pdf-btn');if(db2)db2.style.display='';
-};
-window.resetGame=async function(){
-  if(!confirm('Reset to Turn 0? Clears ALL Firebase game data. Cannot be undone.'))return;
-  await dbRemove('');await dbSet('turn',0);await dbSet('gameTime','D+2 / 1900L');await dbSet('timerDisplay','15:00');
-  const gc=document.getElementById('game-clock');if(gc){gc.textContent='D+2 / 1900L';gc.style.color='';gc._ended=false;}
-  const ab=document.getElementById('aar-capture-block');if(ab)ab.style.display='none';
-  const s=document.getElementById('status-inject-end');if(s){s.textContent='Game reset to Turn 0. All Firebase data cleared.';s.className='status-msg visible warn';}
-  resetTimer();
-};
-window.downloadPDF=function(){
-  const hist=Object.values(S.history||{}).sort((a,b)=>a.turn-b.turn),injects=injectArr(),gt=S.gameTime,aarNote=S.aarNote;
-  let c=`<h1 style="font-family:monospace;text-transform:uppercase;letter-spacing:0.1em">AMWC Wargame — After Action Review</h1><p style="font-family:monospace;font-size:12px;color:#666;margin:6px 0 24px">Game ended: ${gt} | Generated: ${new Date().toLocaleString()}</p>`;
-  if(aarNote)c+=`<h2 style="font-family:monospace;text-transform:uppercase;font-size:13px;border-bottom:2px solid #333;padding-bottom:6px;margin:0 0 12px">Director's AAR Notes</h2><p style="font-family:monospace;font-size:12px;white-space:pre-wrap;margin-bottom:24px;padding:12px;background:#f8f8f8;border:1px solid #ddd">${aarNote}</p>`;
-  if(injects.length){c+=`<h2 style="font-family:monospace;text-transform:uppercase;font-size:13px;border-bottom:2px solid #C8B84A;padding-bottom:6px;margin:24px 0 12px">Inject Log (${injects.length})</h2>`;injects.forEach(inj=>{c+=`<div style="margin-bottom:12px;padding:10px 12px;border-left:4px solid #C8B84A;background:#fdfaf0;font-family:monospace;font-size:11px"><p style="margin:0 0 4px;color:#7A6A2A;font-weight:bold;font-size:10px">⚡ ${inj.type} — Turn ${inj.turn} · ${inj.gameTime} · ${inj.recipients}</p><p style="margin:0 0 4px;white-space:pre-wrap">${inj.note}</p>${inj.struct?`<p style="margin:4px 0 0;color:#666"><strong>Structural change:</strong> ${inj.struct}</p>`:''}</div>`;});}
-  hist.forEach(h=>{
-    c+=`<h2 style="font-family:monospace;text-transform:uppercase;font-size:14px;border-bottom:2px solid #333;padding-bottom:6px;margin:24px 0 12px">Turn ${h.turn}${h.blueFb?` — ${h.blueFb.gameTime}`:''}</h2>`;
-    ['blue','red'].forEach(team=>{
-      const sub=h[team],fb=h[team+'Fb'];c+=`<h3 style="font-family:monospace;text-transform:uppercase;font-size:12px;color:${team==='blue'?'#1A3A5C':'#6B1A1A'};margin:12px 0 6px">${team==='blue'?'Blue':'Red'} Force</h3>`;
-      if(sub){if(sub.collections?.length)c+=`<p style="font-family:monospace;font-size:11px"><strong>Collections:</strong> ${sub.collections.map(c2=>[c2.asset,c2.nai,c2.box,c2.pir].filter(Boolean).join(' / ')).join(' | ')}</p>`;if(sub.maneuver?.length)c+=`<p style="font-family:monospace;font-size:11px"><strong>Maneuver:</strong> ${sub.maneuver.map(m=>`${m.unit}: ${m.action||'—'} → ${m.dest||'—'}`).join(' | ')}</p>`;if(sub.fires?.length)c+=`<p style="font-family:monospace;font-size:11px"><strong>Fires:</strong> ${sub.fires.map(f=>`${f.asset} on ${f.grid} (${f.effect})`).join(' | ')}</p>`;if(sub.cmdNote)c+=`<p style="font-family:monospace;font-size:11px"><strong>Cmd Note:</strong> "${sub.cmdNote}"</p>`;}
-      else c+=`<p style="font-family:monospace;font-size:11px;color:#999">No submission recorded.</p>`;
-      if(fb){c+=`<p style="font-family:monospace;font-size:11px;margin-top:6px;padding-top:6px;border-top:1px solid #ddd">`;if(fb.collections)c+=`<strong>Adj-Collections:</strong> ${fb.collections}<br>`;if(fb.manMov)c+=`<strong>Adj-Maneuver:</strong> ${fb.manMov}<br>`;if(fb.manBDA)c+=`<strong>Adj-BDA:</strong> ${fb.manBDA}<br>`;if(fb.fireRes)c+=`<strong>Adj-Fires:</strong> ${fb.fireRes}<br>`;if(fb.dirNote)c+=`<strong>Dir Note:</strong> ${fb.dirNote}<br>`;c+=`</p>`;}
-    });
-  });
-  const win=window.open('','_blank');win.document.write(`<!DOCTYPE html><html><head><title>AMWC AAR</title><style>body{margin:2cm;font-family:monospace}@media print{body{margin:1cm}}</style></head><body>${c}<script>window.onload=function(){window.print();}<\/script></body></html>`);win.document.close();
+window.dirMarkReceived = team => {
+  const bar = document.getElementById('recv-bar-'+team); if(!bar) return;
+  bar.className = 'recv-bar received';
+  const btn = bar.querySelector('button');
+  if(btn) { btn.textContent='Received ✓'; btn.className='recv-btn'; btn.disabled=true; }
 };
 
-// ═══════════════════════════════════════════════
+const buildFb = team => ({
+  turn: S.turn, nextTime: S.gameTime, gameTime: S.gameTime,
+  collections: vEl('fb-'+team+'-coll'),
+  manMov:      vEl('fb-'+team+'-manmov'),
+  manBDA:      vEl('fb-'+team+'-manbda'),
+  fireRes:     vEl('fb-'+team+'-fireres'),
+  fireStat:    vEl('fb-'+team+'-firestat'),
+  dirNote:     vEl('fb-'+team+'-dirnote'),
+});
+
+window.dirSaveDraft = async team => {
+  await dbSet(team+'Fb', buildFb(team));
+  const s = document.getElementById('status-'+team);
+  if(s) { s.textContent='Draft saved.'; s.className='status-msg visible ok'; }
+};
+
+window.dirClearNote = team => {
+  const e = document.getElementById('fb-'+team+'-dirnote'); if(e) e.value = '';
+};
+
+window.dirPushResults = async team => {
+  const fb  = buildFb(team);
+  const sub = team==='blue' ? S.blueSubmit : S.redSubmit;
+
+  // Archive to turn history
+  if (sub) {
+    const he = S.history[S.turn] || {turn:S.turn, blue:null, red:null, blueFb:null, redFb:null};
+    he[team]        = JSON.parse(JSON.stringify(sub));
+    he[team + 'Fb'] = JSON.parse(JSON.stringify(fb));
+    await dbSet('meta/history/' + S.turn, he);
+  }
+
+  // Push feedback to team, clear their submission so card resets
+  await dbSet(team+'Fb', fb);
+  await dbSet(team+'Submit', null);
+
+  const s = document.getElementById('status-'+team);
+  if(s) { s.textContent=`Results pushed to ${team==='blue'?'Blue':'Red'} — Turn ${S.turn}.`; s.className='status-msg visible ok'; }
+  resetTimer();
+};
+
+window.pushInject = async () => {
+  const note   = document.getElementById('inject-note').value.trim();
+  if(!note) {
+    const s = document.getElementById('status-inject');
+    s.textContent='Director note is required.'; s.className='status-msg visible warn'; return;
+  }
+  const struct = document.getElementById('inject-struct').value.trim();
+  const rcpt   = document.getElementById('inject-recipients').value;
+  const type   = document.getElementById('inject-type').value;
+  const id     = Date.now();
+
+  await dbSet('injectLog/'+id, {id, at:new Date().toISOString(), gameTime:S.gameTime, turn:S.turn, recipients:rcpt, type, note, struct});
+
+  // Append a short notice to dirNote so teams see it immediately in feedback
+  const notice = `[INJECT — ${type} — ${S.gameTime}] ${note}${struct?'\n\nStructural change: '+struct:''}`;
+  async function applyToFb(fbKey) {
+    const ex = (fbKey==='blueFb'?S.blueFb:S.redFb) ||
+               {turn:S.turn,gameTime:S.gameTime,nextTime:S.gameTime,collections:'',manMov:'',manBDA:'',fireRes:'',fireStat:'',dirNote:''};
+    ex.dirNote = (ex.dirNote ? ex.dirNote+'\n\n' : '') + notice;
+    await dbSet(fbKey, ex);
+  }
+  if(rcpt==='Both teams'||rcpt==='Blue only') await applyToFb('blueFb');
+  if(rcpt==='Both teams'||rcpt==='Red only')  await applyToFb('redFb');
+
+  const s = document.getElementById('status-inject');
+  s.textContent=`Inject pushed to ${rcpt} — Turn ${S.turn} / ${S.gameTime}.`; s.className='status-msg visible ok';
+  document.getElementById('inject-note').value='';
+  document.getElementById('inject-struct').value='';
+};
+
+function dirRenderInjectLogPreview() {
+  const el = document.getElementById('inject-log-preview'); if(!el) return;
+  const log = injectArr();
+  el.innerHTML = log.length ? [...log].reverse().map(renderInjectCard).join('') : `<div class="inject-feed-empty">No injects pushed yet.</div>`;
+}
+
+function dirRenderHistory() {
+  const el = document.getElementById('panel-history'); if(!el) return;
+  const hist    = Object.values(S.history||{}).sort((a,b)=>a.turn-b.turn);
+  const injects = injectArr();
+  if (!hist.length && !injects.length) {
+    el.innerHTML=`<div class="awaiting-feedback"><div class="aw-title">No turn history yet</div><div class="aw-sub">Completed turns appear here after results are pushed.</div></div>`;
+    return;
+  }
+  const items = [];
+  hist.forEach(h    => items.push({type:'turn',   sortKey:h.turn*1e13, data:h}));
+  injects.forEach(i => items.push({type:'inject', sortKey:i.id,        inj:i}));
+  items.sort((a,b)=>b.sortKey-a.sortKey);
+
+  const hdr = `<div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+    <button class="btn-secondary" onclick="clearHistory()">Clear history &amp; inject log</button></div>`;
+
+  const body = items.map(item => {
+    if(item.type==='inject') {
+      return `<div class="history-inject-block">
+        <div class="history-inject-block-header" onclick="this.nextElementSibling.classList.toggle('open')">
+          <span style="display:flex;align-items:center;gap:8px"><span class="inject-pill">⚡ Inject</span><span class="phase-title" style="font-size:11px">${esc(item.inj.type||'Note')}</span></span>
+          <span class="section-tag" style="font-size:11px">Turn ${item.inj.turn} · ${esc(item.inj.gameTime)} · ${esc(item.inj.recipients)}</span>
+        </div>
+        <div class="history-inject-block-body">${renderInjectCard(item.inj)}</div>
+      </div>`;
+    }
+    const h  = item.data;
+    const br = h.blue ? renderHistRows(h.blue, h.blueFb) : '<em style="font-size:12px;color:var(--page-text-muted)">No submission recorded.</em>';
+    const rr = h.red  ? renderHistRows(h.red,  h.redFb)  : '<em style="font-size:12px;color:var(--page-text-muted)">No submission recorded.</em>';
+    const gt = h.blueFb?.gameTime || h.redFb?.gameTime || '';
+    return `<div class="history-turn">
+      <div class="history-turn-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="phase-title">Turn ${h.turn}${gt?' — '+gt:''}</span>
+        <span class="section-tag" style="font-size:11px">click to expand</span>
+      </div>
+      <div class="history-turn-body">
+        <div><span class="history-team-label blue">Blue Force</span><div style="margin-top:6px">${br}</div></div>
+        <div style="margin-top:12px"><span class="history-team-label red">Red Force</span><div style="margin-top:6px">${rr}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+  el.innerHTML = hdr + body;
+}
+
+window.clearHistory = async () => {
+  if(!confirm('Clear all turn history and inject log from Firebase?')) return;
+  await dbDel('injectLog');
+  await dbDel('meta/history');
+};
+
+function renderHistRows(sub, fb) {
+  let o = '';
+  if(sub.collections?.length) o+=`<div class="history-entry"><strong>Collections</strong>${sub.collections.map(c=>[c.asset,c.nai,c.box,c.pir].filter(Boolean).join(' / ')).join(' | ')}</div>`;
+  if(sub.maneuver?.length)    o+=`<div class="history-entry"><strong>Maneuver</strong>${sub.maneuver.map(m=>`${m.unit}: ${m.action||'—'} → ${m.dest||'—'}`).join(' | ')}</div>`;
+  if(sub.fires?.length)       o+=`<div class="history-entry"><strong>Fires</strong>${sub.fires.map(f=>`${f.asset} on ${f.grid} (${f.effect})`).join(' | ')}</div>`;
+  if(sub.cmdNote)             o+=`<div class="history-entry"><strong>Cmd Note</strong>"${esc(sub.cmdNote)}"</div>`;
+  if(fb) {
+    o += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--page-border)">`;
+    if(fb.collections) o+=`<div class="history-entry"><strong>Adj — Collections</strong>${esc(fb.collections)}</div>`;
+    if(fb.manMov)      o+=`<div class="history-entry"><strong>Adj — Maneuver</strong>${esc(fb.manMov)}</div>`;
+    if(fb.manBDA)      o+=`<div class="history-entry"><strong>Adj — BDA</strong>${esc(fb.manBDA)}</div>`;
+    if(fb.fireRes)     o+=`<div class="history-entry"><strong>Adj — Fires</strong>${esc(fb.fireRes)}</div>`;
+    if(fb.dirNote)     o+=`<div class="history-entry"><strong>Dir Note</strong>${esc(fb.dirNote)}</div>`;
+    o += `</div>`;
+  }
+  return o || '<em style="font-size:12px;color:var(--page-text-muted)">Empty submission.</em>';
+}
+
+window.togglePhase = id => {
+  const el = document.getElementById(id); if(!el) return;
+  const btn = el.previousElementSibling?.querySelector('.phase-toggle');
+  if(el.style.display==='none') { el.style.display=''; if(btn) btn.textContent='collapse'; }
+  else                          { el.style.display='none'; if(btn) btn.textContent='expand'; }
+};
+
+window.endGame = async () => {
+  if(!confirm('Call end of game? Teams will be notified instantly.')) return;
+  const gt = S.gameTime;
+  await dbSet('meta/gameEnded', {ended:true, time:gt, at:new Date().toISOString()});
+  const notice = `[GAME ENDED] End of game called at ${gt}. Submit final tasks and report to Director's Table.`;
+  async function applyEnd(fbKey) {
+    const ex = (fbKey==='blueFb'?S.blueFb:S.redFb) ||
+               {turn:S.turn,gameTime:gt,nextTime:gt,collections:'',manMov:'',manBDA:'',fireRes:'',fireStat:'',dirNote:''};
+    ex.dirNote = (ex.dirNote?ex.dirNote+'\n\n':'') + notice;
+    await dbSet(fbKey, ex);
+  }
+  await applyEnd('blueFb'); await applyEnd('redFb');
+  const gc = document.getElementById('game-clock');
+  if(gc) { gc.textContent=gt+' — END'; gc.style.color='#C04A4A'; gc._ended=true; }
+  const s = document.getElementById('status-inject-end');
+  if(s) { s.textContent='End of game called. Teams notified.'; s.className='status-msg visible ok'; }
+  const ab = document.getElementById('aar-capture-block');
+  if(ab) { ab.style.display=''; setTimeout(()=>ab.scrollIntoView({behavior:'smooth',block:'nearest'}),100); }
+};
+
+window.submitAAR = async () => {
+  const note = document.getElementById('aar-note-input').value.trim();
+  if(!note) {
+    const s=document.getElementById('status-aar'); s.textContent='Enter at least one debrief point.'; s.className='status-msg visible warn'; return;
+  }
+  await dbSet('meta/aarNote', note);
+  await dbSet('meta/historyLocked', true);
+  const s=document.getElementById('status-aar'); s.textContent='AAR note saved. Turn history locked.'; s.className='status-msg visible ok';
+  const btn=document.getElementById('dl-pdf-btn'); if(btn) btn.style.display='';
+};
+
+window.resetGame = async () => {
+  if(!confirm('Reset to Turn 0? Clears ALL Firebase game data. Cannot be undone.')) return;
+  await dbDel('');
+  await dbSet('turn', 0);
+  await dbSet('gameTime', 'D+2 / 1900L');
+  await dbSet('timerDisplay', '15:00');
+  const gc=document.getElementById('game-clock');
+  if(gc) { gc.textContent='D+2 / 1900L'; gc.style.color=''; gc._ended=false; }
+  const ab=document.getElementById('aar-capture-block'); if(ab) ab.style.display='none';
+  const s=document.getElementById('status-inject-end');
+  if(s) { s.textContent='Game reset to Turn 0. All Firebase data cleared.'; s.className='status-msg visible warn'; }
+  resetTimer();
+};
+
+window.downloadPDF = () => {
+  const hist=Object.values(S.history||{}).sort((a,b)=>a.turn-b.turn), injects=injectArr();
+  let c=`<h1 style="font-family:monospace;text-transform:uppercase">AMWC Wargame — After Action Review</h1>
+<p style="font-family:monospace;font-size:12px;color:#666;margin:6px 0 24px">Game ended: ${S.gameTime} | Generated: ${new Date().toLocaleString()}</p>`;
+  if(S.aarNote) c+=`<h2 style="font-family:monospace;font-size:13px;border-bottom:2px solid #333;padding-bottom:6px;margin:0 0 12px">DIRECTOR'S AAR NOTES</h2><pre style="font-family:monospace;font-size:12px;white-space:pre-wrap;padding:12px;background:#f8f8f8;border:1px solid #ddd;margin-bottom:24px">${S.aarNote}</pre>`;
+  if(injects.length) {
+    c+=`<h2 style="font-family:monospace;font-size:13px;border-bottom:2px solid #C8B84A;padding-bottom:6px;margin:24px 0 12px">INJECT LOG (${injects.length})</h2>`;
+    injects.forEach(inj=>{c+=`<div style="margin-bottom:12px;padding:10px;border-left:4px solid #C8B84A;background:#fdfaf0;font-family:monospace;font-size:11px"><p style="margin:0 0 4px;color:#7A6A2A;font-weight:bold">⚡ ${inj.type} — Turn ${inj.turn} · ${inj.gameTime} · ${inj.recipients}</p><p style="margin:0;white-space:pre-wrap">${inj.note}</p>${inj.struct?`<p style="margin:4px 0 0"><strong>Structural change:</strong> ${inj.struct}</p>`:''}</div>`;});
+  }
+  hist.forEach(h=>{
+    c+=`<h2 style="font-family:monospace;font-size:14px;border-bottom:2px solid #333;padding-bottom:6px;margin:24px 0 12px">TURN ${h.turn}${h.blueFb?` — ${h.blueFb.gameTime}`:''}</h2>`;
+    ['blue','red'].forEach(team=>{
+      const sub=h[team], fb=h[team+'Fb'];
+      c+=`<h3 style="font-family:monospace;font-size:12px;color:${team==='blue'?'#1A3A5C':'#6B1A1A'};margin:12px 0 6px">${team==='blue'?'BLUE':'RED'} FORCE</h3>`;
+      if(sub){
+        if(sub.collections?.length) c+=`<p style="font-family:monospace;font-size:11px"><b>Collections:</b> ${sub.collections.map(c2=>[c2.asset,c2.nai,c2.box,c2.pir].filter(Boolean).join(' / ')).join(' | ')}</p>`;
+        if(sub.maneuver?.length)    c+=`<p style="font-family:monospace;font-size:11px"><b>Maneuver:</b> ${sub.maneuver.map(m=>`${m.unit}: ${m.action||'—'} → ${m.dest||'—'}`).join(' | ')}</p>`;
+        if(sub.fires?.length)       c+=`<p style="font-family:monospace;font-size:11px"><b>Fires:</b> ${sub.fires.map(f=>`${f.asset} on ${f.grid} (${f.effect})`).join(' | ')}</p>`;
+        if(sub.cmdNote)             c+=`<p style="font-family:monospace;font-size:11px"><b>Cmd Note:</b> "${sub.cmdNote}"</p>`;
+      } else c+=`<p style="font-family:monospace;font-size:11px;color:#999">No submission recorded.</p>`;
+      if(fb){c+=`<div style="font-family:monospace;font-size:11px;margin-top:6px;padding-top:6px;border-top:1px solid #ddd">`;if(fb.collections)c+=`<p><b>Adj-Collections:</b> ${fb.collections}</p>`;if(fb.manMov)c+=`<p><b>Adj-Maneuver:</b> ${fb.manMov}</p>`;if(fb.manBDA)c+=`<p><b>Adj-BDA:</b> ${fb.manBDA}</p>`;if(fb.fireRes)c+=`<p><b>Adj-Fires:</b> ${fb.fireRes}</p>`;if(fb.dirNote)c+=`<p><b>Dir Note:</b> ${fb.dirNote}</p>`;c+=`</div>`;}
+    });
+  });
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>AMWC AAR</title><style>body{margin:2cm;font-family:monospace}@media print{body{margin:1cm}}</style></head><body>${c}<script>window.onload=function(){window.print();}<\/script></body></html>`);
+  w.document.close();
+};
+
+// ═══════════════════════════════════════════════════════
 // TEAM PAGE
-// ═══════════════════════════════════════════════
-function renderTeam(team){
-  document.getElementById('app').innerHTML=`
+// ═══════════════════════════════════════════════════════
+function renderTeam(team) {
+  document.getElementById('app').innerHTML = `
+  <div id="conn-warn" class="conn-warn">⚠ Firebase connection lost — attempting to reconnect. Data may be stale.</div>
   <div class="top-bar">
     <div class="top-left">
       <div style="display:flex;align-items:center;gap:12px">
         <span class="top-title">${team==='blue'?'Blue Force':'Red Force'}</span>
         <span class="role-badge ${team}">${team==='blue'?'Blue':'Red'}</span>
-        <span class="sync-dot" id="sync-dot" title="Connected"></span>
+        <span class="sync-dot connecting" id="sync-dot" title="Connecting…"></span>
       </div>
       <div class="turn-controls"><span class="tc-label">Turn</span><span class="tc-val" id="team-turn">${S.turn}</span></div>
     </div>
@@ -614,137 +1023,331 @@ function renderTeam(team){
   </div>
   <div id="team-ended-banner" class="game-ended-banner${S.gameEnded?.ended?' visible':''}">
     <div class="geb-title">Game Ended</div>
-    <div class="geb-sub" id="team-ended-sub">${S.gameEnded?.ended?`End of game called at ${S.gameEnded.time}. Submit final tasks and report to Director's Table.`:'Submit final tasks and report to Director\'s Table.'}</div>
+    <div class="geb-sub" id="team-ended-sub">${S.gameEnded?.ended
+      ? `End of game called at ${S.gameEnded.time}. Submit final tasks and report to Director's Table.`
+      : 'Submit final tasks and report to Director\'s Table.'}</div>
   </div>
   <div class="team-tabs">
     <button class="tab active" id="ttab-feedback" onclick="teamTab('feedback')">Director Feedback</button>
-    <button class="tab" id="ttab-turncard" onclick="teamTab('turncard')">Turn Card</button>
-    <button class="tab" id="ttab-refs" onclick="teamTab('refs')">References</button>
+    <button class="tab"        id="ttab-turncard" onclick="teamTab('turncard')">Turn Card</button>
+    <button class="tab"        id="ttab-refs"     onclick="teamTab('refs')">References</button>
   </div>
   <div class="panel active" id="tpanel-feedback"></div>
-  <div class="panel" id="tpanel-turncard"></div>
-  <div class="panel" id="tpanel-refs">
-    <div class="phase-section"><div class="phase-header"><span class="phase-title">Reference Documents</span><span class="section-tag">Shared repository — all teams</span></div><div class="phase-body" id="team-doc-repo"></div></div>
+  <div class="panel"        id="tpanel-turncard"></div>
+  <div class="panel"        id="tpanel-refs">
+    <div class="phase-section">
+      <div class="phase-header"><span class="phase-title">Reference Documents</span><span class="section-tag">Shared repository — all teams</span></div>
+      <div class="phase-body" id="team-doc-repo"></div>
+    </div>
   </div>`;
-  setInterval(()=>{const e=document.getElementById('team-realclock');if(e)e.textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});},1000);
-  teamRenderFeedback(team);teamRenderTurnCard(team);
+
+  setInterval(() => {
+    const e = document.getElementById('team-realclock');
+    if(e) e.textContent = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }, 1000);
+
+  teamRenderFeedback(team);
+  teamRenderTurnCard(team);
 }
 
-window.teamTab=function(t){
-  ['feedback','turncard','refs'].forEach(id=>{document.getElementById('ttab-'+id)?.classList.remove('active');document.getElementById('tpanel-'+id)?.classList.remove('active');});
-  document.getElementById('ttab-'+t)?.classList.add('active');document.getElementById('tpanel-'+t)?.classList.add('active');
-  if(t==='refs'){const e=document.getElementById('team-doc-repo');if(e&&!e._loaded){e._loaded=true;renderDocRepo('team-doc-repo');}}
-  if(t==='turncard')teamRenderTurnCard(ROLE);
+window.teamTab = t => {
+  ['feedback','turncard','refs'].forEach(id => {
+    document.getElementById('ttab-'+id)?.classList.remove('active');
+    document.getElementById('tpanel-'+id)?.classList.remove('active');
+  });
+  document.getElementById('ttab-'+t)?.classList.add('active');
+  document.getElementById('tpanel-'+t)?.classList.add('active');
+  if (t==='refs') {
+    const e = document.getElementById('team-doc-repo');
+    if(e && !e._loaded) { e._loaded=true; renderDocRepo('team-doc-repo'); }
+  }
+  // Always re-render turn card when switching to it so state is fresh
+  if (t==='turncard') teamRenderTurnCard(ROLE);
 };
 
-function teamRenderFeedback(team){
-  const fb=team==='blue'?S.blueFb:S.redFb,el=document.getElementById('tpanel-feedback');if(!el)return;
-  // sync header
-  const tEl=document.getElementById('team-turn');if(tEl)tEl.textContent=S.turn;
-  const gtEl=document.getElementById('team-gametime');if(gtEl)gtEl.textContent=S.gameTime;
-  const tiEl=document.getElementById('team-timer');if(tiEl&&!timerRunning)tiEl.textContent=S.timerDisplay;
-  const myInjects=injectsForTeam(team);
-  let injectHtml='';
-  if(myInjects.length)injectHtml=`<div class="inject-feed-section"><div class="inject-feed-header"><span class="inject-feed-title">⚡ Director Injects (${myInjects.length})</span><span style="font-size:10px;color:#C8B84A;letter-spacing:0.04em">Most recent first</span></div><div class="inject-feed-body">${[...myInjects].reverse().map(renderInjectCard).join('')}</div></div>`;
-  const fbIsCurrent=fb&&(fb.turn===S.turn||S.turn===0);
-  if(!fbIsCurrent){el.innerHTML=`${injectHtml}<div class="awaiting-feedback"><div class="aw-title">${S.turn===0?'Turn 0 — Awaiting Confirmation':'Awaiting director\'s table'}</div><div class="aw-sub">${S.turn===0?'Submit your initial force laydown on the Turn Card.':'Results will appear here once the director pushes feedback for Turn '+S.turn+'.'}</div></div>`;return;}
-  const empty=s=>!s||!s.trim();
-  el.innerHTML=`${injectHtml}
-  <div class="phase-section"><div class="phase-header"><span class="phase-title">Collections</span></div><div class="phase-body"><div class="feedback-label">ISR results — Turn ${fb.turn}</div><div class="feedback-block ${empty(fb.collections)?'empty':''}">${escHtml(fb.collections)||'No collections feedback provided.'}</div></div></div>
-  <div class="phase-section"><div class="phase-header"><span class="phase-title">Maneuver</span></div><div class="phase-body"><div class="adj-row"><div><div class="feedback-label">Movement results</div><div class="feedback-block ${empty(fb.manMov)?'empty':''}">${escHtml(fb.manMov)||'No movement feedback provided.'}</div></div><div><div class="feedback-label">Contact / BDA</div><div class="feedback-block ${empty(fb.manBDA)?'empty':''}">${escHtml(fb.manBDA)||'No contact or BDA this turn.'}</div></div></div></div></div>
-  <div class="phase-section"><div class="phase-header"><span class="phase-title">Fires</span></div><div class="phase-body"><div class="adj-row"><div><div class="feedback-label">Fire mission results / BDA</div><div class="feedback-block ${empty(fb.fireRes)?'empty':''}">${escHtml(fb.fireRes)||'No fires feedback provided.'}</div></div><div><div class="feedback-label">Asset status after execution</div><div class="feedback-block ${empty(fb.fireStat)?'empty':''}">${escHtml(fb.fireStat)||'No asset status update.'}</div></div></div></div></div>
-  ${fb.dirNote?`<div class="director-note"><div class="director-note-label">Director's note</div>${escHtml(fb.dirNote).replace(/\n/g,'<br>')}</div>`:''}
-  <div style="margin-top:0.5rem;text-align:right"><button class="btn-primary" onclick="teamTab('turncard')">Proceed to turn card →</button></div>`;
+function teamRenderFeedback(team) {
+  const fb = team==='blue' ? S.blueFb : S.redFb;
+  const el = document.getElementById('tpanel-feedback'); if(!el) return;
+
+  // Sync header clocks
+  const tEl=document.getElementById('team-turn');      if(tEl) tEl.textContent=S.turn;
+  const gtEl=document.getElementById('team-gametime'); if(gtEl) gtEl.textContent=S.gameTime;
+  const tiEl=document.getElementById('team-timer');    if(tiEl && !timerRunning) tiEl.textContent=S.timerDisplay;
+
+  const myInjects = injectsForTeam(team);
+  const injectHtml = myInjects.length
+    ? `<div class="inject-feed-section">
+        <div class="inject-feed-header">
+          <span class="inject-feed-title">⚡ Director Injects (${myInjects.length})</span>
+          <span style="font-size:10px;color:#C8B84A;letter-spacing:0.04em">Most recent first</span>
+        </div>
+        <div class="inject-feed-body">${[...myInjects].reverse().map(renderInjectCard).join('')}</div>
+      </div>` : '';
+
+  // Feedback is only current if its turn number matches the current turn
+  const fbCurrent = fb && (fb.turn === S.turn || S.turn === 0);
+
+  if (!fbCurrent) {
+    el.innerHTML = `${injectHtml}<div class="awaiting-feedback">
+      <div class="aw-title">${S.turn===0?'Turn 0 — Awaiting Confirmation':'Awaiting director\'s table'}</div>
+      <div class="aw-sub">${S.turn===0
+        ? 'Submit your initial force laydown on the Turn Card. The director will confirm positions before Turn 1 begins.'
+        : 'Results will appear here once the director pushes feedback for Turn ' + S.turn + '.'}</div>
+    </div>`;
+    return;
+  }
+
+  const empty = s => !s || !s.trim();
+  el.innerHTML = `${injectHtml}
+  <div class="phase-section">
+    <div class="phase-header"><span class="phase-title">Collections</span></div>
+    <div class="phase-body">
+      <div class="feedback-label">ISR results — Turn ${fb.turn}</div>
+      <div class="feedback-block ${empty(fb.collections)?'empty':''}">${esc(fb.collections)||'No collections feedback provided.'}</div>
+    </div>
+  </div>
+  <div class="phase-section">
+    <div class="phase-header"><span class="phase-title">Maneuver</span></div>
+    <div class="phase-body">
+      <div class="adj-row">
+        <div><div class="feedback-label">Movement results</div><div class="feedback-block ${empty(fb.manMov)?'empty':''}">${esc(fb.manMov)||'No movement feedback provided.'}</div></div>
+        <div><div class="feedback-label">Contact / BDA</div><div class="feedback-block ${empty(fb.manBDA)?'empty':''}">${esc(fb.manBDA)||'No contact or BDA this turn.'}</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="phase-section">
+    <div class="phase-header"><span class="phase-title">Fires</span></div>
+    <div class="phase-body">
+      <div class="adj-row">
+        <div><div class="feedback-label">Fire mission results / BDA</div><div class="feedback-block ${empty(fb.fireRes)?'empty':''}">${esc(fb.fireRes)||'No fires feedback provided.'}</div></div>
+        <div><div class="feedback-label">Asset status</div><div class="feedback-block ${empty(fb.fireStat)?'empty':''}">${esc(fb.fireStat)||'No asset status update.'}</div></div>
+      </div>
+    </div>
+  </div>
+  ${fb.dirNote ? `<div class="director-note"><div class="director-note-label">Director's note</div>${esc(fb.dirNote).replace(/\n/g,'<br>')}</div>` : ''}
+  <div style="margin-top:0.5rem;text-align:right">
+    <button class="btn-primary" onclick="teamTab('turncard')">Proceed to turn card →</button>
+  </div>`;
 }
 
-function teamRenderTurnCard(team){
-  const el=document.getElementById('tpanel-turncard');if(!el)return;
-  const seeds=team==='blue'?SEED_BLUE:SEED_RED;
-  const currentSub=team==='blue'?S.blueSubmit:S.redSubmit;
+function teamRenderTurnCard(team) {
+  const el = document.getElementById('tpanel-turncard'); if(!el) return;
+  const sub = team==='blue' ? S.blueSubmit : S.redSubmit;
 
-  // If a submission already exists for THIS turn, show confirmation instead of a blank card
-  if(currentSub&&currentSub.turn===S.turn&&S.turn>0){
-    el.innerHTML=`<div style="text-align:center;padding:3rem 1rem;color:var(--page-text-muted)">
-      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;color:#8ACA6A">✓ Turn ${S.turn} submitted</div>
-      <div style="font-size:12px;margin-bottom:1.5rem">Submitted at ${new Date(currentSub.submittedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} · ${escHtml(currentSub.gameTime)}</div>
-      <div style="font-size:12px;color:var(--page-text-muted);margin-bottom:1.5rem">Awaiting director adjudication. Check the Director Feedback tab for results.</div>
+  // Already submitted this turn — show confirmation state
+  if (sub && sub.turn === S.turn) {
+    el.innerHTML = `<div class="submitted-confirm">
+      <div class="sc-icon">✓</div>
+      <div class="sc-title">Turn ${S.turn} submitted</div>
+      <div class="sc-sub">Submitted at ${new Date(sub.submittedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} · ${esc(sub.gameTime)}<br>Awaiting director adjudication — check Director Feedback for results.</div>
       <button class="btn-secondary" onclick="teamForceReopenCard('${team}')">Re-open card to make changes</button>
     </div>`;
     return;
   }
 
-  // prevSub = submission from the PREVIOUS turn (for pre-filling unit positions)
-  const prevSub=(currentSub&&currentSub.turn===S.turn-1)?currentSub:null;
-  const manSource=prevSub?prevSub.maneuver:seeds.map(s=>({unit:s.unit,pos:'',action:'',dest:''}));
-  const collSource=prevSub?prevSub.collections:[];
-  const turn0Note=S.turn===0?`<div class="turn0-banner" style="margin-bottom:1rem"><strong>Turn 0 — Initial Laydown.</strong> Enter force positions and commander's intent. Leave fires empty.</div>`:'';
-  const manRowsHtml=manSource.map(m=>`<div class="entry-row maneuver-row"><div class="field"><input type="text" class="man-unit" value="${escHtml(m.unit||'')}"></div><div class="field"><input type="text" class="man-pos auto-pop" value="${S.turn===0?'':escHtml(m.dest||m.pos||'')}" placeholder="Grid"></div><div class="field">${makeSelect(MAN_ACTIONS,'select action',S.turn===0?'':m.action||'')}</div><div class="field"><input type="text" class="man-dest" placeholder="Grid or named feature — purpose" value=""></div><button class="remove-btn" onclick="this.parentElement.remove()">×</button></div>`).join('');
-  const collRowsHtml=collSource.map(c=>`<div class="entry-row collections-row"><div class="field"><input type="text" class="coll-asset" value="${escHtml(c.asset||'')}"></div><div class="field"><input type="text" class="coll-nai" value="${escHtml(c.nai||'')}"></div><div class="field">${makeSelect(BOX_SIZES,'select size',c.box||'')}</div><div class="field"><input type="text" class="coll-pir" value="${escHtml(c.pir||'')}"></div><button class="remove-btn" onclick="this.parentElement.remove()">×</button></div>`).join('');
-  el.innerHTML=`${turn0Note}
+  // prevSub = last submission (for carrying forward unit positions)
+  // Only use it if it's from the previous turn
+  const prevSub = (sub && sub.turn === S.turn - 1) ? sub : null;
+  const seeds   = team==='blue' ? SEED_BLUE : SEED_RED;
+  const manSource  = prevSub ? prevSub.maneuver  : seeds.map(s=>({unit:s.unit,pos:'',action:'',dest:''}));
+  const collSource = prevSub ? prevSub.collections : [];
+
+  const t0Banner = S.turn===0
+    ? `<div class="turn0-banner" style="margin-bottom:1rem"><strong>Turn 0 — Initial Laydown.</strong> Enter force positions and commander's intent. Leave fires empty.</div>` : '';
+
+  const manRowsHtml = manSource.map(m => `
+    <div class="entry-row maneuver-row">
+      <div class="field"><input type="text" class="man-unit" value="${esc(m.unit||'')}"></div>
+      <div class="field"><input type="text" class="man-pos auto-pop" value="${S.turn===0?'':esc(m.dest||m.pos||'')}" placeholder="Grid"></div>
+      <div class="field">${mkSel(MAN_ACTIONS,'select action',S.turn===0?'':m.action||'')}</div>
+      <div class="field"><input type="text" class="man-dest" placeholder="Grid or named feature — purpose" value=""></div>
+      <button class="remove-btn" onclick="this.parentElement.remove()">×</button>
+    </div>`).join('');
+
+  const collRowsHtml = collSource.map(c => `
+    <div class="entry-row collections-row">
+      <div class="field"><input type="text" class="coll-asset" value="${esc(c.asset||'')}"></div>
+      <div class="field"><input type="text" class="coll-nai"   value="${esc(c.nai||'')}"></div>
+      <div class="field">${mkSel(BOX_SIZES,'select size',c.box||'')}</div>
+      <div class="field"><input type="text" class="coll-pir"   value="${esc(c.pir||'')}"></div>
+      <button class="remove-btn" onclick="this.parentElement.remove()">×</button>
+    </div>`).join('');
+
+  el.innerHTML = `${t0Banner}
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-    <div style="display:flex;align-items:center;gap:10px"><span class="phase-title" style="font-size:13px">Turn Card</span><span style="font-size:11px;font-weight:700;background:var(--page-surface2);color:var(--page-text-muted);padding:3px 10px;border-radius:3px;border:1px solid var(--page-border);letter-spacing:0.04em;text-transform:uppercase">Turn ${S.turn}</span></div>
-    <div style="display:flex;align-items:center;gap:10px"><span class="meta-label">Game time</span><input type="text" id="tc-gametime" value="${S.gameTime}" style="width:130px;border:1px solid var(--input-border);border-radius:3px;padding:5px 9px;background:var(--input-bg);color:var(--page-text);font-family:inherit;font-size:13px"></div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="phase-title" style="font-size:13px">Turn Card</span>
+      <span style="font-size:11px;font-weight:700;background:var(--page-surface2);color:var(--page-text-muted);padding:3px 10px;border-radius:3px;border:1px solid var(--page-border);letter-spacing:0.04em;text-transform:uppercase">Turn ${S.turn}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="meta-label">Game time</span>
+      <input type="text" id="tc-gametime" value="${S.gameTime}" style="width:130px;border:1px solid var(--input-border);border-radius:3px;padding:5px 9px;background:var(--input-bg);color:var(--page-text);font-family:inherit;font-size:13px" oninput="this._userEdited=true">
+    </div>
   </div>
-  <div class="section"><div class="section-header"><span class="section-title">Collections</span><span class="section-tag">ISR tasking &amp; targeting${S.turn===0?' — leave empty for initial laydown':''}</span></div><div class="section-body"><div class="entry-row collections-row" style="margin-bottom:4px"><div class="col-head">Asset</div><div class="col-head">NAI center grid</div><div class="col-head">Box size</div><div class="col-head">PIR / targeting purpose</div><div></div></div><div id="tc-coll-rows">${collRowsHtml}</div><button class="add-btn" onclick="tcAddRow('coll')">+ add asset</button></div></div>
-  <div class="section"><div class="section-header"><span class="section-title">Maneuver</span><span class="section-tag">${S.turn===0?'Enter initial force positions':'Positions carried forward from last turn'}</span></div><div class="section-body"><div class="entry-row maneuver-row" style="margin-bottom:4px"><div class="col-head">Unit</div><div class="col-head">Current position</div><div class="col-head">Action</div><div class="col-head">Destination / objective</div><div></div></div><div id="tc-man-rows">${manRowsHtml}</div><button class="add-btn" onclick="tcAddRow('man')">+ add unit</button></div></div>
-  <div class="section"><div class="section-header"><span class="section-title">Fires</span><span class="section-tag">Fire missions this turn${S.turn===0?' — leave empty for initial laydown':''}</span></div><div class="section-body"><div class="entry-row fires-row" style="margin-bottom:4px"><div class="col-head">Asset</div><div class="col-head">Target grid</div><div class="col-head">Target description</div><div class="col-head">Desired effect</div><div class="col-head">Timing / trigger</div><div></div></div><div id="tc-fires-rows"></div><button class="add-btn" onclick="tcAddRow('fires')">+ add fire mission</button></div></div>
-  <div class="section"><div class="section-header"><span class="section-title">Commander's note</span><span class="section-tag">Main effort and key decision this turn</span></div><div class="section-body"><div class="field" style="margin:0"><textarea id="tc-cmdnote" placeholder="${S.turn===0?'State commander\'s intent and initial scheme of maneuver.':'State the main effort and the decision driving it this turn.'}" style="min-height:72px"></textarea></div></div></div>
-  <div class="submit-row"><div id="tc-status" class="status-bar"></div><button class="btn-secondary" onclick="tcClearFires()">Clear fires</button><button class="btn-primary" onclick="tcSubmit('${team}')">${S.turn===0?'Submit initial laydown ↗':'Submit to director\'s table ↗'}</button></div>`;
+  <div class="section">
+    <div class="section-header"><span class="section-title">Collections</span><span class="section-tag">ISR tasking${S.turn===0?' — leave empty for initial laydown':''}</span></div>
+    <div class="section-body">
+      <div class="entry-row collections-row" style="margin-bottom:4px">
+        <div class="col-head">Asset</div><div class="col-head">NAI center grid</div><div class="col-head">Box size</div><div class="col-head">PIR / targeting purpose</div><div></div>
+      </div>
+      <div id="tc-coll-rows">${collRowsHtml}</div>
+      <button class="add-btn" onclick="tcAddRow('coll')">+ add asset</button>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-header"><span class="section-title">Maneuver</span><span class="section-tag">${S.turn===0?'Enter initial force positions':'Positions carried forward from last turn'}</span></div>
+    <div class="section-body">
+      <div class="entry-row maneuver-row" style="margin-bottom:4px">
+        <div class="col-head">Unit</div><div class="col-head">Current position</div><div class="col-head">Action</div><div class="col-head">Destination / objective</div><div></div>
+      </div>
+      <div id="tc-man-rows">${manRowsHtml}</div>
+      <button class="add-btn" onclick="tcAddRow('man')">+ add unit</button>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-header"><span class="section-title">Fires</span><span class="section-tag">Fire missions this turn${S.turn===0?' — leave empty for initial laydown':''}</span></div>
+    <div class="section-body">
+      <div class="entry-row fires-row" style="margin-bottom:4px">
+        <div class="col-head">Asset</div><div class="col-head">Target grid</div><div class="col-head">Target description</div><div class="col-head">Desired effect</div><div class="col-head">Timing / trigger</div><div></div>
+      </div>
+      <div id="tc-fires-rows"></div>
+      <button class="add-btn" onclick="tcAddRow('fires')">+ add fire mission</button>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-header"><span class="section-title">Commander's note</span><span class="section-tag">Main effort and key decision this turn</span></div>
+    <div class="section-body">
+      <div class="field" style="margin:0">
+        <textarea id="tc-cmdnote" placeholder="${S.turn===0?'State commander\'s intent and initial scheme of maneuver.':'State the main effort and the decision driving it this turn.'}" style="min-height:72px"></textarea>
+      </div>
+    </div>
+  </div>
+  <div class="submit-row">
+    <div id="tc-status" class="status-bar"></div>
+    <button class="btn-secondary" onclick="tcClearFires()">Clear fires</button>
+    <button class="btn-primary" onclick="tcSubmit('${team}')">${S.turn===0?'Submit initial laydown ↗':'Submit to director\'s table ↗'}</button>
+  </div>`;
 }
 
-window.teamForceReopenCard=async function(team){
-  if(!confirm('Re-open the turn card? Your previous submission will be cleared so you can resubmit.'))return;
-  await dbSet(team+'Submit',null);
+window.teamForceReopenCard = async team => {
+  if(!confirm('Re-open the turn card? Your previous submission will be cleared so you can resubmit.')) return;
+  await dbSet(team+'Submit', null);
   teamRenderTurnCard(team);
 };
 
-window.tcAddRow=function(type){
-  if(type==='coll'){const d=document.createElement('div');d.className='entry-row collections-row';d.innerHTML=`<div class="field"><input type="text" class="coll-asset" placeholder="RQ-20, MQ-9…"></div><div class="field"><input type="text" class="coll-nai" placeholder="BK 0512 4231"></div><div class="field">${makeSelect(BOX_SIZES,'select size')}</div><div class="field"><input type="text" class="coll-pir" placeholder="Confirm enemy axis IVO…"></div><button class="remove-btn" onclick="this.parentElement.remove()">×</button>`;document.getElementById('tc-coll-rows').appendChild(d);}
-  else if(type==='man'){const d=document.createElement('div');d.className='entry-row maneuver-row';d.innerHTML=`<div class="field"><input type="text" class="man-unit" placeholder="Unit designation"></div><div class="field"><input type="text" class="man-pos auto-pop" placeholder="Grid"></div><div class="field">${makeSelect(MAN_ACTIONS,'select action')}</div><div class="field"><input type="text" class="man-dest" placeholder="Grid or named feature — purpose"></div><button class="remove-btn" onclick="this.parentElement.remove()">×</button>`;document.getElementById('tc-man-rows').appendChild(d);}
-  else{const d=document.createElement('div');d.className='entry-row fires-row';d.innerHTML=`<div class="field"><input type="text" class="fire-asset" placeholder="M777, AH-1Z…"></div><div class="field"><input type="text" class="fire-grid" placeholder="BK 0512 4231"></div><div class="field"><input type="text" class="fire-desc" placeholder="Description"></div><div class="field">${makeSelect(EFFECTS,'effect')}</div><div class="field"><input type="text" class="fire-timing" placeholder="On order / H+30 / on contact"></div><button class="remove-btn" onclick="this.parentElement.remove()">×</button>`;document.getElementById('tc-fires-rows').appendChild(d);}
+window.tcAddRow = type => {
+  if(type==='coll') {
+    const d=document.createElement('div'); d.className='entry-row collections-row';
+    d.innerHTML=`<div class="field"><input type="text" class="coll-asset" placeholder="RQ-20, MQ-9…"></div><div class="field"><input type="text" class="coll-nai" placeholder="BK 0512 4231"></div><div class="field">${mkSel(BOX_SIZES,'select size')}</div><div class="field"><input type="text" class="coll-pir" placeholder="Confirm enemy axis IVO…"></div><button class="remove-btn" onclick="this.parentElement.remove()">×</button>`;
+    document.getElementById('tc-coll-rows').appendChild(d);
+  } else if(type==='man') {
+    const d=document.createElement('div'); d.className='entry-row maneuver-row';
+    d.innerHTML=`<div class="field"><input type="text" class="man-unit" placeholder="Unit designation"></div><div class="field"><input type="text" class="man-pos auto-pop" placeholder="Grid"></div><div class="field">${mkSel(MAN_ACTIONS,'select action')}</div><div class="field"><input type="text" class="man-dest" placeholder="Grid or named feature — purpose"></div><button class="remove-btn" onclick="this.parentElement.remove()">×</button>`;
+    document.getElementById('tc-man-rows').appendChild(d);
+  } else {
+    const d=document.createElement('div'); d.className='entry-row fires-row';
+    d.innerHTML=`<div class="field"><input type="text" class="fire-asset" placeholder="M777, AH-1Z…"></div><div class="field"><input type="text" class="fire-grid" placeholder="BK 0512 4231"></div><div class="field"><input type="text" class="fire-desc" placeholder="Description"></div><div class="field">${mkSel(EFFECTS,'effect')}</div><div class="field"><input type="text" class="fire-timing" placeholder="On order / H+30 / on contact"></div><button class="remove-btn" onclick="this.parentElement.remove()">×</button>`;
+    document.getElementById('tc-fires-rows').appendChild(d);
+  }
 };
-window.tcClearFires=function(){document.getElementById('tc-fires-rows').innerHTML='';showTcStatus('Fires cleared.','ok');};
-window.tcSubmit=async function(team){
-  const note=document.getElementById('tc-cmdnote').value.trim();if(!note){showTcStatus("Commander's note is required.",'warn');return;}
-  const collections=[...document.querySelectorAll('#tc-coll-rows .entry-row')].map(r=>({asset:r.querySelector('.coll-asset')?.value||'',nai:r.querySelector('.coll-nai')?.value||'',box:r.querySelector('select')?.value||'',pir:r.querySelector('.coll-pir')?.value||''}));
-  const maneuver=[...document.querySelectorAll('#tc-man-rows .entry-row')].map(r=>({unit:r.querySelector('.man-unit')?.value||'',pos:r.querySelector('.man-pos')?.value||'',action:r.querySelector('select')?.value||'',dest:r.querySelector('.man-dest')?.value||''}));
-  const fires=[...document.querySelectorAll('#tc-fires-rows .entry-row')].map(r=>({asset:r.querySelector('.fire-asset')?.value||'',grid:r.querySelector('.fire-grid')?.value||'',desc:r.querySelector('.fire-desc')?.value||'',effect:r.querySelector('select')?.value||'',timing:r.querySelector('.fire-timing')?.value||''}));
-  const gt=document.getElementById('tc-gametime')?.value||S.gameTime;
-  await dbSet(team+'Submit',{turn:S.turn,gameTime:gt,team,collections,maneuver,fires,cmdNote:note,submittedAt:new Date().toISOString()});
-  showTcStatus(`${team==='blue'?'Blue':'Red'} ${S.turn===0?'initial laydown':'turn card'} submitted — ${gt}. Awaiting director's table.`,'ok');
-};
-function showTcStatus(msg,type){const el=document.getElementById('tc-status');if(!el)return;el.textContent=msg;el.className='status-bar visible '+(type||'');}
 
-// ── DOC REPOSITORY ───────────────────────────
-async function fetchGithubPath(path){const url=`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}`;const res=await fetch(url,{headers:{Accept:'application/vnd.github.v3+json'}});if(res.status===404)return[];if(!res.ok)throw new Error(`GitHub API error ${res.status}`);const data=await res.json();return Array.isArray(data)?data:[];}
-async function fetchAllDocs(){
-  const results=[],seen=new Set();
-  for(const path of GITHUB_PATHS){let items;try{items=await fetchGithubPath(path);}catch(e){continue;}for(const item of items){if(item.type!=='file')continue;const ext=fileExt(item.name);if(SKIP_EXT.has(ext)||item.name.startsWith('.')||seen.has(item.sha))continue;seen.add(item.sha);results.push({name:item.name,ext,size:item.size,path:item.path,downloadUrl:item.download_url,htmlUrl:item.html_url});}}
-  results.sort((a,b)=>{if(a.ext==='pdf'&&b.ext!=='pdf')return -1;if(b.ext==='pdf'&&a.ext!=='pdf')return 1;return a.name.localeCompare(b.name);});
+window.tcClearFires = () => { document.getElementById('tc-fires-rows').innerHTML=''; showTcStatus('Fires cleared.','ok'); };
+
+window.tcSubmit = async team => {
+  const note = document.getElementById('tc-cmdnote').value.trim();
+  if(!note) { showTcStatus("Commander's note is required.", 'warn'); return; }
+  const collections = [...document.querySelectorAll('#tc-coll-rows .entry-row')].map(r=>({
+    asset:r.querySelector('.coll-asset')?.value||'', nai:r.querySelector('.coll-nai')?.value||'',
+    box:r.querySelector('select')?.value||'',        pir:r.querySelector('.coll-pir')?.value||'',
+  }));
+  const maneuver = [...document.querySelectorAll('#tc-man-rows .entry-row')].map(r=>({
+    unit:r.querySelector('.man-unit')?.value||'', pos:r.querySelector('.man-pos')?.value||'',
+    action:r.querySelector('select')?.value||'',  dest:r.querySelector('.man-dest')?.value||'',
+  }));
+  const fires = [...document.querySelectorAll('#tc-fires-rows .entry-row')].map(r=>({
+    asset:r.querySelector('.fire-asset')?.value||'', grid:r.querySelector('.fire-grid')?.value||'',
+    desc:r.querySelector('.fire-desc')?.value||'',   effect:r.querySelector('select')?.value||'',
+    timing:r.querySelector('.fire-timing')?.value||'',
+  }));
+  const gt = document.getElementById('tc-gametime')?.value || S.gameTime;
+  await dbSet(team+'Submit', {turn:S.turn, gameTime:gt, team, collections, maneuver, fires, cmdNote:note, submittedAt:new Date().toISOString()});
+  showTcStatus(`${team==='blue'?'Blue':'Red'} ${S.turn===0?'initial laydown':'turn card'} submitted — ${gt}. Awaiting director's table.`, 'ok');
+};
+
+function showTcStatus(msg, type) {
+  const el = document.getElementById('tc-status'); if(!el) return;
+  el.textContent=msg; el.className='status-bar visible '+(type||'');
+}
+
+// ─────────────────────────────────────────────
+// DOCUMENT REPOSITORY
+// ─────────────────────────────────────────────
+async function ghFetch(path) {
+  const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`,
+                          {headers:{Accept:'application/vnd.github.v3+json'}});
+  if(res.status===404) return [];
+  if(!res.ok) throw new Error(`GitHub API error ${res.status}`);
+  const d = await res.json(); return Array.isArray(d)?d:[];
+}
+async function fetchAllDocs() {
+  const results=[], seen=new Set();
+  for(const path of GH_PATHS) {
+    let items; try { items=await ghFetch(path); } catch(e) { continue; }
+    for(const item of items) {
+      if(item.type!=='file') continue;
+      const ext=fExt(item.name);
+      if(SKIP_EXT.has(ext)||item.name.startsWith('.')||seen.has(item.sha)) continue;
+      seen.add(item.sha);
+      results.push({name:item.name,ext,size:item.size,downloadUrl:item.download_url,htmlUrl:item.html_url});
+    }
+  }
+  results.sort((a,b)=>{ if(a.ext==='pdf'&&b.ext!=='pdf')return -1; if(b.ext==='pdf'&&a.ext!=='pdf')return 1; return a.name.localeCompare(b.name); });
   return results;
 }
-window.renderDocRepo=async function(cid){
-  const el=document.getElementById(cid);if(!el)return;
-  el.innerHTML=`<div class="doc-repo-header"><div><div class="section-title" style="font-size:13px;margin-bottom:4px">Reference Documents</div><div class="doc-repo-meta">GitHub · ${GITHUB_OWNER}/${GITHUB_REPO} · Click to open or download</div></div><button class="doc-refresh-btn" onclick="(()=>{const e=document.getElementById('${cid}');if(e){e._loaded=false;renderDocRepo('${cid}');}})()">↻ Refresh</button></div>
+
+window.renderDocRepo = async cid => {
+  const el=document.getElementById(cid); if(!el) return;
+  el.innerHTML=`
+  <div class="doc-repo-header">
+    <div><div class="section-title" style="font-size:13px;margin-bottom:4px">Reference Documents</div>
+    <div class="doc-repo-meta">GitHub · ${GH_OWNER}/${GH_REPO} · Click to open or download</div></div>
+    <button class="doc-refresh-btn" onclick="(()=>{const e=document.getElementById('${cid}');if(e){e._loaded=false;renderDocRepo('${cid}');}})()">↻ Refresh</button>
+  </div>
   <div class="doc-search-bar"><input type="text" id="doc-search-${cid}" placeholder="Search documents…" oninput="filterDocs('${cid}')"></div>
   <div class="doc-filter-bar" id="doc-filters-${cid}"></div>
   <div id="doc-list-${cid}" class="doc-loading">Loading documents…</div>
-  <div class="doc-repo-note">📌 Upload files to <strong>${GITHUB_OWNER}/${GITHUB_REPO}</strong> (root, /references, /docs, or /documents). They appear here automatically after a refresh.</div>`;
-  try{
-    const docs=await fetchAllDocs();el._docs=docs;
+  <div class="doc-repo-note">📌 Upload files to <strong>${GH_OWNER}/${GH_REPO}</strong> (root, /references, /docs, or /documents). They appear here automatically after a refresh.</div>`;
+  try {
+    const docs=await fetchAllDocs(); el._docs=docs;
     const exts=[...new Set(docs.map(d=>d.ext).filter(Boolean))].sort();
     const fb=document.getElementById(`doc-filters-${cid}`);
-    if(fb&&exts.length>1)fb.innerHTML=`<button class="doc-filter-btn active" onclick="setDocFilter('${cid}','all',this)">All (${docs.length})</button>`+exts.map(ext=>`<button class="doc-filter-btn" onclick="setDocFilter('${cid}','${ext}',this)">${ext.toUpperCase()} (${docs.filter(d=>d.ext===ext).length})</button>`).join('');
+    if(fb&&exts.length>1) fb.innerHTML=`<button class="doc-filter-btn active" onclick="setDocFilter('${cid}','all',this)">All (${docs.length})</button>`
+      +exts.map(ext=>`<button class="doc-filter-btn" onclick="setDocFilter('${cid}','${ext}',this)">${ext.toUpperCase()} (${docs.filter(d=>d.ext===ext).length})</button>`).join('');
     renderDocList(cid,docs);
-  }catch(e){document.getElementById(`doc-list-${cid}`).innerHTML=`<div class="doc-error">Could not load from GitHub.<br><br>Error: ${escHtml(e.message)}<br><br>Confirm the repository is public. GitHub allows 60 unauthenticated API requests/hour — wait a few minutes if this persists.</div>`;}
+  } catch(e) {
+    document.getElementById(`doc-list-${cid}`).innerHTML=`<div class="doc-error">Could not load from GitHub.<br><br>Error: ${esc(e.message)}<br><br>Confirm the repository is public. GitHub allows 60 unauthenticated API requests/hour.</div>`;
+  }
 };
-function renderDocList(cid,docs){
-  const el=document.getElementById(`doc-list-${cid}`);if(!el)return;
-  if(!docs.length){el.innerHTML=`<div class="doc-empty"><div class="de-icon">📂</div><div class="de-title">No documents found</div><div class="de-sub">Upload reference files to the GitHub repository. They will appear here automatically.</div></div>`;return;}
-  el.innerHTML=`<div class="doc-grid">${docs.map(d=>`<a class="doc-card" href="${escHtml(d.downloadUrl||d.htmlUrl)}" target="_blank" rel="noopener" title="${escHtml(d.name)}"><div class="doc-icon">${fileIcon(d.name)}</div><div class="doc-info"><div class="doc-name">${escHtml(d.name)}</div><div class="doc-meta"><span class="doc-type-badge ${d.ext||'other'}">${(d.ext||'file').toUpperCase()}</span>${d.size?fileSizeStr(d.size):''}</div></div></a>`).join('')}</div>`;
+
+function renderDocList(cid, docs) {
+  const el=document.getElementById(`doc-list-${cid}`); if(!el) return;
+  if(!docs.length) { el.innerHTML=`<div class="doc-empty"><div class="de-icon">📂</div><div class="de-title">No documents found</div><div class="de-sub">Upload reference files to the GitHub repository.</div></div>`; return; }
+  el.innerHTML=`<div class="doc-grid">${docs.map(d=>`<a class="doc-card" href="${esc(d.downloadUrl||d.htmlUrl)}" target="_blank" rel="noopener"><div class="doc-icon">${fIcon(d.name)}</div><div class="doc-info"><div class="doc-name">${esc(d.name)}</div><div class="doc-meta"><span class="doc-type-badge ${d.ext||'other'}">${(d.ext||'file').toUpperCase()}</span>${d.size?fSize(d.size):''}</div></div></a>`).join('')}</div>`;
 }
-window.filterDocs=function(cid){const el=document.getElementById(cid);if(!el||!el._docs)return;const q=(document.getElementById(`doc-search-${cid}`)?.value||'').toLowerCase(),af=el._activeFilter||'all';let docs=el._docs;if(af!=='all')docs=docs.filter(d=>d.ext===af);if(q)docs=docs.filter(d=>d.name.toLowerCase().includes(q));renderDocList(cid,docs);};
-window.setDocFilter=function(cid,ext,btn){const el=document.getElementById(cid);if(!el)return;el._activeFilter=ext;const fb=document.getElementById(`doc-filters-${cid}`);if(fb)fb.querySelectorAll('.doc-filter-btn').forEach(b=>b.classList.toggle('active',b===btn));filterDocs(cid);};
+
+window.filterDocs = cid => {
+  const el=document.getElementById(cid); if(!el||!el._docs) return;
+  const q=(document.getElementById(`doc-search-${cid}`)?.value||'').toLowerCase(), af=el._activeFilter||'all';
+  let docs=el._docs; if(af!=='all') docs=docs.filter(d=>d.ext===af); if(q) docs=docs.filter(d=>d.name.toLowerCase().includes(q));
+  renderDocList(cid,docs);
+};
+
+window.setDocFilter = (cid,ext,btn) => {
+  const el=document.getElementById(cid); if(!el) return; el._activeFilter=ext;
+  const fb=document.getElementById(`doc-filters-${cid}`);
+  if(fb) fb.querySelectorAll('.doc-filter-btn').forEach(b=>b.classList.toggle('active',b===btn));
+  filterDocs(cid);
+};
 
 </script>
 </body>
