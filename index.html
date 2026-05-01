@@ -1352,13 +1352,13 @@ function teamRenderTurnCard(team) {
     const prevHist = S.history[S.turn - 1];
     if (prevHist && prevHist[team] && !prevHist[team]._cleared) prevSub = prevHist[team];
   }
-  const manSource  = prevSub ? prevSub.maneuver   : seeds.map(s=>({unit:s.unit,pos:'',action:'',dest:''}));
-  const collSource = prevSub ? prevSub.collections : [];
+  const manSource  = (prevSub && prevSub.maneuver)   ? prevSub.maneuver   : seeds.map(s=>({unit:s.unit,pos:'',action:'',dest:''}));
+  const collSource = (prevSub && prevSub.collections) ? prevSub.collections : [];
 
   const t0Banner = S.turn===0
     ? `<div class="turn0-banner" style="margin-bottom:1rem"><strong>Turn 0 — Initial Laydown.</strong> Enter force positions and commander's intent. Leave fires empty.</div>` : '';
 
-  const manRowsHtml = manSource.map(m => `
+  const manRowsHtml = (manSource||[]).map(m => `
     <div class="entry-row maneuver-row">
       <div class="field"><input type="text" class="man-unit" value="${esc(m.unit||'')}"></div>
       <div class="field"><input type="text" class="man-pos auto-pop" value="${S.turn===0?'':esc(m.dest||m.pos||'')}" placeholder="Grid"></div>
@@ -1367,7 +1367,7 @@ function teamRenderTurnCard(team) {
       <button class="remove-btn" onclick="this.parentElement.remove()">×</button>
     </div>`).join('');
 
-  const collRowsHtml = collSource.map(c => `
+  const collRowsHtml = (collSource||[]).map(c => `
     <div class="entry-row collections-row">
       <div class="field"><input type="text" class="coll-asset" value="${esc(c.asset||'')}"></div>
       <div class="field"><input type="text" class="coll-nai"   value="${esc(c.nai||'')}"></div>
