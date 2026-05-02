@@ -81,6 +81,8 @@ body.role-red{
 .section-body,.phase-body{padding:14px}
 .submission-block{background:var(--page-bg,#111);border:1px solid var(--page-border);border-radius:3px;padding:10px 12px;margin-bottom:10px;border-left:3px solid var(--page-accent)}
 .sub-row{display:grid;grid-template-columns:1fr 1fr 1fr 1.5fr;gap:8px;font-size:12px;margin-bottom:4px;color:var(--page-text)}
+.sub-row.fires-sub-row{grid-template-columns:1fr 1fr 1fr 1fr 1.2fr;}
+.sub-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .sub-row span:first-child{font-weight:700}
 .no-submission{font-size:12px;color:var(--page-text-muted);font-style:italic;padding:4px 0}
 .feedback-block{background:var(--page-surface2);border:1px solid var(--page-border);border-radius:3px;padding:12px 14px;margin-bottom:10px;line-height:1.6;font-size:13px;color:var(--page-text)}
@@ -156,9 +158,7 @@ body.role-red{
 .btn-end:hover{background:rgba(192,74,74,0.15)}
 .btn-reset{font-size:12px;padding:7px 16px;border:1px solid #C8B84A;border-radius:3px;background:none;color:#C8B84A;cursor:pointer;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;font-family:inherit}
 .btn-reset:hover{background:rgba(122,106,42,0.15)}
-.recv-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-radius:3px;margin-bottom:1rem;font-size:13px;border:1px solid}
-.recv-bar.waiting{background:var(--page-surface2);border-color:var(--page-border);color:var(--page-text-muted)}
-.recv-bar.received{background:rgba(42,74,26,0.3);border-color:#8A9E72;color:#8ACA6A}
+
 .recv-btn{font-size:12px;padding:5px 12px;border-radius:3px;border:1px solid var(--page-border);background:var(--btn-surface);color:var(--page-text);cursor:pointer;font-weight:700;letter-spacing:0.03em;font-family:inherit}
 .recv-btn.confirm{background:#4E6238;color:#fff;border-color:#3B4A2F}
 .recv-btn:disabled{opacity:0.55;cursor:default}
@@ -175,9 +175,7 @@ body.role-red{
 .game-ended-banner .geb-title{font-size:15px;font-weight:700;color:#C04A4A;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px}
 .game-ended-banner .geb-sub{font-size:12px;color:var(--page-text-muted)}
 .push-row{display:flex;justify-content:flex-end;align-items:flex-end;gap:8px;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--page-border)}
-.next-time-block{flex:1}
-.next-time-block label{font-size:10px;color:var(--page-text-muted);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:4px}
-.next-time-block .nt-val{font-size:13px;font-weight:700;color:var(--page-accent);background:var(--page-bg);border:1px solid var(--page-border);border-radius:3px;padding:5px 10px;display:inline-block;min-width:130px}
+
 .submit-row{display:flex;justify-content:flex-end;align-items:center;gap:8px;padding-top:1rem;border-top:1px solid var(--page-border)}
 .history-turn{background:var(--page-surface);border:1px solid var(--page-border);border-radius:3px;margin-bottom:1rem;overflow:hidden}
 .history-turn-header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:var(--page-surface2);border-bottom:1px solid var(--page-border);cursor:pointer}
@@ -409,11 +407,13 @@ window.setGameTime = async () => {
   document.getElementById('game-time-input').value = '';
 };
 
-window.advanceGameTime = async () => {
+window.advanceGameTime = async (dir=1) => {
   const p = parseGT(S.gameTime) || {day:2, hour:19, min:0};
-  const hrs = parseInt(document.getElementById('advance-hrs').value) || 6;
+  const hrs = (parseInt(document.getElementById('advance-hrs').value) || 6) * dir;
   p.hour += hrs;
+  // Handle both forward and backward wrapping
   while(p.hour >= 24) { p.hour -= 24; p.day++; }
+  while(p.hour < 0)   { p.hour += 24; p.day = Math.max(0, p.day - 1); }
   await dbSet('gameTime', fmtGT(p.day, p.hour, p.min));
 };
 
@@ -484,9 +484,7 @@ async function boot() {
     S.gameTime = val || 'D+2 / 1900L';
     document.querySelectorAll('#game-clock,#team-gametime').forEach(e => { if(e && !e._ended) e.textContent = S.gameTime; });
     // Update game-time display in open turn cards
-    const tc = document.getElementById('tc-gametime'); if(tc && !tc._userEdited) tc.value = S.gameTime;
     // Update next-turn labels on director panels
-    document.querySelectorAll('.nt-val').forEach(e => e.textContent = S.gameTime);
   });
 
   dbOn('turn', val => {
@@ -519,14 +517,31 @@ async function boot() {
 
   dbOn('blueSubmit', val => {
     S.blueSubmit = val;
-    if (ROLE === 'director') dirUpdateSubmissionZone('blue');
-    if (ROLE === 'blue')     teamRenderTurnCard('blue');
+    if (ROLE === 'director') {
+      // If panel not yet rendered, do full render; otherwise just update zone
+      const el = document.getElementById('panel-blue');
+      if (el && el.querySelector('.dir-adj-form')) {
+        dirUpdateSubmissionZone('blue');
+        dirRenderBadges();
+      } else {
+        dirRenderTeamPanel('blue');
+      }
+    }
+    if (ROLE === 'blue') teamRenderTurnCard('blue');
   });
 
   dbOn('redSubmit', val => {
     S.redSubmit = val;
-    if (ROLE === 'director') dirUpdateSubmissionZone('red');
-    if (ROLE === 'red')      teamRenderTurnCard('red');
+    if (ROLE === 'director') {
+      const el = document.getElementById('panel-red');
+      if (el && el.querySelector('.dir-adj-form')) {
+        dirUpdateSubmissionZone('red');
+        dirRenderBadges();
+      } else {
+        dirRenderTeamPanel('red');
+      }
+    }
+    if (ROLE === 'red') teamRenderTurnCard('red');
   });
 
   dbOn('blueFb', val => {
@@ -623,7 +638,13 @@ function renderDirector() {
       <div class="clock-block"><span class="clock-label">Game time</span><span class="clock-value game" id="game-clock">${S.gameTime}</span></div>
       <div class="game-clock-controls">
         <div class="gclock-row"><label>Set to</label><input type="text" id="game-time-input" placeholder="D+3 / 0600L" style="width:120px"><button class="tc-btn" onclick="setGameTime()">Set</button></div>
-        <div class="gclock-row"><label>Advance</label><input type="number" id="advance-hrs" value="6" style="width:52px"><label>hrs</label><button class="tc-btn" onclick="advanceGameTime()">→</button></div>
+        <div class="gclock-row" style="align-items:center;gap:6px">
+          <label>Advance</label>
+          <button class="tc-btn" onclick="advanceGameTime(-1)" style="font-size:14px;padding:3px 9px">−</button>
+          <input type="number" id="advance-hrs" value="6" style="width:46px;text-align:center">
+          <label>hrs</label>
+          <button class="tc-btn" onclick="advanceGameTime(1)" style="font-size:14px;padding:3px 9px">+</button>
+        </div>
       </div>
     </div>
   </div>
@@ -751,10 +772,7 @@ function dirRenderTeamPanel(team) {
 
   el.innerHTML = `
   ${t0Banner}
-  <div id="recv-bar-${team}" class="recv-bar waiting">
-    <span>Awaiting ${team==='blue'?'Blue':'Red'} submission — Turn ${S.turn}</span>
-    <button class="recv-btn confirm" onclick="dirMarkReceived('${team}')">Mark received</button>
-  </div>
+
   <div id="sub-zone-${team}">
     <div class="phase-section">
       <div class="phase-header"><span class="phase-title">Submission</span></div>
@@ -795,11 +813,10 @@ function dirRenderTeamPanel(team) {
         </div>
       </div>
     </div>
-    <div class="push-row">
-      <div class="next-time-block"><label>Next turn game time</label><span class="nt-val">${S.gameTime}</span></div>
-      <div id="status-${team}" class="status-msg"></div>
+    <div class="push-row" style="border-top:1px solid var(--page-border);margin-top:1rem;padding-top:1rem">
+      <div id="status-${team}" class="status-msg" style="margin-right:auto"></div>
+      <button class="btn-secondary" onclick="dirClearAdj('${team}')">Clear adjudication</button>
       <button class="btn-secondary" onclick="dirClearNote('${team}')">Clear note</button>
-      <button class="btn-secondary" onclick="dirSaveDraft('${team}')">Save draft</button>
       <button class="btn-primary" onclick="dirPushResults('${team}')">Push results to ${team==='blue'?'Blue':'Red'} ↗</button>
     </div>
   </div>`;
@@ -814,21 +831,16 @@ function dirUpdateSubmissionZone(team) {
   const sub    = (rawSub && !rawSub._cleared) ? rawSub : null;
   const hasNew = sub && sub.turn === S.turn;
 
-  // Update recv bar
-  const bar = document.getElementById('recv-bar-'+team);
-  if (bar) {
-    bar.className = 'recv-bar ' + (hasNew ? 'received' : 'waiting');
-    bar.innerHTML = hasNew
-      ? `<span>${team==='blue'?'Blue':'Red'} submission received — Turn ${S.turn}</span><button class="recv-btn" disabled>Received ✓</button>`
-      : `<span>Awaiting ${team==='blue'?'Blue':'Red'} submission — Turn ${S.turn}</span><button class="recv-btn confirm" onclick="dirMarkReceived('${team}')">Mark received</button>`;
-  }
-
   // Update submission display zone
   const zone = document.getElementById('sub-zone-'+team); if(!zone) return;
 
   const subRows = rows => {
     if (!rows||!rows.length) return '<div class="no-submission">No entries.</div>';
     return rows.map(r => `<div class="sub-row">${r.map(c=>`<span>${esc(c||'—')}</span>`).join('')}</div>`).join('');
+  };
+  const subRowsFires = rows => {
+    if (!rows||!rows.length) return '<div class="no-submission">No entries.</div>';
+    return rows.map(r => `<div class="sub-row fires-sub-row">${r.map(c=>`<span title="${esc(c||'—')}">${esc(c||'—')}</span>`).join('')}</div>`).join('');
   };
 
   if (!sub) {
@@ -838,7 +850,7 @@ function dirUpdateSubmissionZone(team) {
 
   const collRows  = subRows((sub.collections||[]).map(c=>[c.asset,c.nai,c.box,c.pir]));
   const manRows   = subRows((sub.maneuver||[]).map(m=>[m.unit,m.pos,m.action,m.dest]));
-  const firesRows = subRows((sub.fires||[]).map(f=>[f.asset,f.grid,f.desc,f.effect,f.timing]));
+  const firesRows = subRowsFires((sub.fires||[]).map(f=>[f.asset,f.grid,f.desc,f.effect,f.timing]));
   const cmdNote   = sub.cmdNote || '—';
 
   zone.innerHTML = `
@@ -861,9 +873,12 @@ function dirUpdateSubmissionZone(team) {
 }
 
 // Sync adjudication textareas from Firebase WITHOUT rebuilding the DOM
-// Only fills in empty fields — never overwrites text the director has typed
+// Only syncs if the saved feedback is for the CURRENT turn (prevents stale data
+// from a previous turn pre-filling the new turn's adjudication fields).
 function dirSyncFbToTextareas(team) {
   const fb = team==='blue' ? S.blueFb : S.redFb; if(!fb) return;
+  // Only sync if this feedback is for the current turn
+  if (fb.turn !== S.turn) return;
   const fields = {
     ['fb-'+team+'-coll']:    fb.collections||'',
     ['fb-'+team+'-manmov']:  fb.manMov||'',
@@ -874,17 +889,12 @@ function dirSyncFbToTextareas(team) {
   };
   Object.entries(fields).forEach(([id, val]) => {
     const el = document.getElementById(id);
-    // Only update if field is currently empty to avoid clobbering director's typing
+    // Only fill empty fields — never overwrite text the director is actively typing
     if (el && !el.value) el.value = val;
   });
 }
 
-window.dirMarkReceived = team => {
-  const bar = document.getElementById('recv-bar-'+team); if(!bar) return;
-  bar.className = 'recv-bar received';
-  const btn = bar.querySelector('button');
-  if(btn) { btn.textContent='Received ✓'; btn.className='recv-btn'; btn.disabled=true; }
-};
+
 
 const buildFb = team => ({
   turn: S.turn, nextTime: S.gameTime, gameTime: S.gameTime,
@@ -896,10 +906,12 @@ const buildFb = team => ({
   dirNote:     vEl('fb-'+team+'-dirnote'),
 });
 
-window.dirSaveDraft = async team => {
-  await dbSet(team+'Fb', buildFb(team));
-  const s = document.getElementById('status-'+team);
-  if(s) { s.textContent='Draft saved.'; s.className='status-msg visible ok'; }
+
+
+window.dirClearAdj = team => {
+  ['coll','manmov','manbda','fireres','firestat'].forEach(field => {
+    const e = document.getElementById('fb-'+team+'-'+field); if(e) e.value = '';
+  });
 };
 
 window.dirClearNote = team => {
@@ -1352,8 +1364,19 @@ function teamRenderTurnCard(team) {
     const prevHist = S.history[S.turn - 1];
     if (prevHist && prevHist[team] && !prevHist[team]._cleared) prevSub = prevHist[team];
   }
-  const manSource  = (prevSub && prevSub.maneuver)   ? prevSub.maneuver   : seeds.map(s=>({unit:s.unit,pos:'',action:'',dest:''}));
-  const collSource = (prevSub && prevSub.collections) ? prevSub.collections : [];
+  const manSource   = (prevSub && prevSub.maneuver)    ? prevSub.maneuver    : seeds.map(s=>({unit:s.unit,pos:'',action:'',dest:''}));
+  const collSource  = (prevSub && prevSub.collections)  ? prevSub.collections  : [];
+  const firesSource = (prevSub && prevSub.fires)        ? prevSub.fires        : [];
+
+  const firesRowsHtml = S.turn===0 ? '' : (firesSource||[]).map(f => `
+    <div class="entry-row fires-row">
+      <div class="field"><input type="text" class="fire-asset" value="${esc(f.asset||'')}"></div>
+      <div class="field"><input type="text" class="fire-grid"  value="${esc(f.grid||'')}"></div>
+      <div class="field"><input type="text" class="fire-desc"  value="${esc(f.desc||'')}"></div>
+      <div class="field">${mkSel(EFFECTS,'effect',f.effect||'')}</div>
+      <div class="field"><input type="text" class="fire-timing" value="${esc(f.timing||'')}"></div>
+      <button class="remove-btn" onclick="this.parentElement.remove()">×</button>
+    </div>`).join('');
 
   const t0Banner = S.turn===0
     ? `<div class="turn0-banner" style="margin-bottom:1rem"><strong>Turn 0 — Initial Laydown.</strong> Enter force positions and commander's intent. Leave fires empty.</div>` : '';
@@ -1382,9 +1405,9 @@ function teamRenderTurnCard(team) {
       <span class="phase-title" style="font-size:13px">Turn Card</span>
       <span style="font-size:11px;font-weight:700;background:var(--page-surface2);color:var(--page-text-muted);padding:3px 10px;border-radius:3px;border:1px solid var(--page-border);letter-spacing:0.04em;text-transform:uppercase">Turn ${S.turn}</span>
     </div>
-    <div style="display:flex;align-items:center;gap:10px">
+    <div style="display:flex;align-items:center;gap:8px">
       <span class="meta-label">Game time</span>
-      <input type="text" id="tc-gametime" value="${S.gameTime}" style="width:130px;border:1px solid var(--input-border);border-radius:3px;padding:5px 9px;background:var(--input-bg);color:var(--page-text);font-family:inherit;font-size:13px" oninput="this._userEdited=true">
+      <span style="font-size:13px;font-weight:700;color:var(--page-accent);background:var(--page-surface2);border:1px solid var(--page-border);border-radius:3px;padding:5px 10px">${S.gameTime}</span>
     </div>
   </div>
   <div class="section">
@@ -1413,7 +1436,7 @@ function teamRenderTurnCard(team) {
       <div class="entry-row fires-row" style="margin-bottom:4px">
         <div class="col-head">Asset</div><div class="col-head">Target grid</div><div class="col-head">Target description</div><div class="col-head">Desired effect</div><div class="col-head">Timing / trigger</div><div></div>
       </div>
-      <div id="tc-fires-rows"></div>
+      <div id="tc-fires-rows">${firesRowsHtml}</div>
       <button class="add-btn" onclick="tcAddRow('fires')">+ add fire mission</button>
     </div>
   </div>
@@ -1472,7 +1495,7 @@ window.tcSubmit = async team => {
     desc:r.querySelector('.fire-desc')?.value||'',   effect:r.querySelector('select')?.value||'',
     timing:r.querySelector('.fire-timing')?.value||'',
   }));
-  const gt = document.getElementById('tc-gametime')?.value || S.gameTime;
+  const gt = S.gameTime;
   await dbSet(team+'Submit', {turn:S.turn, gameTime:gt, team, collections, maneuver, fires, cmdNote:note, submittedAt:new Date().toISOString()});
   showTcStatus(`${team==='blue'?'Blue':'Red'} ${S.turn===0?'initial laydown':'turn card'} submitted — ${gt}. Awaiting director's table.`, 'ok');
 };
