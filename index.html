@@ -61,6 +61,36 @@ body.role-red{
 .gclock-row label{font-size:11px;color:var(--page-text-muted);white-space:nowrap;font-weight:500;letter-spacing:0.03em}
 .gclock-row input{font-size:12px;border:1px solid var(--page-border);border-radius:3px;padding:4px 8px;background:var(--input-bg);color:var(--page-text);font-family:inherit}
 .team-clocks-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+
+/* ── DIRECTOR PREMIUM TOP BAR ─────────────────────────────── */
+.dir-top-bar{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:0;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:2px solid var(--page-accent);min-height:80px}
+.dir-top-identity{display:flex;flex-direction:column;gap:10px;padding-right:24px;border-right:1px solid var(--page-border)}
+.dir-top-title-row{display:flex;align-items:center;gap:10px}
+.dir-title{font-size:16px;font-weight:700;color:var(--page-text);letter-spacing:0.12em;text-transform:uppercase}
+.dir-turn-block{display:flex;align-items:center;gap:10px}
+.dir-block-label{font-size:10px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--page-text-muted);white-space:nowrap}
+.dir-turn-controls{display:flex;align-items:center;gap:6px}
+.dir-ctrl-btn{font-size:15px;line-height:1;padding:4px 10px;border:1px solid var(--page-border);border-radius:3px;background:var(--btn-surface);color:var(--page-text);cursor:pointer;font-family:inherit;font-weight:700}
+.dir-ctrl-btn:hover{background:var(--btn-hover);border-color:var(--page-accent)}
+.dir-turn-val{font-size:20px;font-weight:700;min-width:28px;text-align:center;color:var(--page-text);font-variant-numeric:tabular-nums}
+.dir-top-clocks{display:flex;align-items:center;justify-content:center;gap:0;padding:0 20px}
+.dir-clock-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 20px}
+.dir-clock-label{font-size:10px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--page-text-muted)}
+.dir-clock-val{font-size:22px;font-weight:700;color:var(--page-text);font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:0.04em}
+.dir-clock-accent{color:var(--page-accent)}
+.dir-clock-divider{width:1px;height:40px;background:var(--page-border);flex-shrink:0}
+.dir-top-controls{display:flex;align-items:flex-start;gap:0;padding-left:24px;border-left:1px solid var(--page-border)}
+.dir-ctrl-group{display:flex;flex-direction:column;gap:6px;padding:0 16px}
+.dir-ctrl-group:first-child{padding-left:0}
+.dir-ctrl-divider{width:1px;align-self:stretch;background:var(--page-border);flex-shrink:0}
+.dir-ctrl-row{display:flex;align-items:center;gap:5px}
+.dir-action-btn{font-size:11px;padding:5px 10px;border:1px solid var(--page-border);border-radius:3px;background:var(--btn-surface);color:var(--page-text);cursor:pointer;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;font-family:inherit;white-space:nowrap}
+.dir-action-btn:hover{background:var(--btn-hover);border-color:var(--page-accent)}
+.dir-text-input{font-size:12px;border:1px solid var(--page-border);border-radius:3px;padding:5px 8px;background:var(--input-bg);color:var(--page-text);font-family:inherit}
+.dir-text-input:focus{outline:2px solid var(--page-accent);outline-offset:1px}
+.dir-num-input{font-size:12px;border:1px solid var(--page-border);border-radius:3px;padding:5px 6px;background:var(--input-bg);color:var(--page-text);font-family:inherit}
+.dir-unit-label{font-size:11px;color:var(--page-text-muted);font-weight:500;letter-spacing:0.04em;text-transform:uppercase}
+/* ─────────────────────────────────────────────────────────── */
 .turn-controls{display:flex;align-items:center;gap:8px}
 .tc-label{font-size:11px;color:var(--page-text-muted);font-weight:500;letter-spacing:0.05em;text-transform:uppercase}
 .tc-btn{font-size:12px;padding:4px 10px;border:1px solid var(--page-border);border-radius:3px;background:var(--btn-surface);color:var(--page-text);cursor:pointer;font-weight:500;font-family:inherit}
@@ -252,7 +282,14 @@ const dbOn  = (path, cb) => { const u = onValue(gRef(path), s => cb(s.exists() ?
 // ROLE
 // ─────────────────────────────────────────────
 const params = new URLSearchParams(location.search);
-const ROLE   = params.get('role') || 'director';
+// Path-based role detection: /red → red, /blue → blue, /references → director
+// Falls back to ?role= param, then defaults to director
+const _path = location.pathname.replace(/\/+$/, '').toLowerCase();
+const _pathRole = _path.endsWith('/red') ? 'red'
+                : _path.endsWith('/blue') ? 'blue'
+                : _path.endsWith('/references') ? 'director'
+                : null;
+const ROLE = _pathRole || params.get('role') || 'director';
 document.body.classList.add('role-' + ROLE);
 document.title = ROLE === 'director' ? "Director's Table"
                : ROLE === 'blue'     ? 'Blue Force' : 'Red Force';
@@ -267,7 +304,13 @@ const SEED_BLUE    = [{unit:'Co A (-)'},{unit:'Co B (-)'},{unit:'Co C (-)'},{uni
 const SEED_RED     = [{unit:'1st Mech Co'},{unit:'2nd Mech Co'},{unit:'Assault Gun Co'},{unit:'Firepower Co'}];
 const INJECT_TYPES = ['Intelligence update','Early contact — mid-turn','Weather / environment change','Higher HQ order','Asset availability change','Force structure change','Other'];
 const GH_OWNER = 'dkitchens444', GH_REPO = 'amwc-wargame';
-const GH_PATHS = ['','references','docs','documents'];
+// Each role has its own folder plus a shared folder
+const GH_PATH_MAP = {
+  director: ['references', 'references/director', 'docs'],
+  blue:     ['references', 'references/blue',     'docs'],
+  red:      ['references', 'references/red',       'docs'],
+};
+// Fallback if a role-specific folder doesn't exist — fetchGithubPath returns [] on 404
 const FILE_ICONS   = {pdf:'📄',doc:'📝',docx:'📝',ppt:'📊',pptx:'📊',xls:'📋',xlsx:'📋',txt:'📃',md:'📃',png:'🖼',jpg:'🖼',jpeg:'🖼',gif:'🖼',zip:'🗜'};
 const SKIP_EXT     = new Set(['html','htm','js','css','json','gitignore','xml','yaml','yml']);
 
@@ -275,7 +318,7 @@ const SKIP_EXT     = new Set(['html','htm','js','css','json','gitignore','xml','
 // SHARED STATE  (single source of truth — always reflects Firebase)
 // ─────────────────────────────────────────────
 const S = {
-  gameTime:      'D+2 / 1900L',
+  gameTime:      'D-0 / 0600L',
   turn:          0,
   blueSubmit:    null,
   redSubmit:     null,
@@ -303,8 +346,13 @@ const fExt  = n => { const p = n.split('.'); return p.length>1 ? p[p.length-1].t
 const fIcon = n => FILE_ICONS[fExt(n)] || '📁';
 const fSize = b => !b?'': b<1024?b+'B': b<1048576?(b/1024).toFixed(0)+'KB':(b/1048576).toFixed(1)+'MB';
 const vEl   = id => { const e = document.getElementById(id); return e ? e.value : ''; };
-const parseGT = s => { const m = s.match(/D\+(\d+)\s*\/\s*(\d{1,2})(\d{2})L/i); return m?{day:+m[1],hour:+m[2],min:+m[3]}:null; };
-const fmtGT   = (d,h,m) => `D+${d} / ${pad(h)}${pad(m)}L`;
+const parseGT = s => {
+  // Supports D+N and D-N notation
+  const m = s.match(/D([+-])(\d+)\s*\/\s*(\d{1,2})(\d{2})L?/i);
+  if(m) return { sign:m[1], day:+m[2], hour:+m[3], min:+m[4] };
+  return null;
+};
+const fmtGT = (sign, d, h, m) => `D${sign}${d} / ${pad(h)}${pad(m)}L`;
 const injectArr = () => Object.values(S.injectLog||{}).sort((a,b)=>a.id-b.id);
 const injectsForTeam = t => injectArr().filter(i =>
   i.recipients==='Both teams' ||
@@ -403,18 +451,22 @@ window.updateTimerDur = () => {
 window.setGameTime = async () => {
   const val = document.getElementById('game-time-input').value.trim(); if(!val) return;
   const p = parseGT(val); if(!p) return;
-  await dbSet('gameTime', fmtGT(p.day, p.hour, p.min));
+  await dbSet('gameTime', fmtGT(p.sign||'+', p.day, p.hour, p.min));
   document.getElementById('game-time-input').value = '';
 };
 
 window.advanceGameTime = async (dir=1) => {
-  const p = parseGT(S.gameTime) || {day:2, hour:19, min:0};
+  const p = parseGT(S.gameTime) || {sign:'-', day:0, hour:6, min:0};
   const hrs = (parseInt(document.getElementById('advance-hrs').value) || 6) * dir;
-  p.hour += hrs;
-  // Handle both forward and backward wrapping
-  while(p.hour >= 24) { p.hour -= 24; p.day++; }
-  while(p.hour < 0)   { p.hour += 24; p.day = Math.max(0, p.day - 1); }
-  await dbSet('gameTime', fmtGT(p.day, p.hour, p.min));
+  // Convert to total signed hours for arithmetic
+  const sign = p.sign || '+';
+  let totalHrs = (sign==='-' ? -1 : 1) * (p.day * 24 + p.hour) + hrs;
+  // Convert back to D+/D- notation
+  const newSign = totalHrs < 0 ? '-' : '+';
+  totalHrs = Math.abs(totalHrs);
+  const newDay  = Math.floor(totalHrs / 24);
+  const newHour = Math.floor(totalHrs % 24);
+  await dbSet('gameTime', fmtGT(newSign, newDay, newHour, p.min));
 };
 
 // ─────────────────────────────────────────────
@@ -481,7 +533,7 @@ async function boot() {
   // and re-renders only the affected component
 
   dbOn('gameTime', val => {
-    S.gameTime = val || 'D+2 / 1900L';
+    S.gameTime = val || 'D-0 / 0600L';
     document.querySelectorAll('#game-clock,#team-gametime').forEach(e => { if(e && !e._ended) e.textContent = S.gameTime; });
     // Update game-time display in open turn cards
     // Update next-turn labels on director panels
@@ -611,39 +663,69 @@ boot();
 function renderDirector() {
   document.getElementById('app').innerHTML = `
   <div id="conn-warn" class="conn-warn">⚠ Firebase connection lost — attempting to reconnect. Data may be stale.</div>
-  <div class="top-bar">
-    <div class="top-left">
-      <div style="display:flex;align-items:center;gap:12px">
-        <span class="top-title">Director's Table</span>
+  <div class="dir-top-bar">
+    <!-- LEFT: identity + turn control -->
+    <div class="dir-top-identity">
+      <div class="dir-top-title-row">
+        <span class="dir-title">Director's Table</span>
         <span class="role-badge dir">Director</span>
         <span class="sync-dot connecting" id="sync-dot" title="Connecting…"></span>
       </div>
-      <div class="turn-controls">
-        <span class="tc-label">Turn</span>
-        <button class="tc-btn" onclick="dirChangeTurn(-1)">−</button>
-        <span class="tc-val" id="turn-disp">${S.turn}</span>
-        <button class="tc-btn" onclick="dirChangeTurn(1)">+</button>
-      </div>
-    </div>
-    <div class="clocks">
-      <div class="clock-block"><span class="clock-label">Real time</span><span class="clock-value" id="real-clock">—</span></div>
-      <div class="clock-with-btn">
-        <div class="clock-block"><span class="clock-label">Turn timer</span><span class="clock-value" id="turn-timer">${S.timerDisplay}</span></div>
-        <div class="timer-btns">
-          <button class="tc-btn" onclick="startTimer()" id="timer-btn">Start</button>
-          <button class="tc-btn" onclick="resetTimer()">Reset</button>
-          <div class="timer-dur-row"><label>Min</label><input type="number" id="timer-dur-input" value="15" min="1" max="120" onchange="updateTimerDur()"></div>
+      <div class="dir-turn-block">
+        <span class="dir-block-label">Turn</span>
+        <div class="dir-turn-controls">
+          <button class="dir-ctrl-btn" onclick="dirChangeTurn(-1)">−</button>
+          <span class="dir-turn-val" id="turn-disp">${S.turn}</span>
+          <button class="dir-ctrl-btn" onclick="dirChangeTurn(1)">+</button>
         </div>
       </div>
-      <div class="clock-block"><span class="clock-label">Game time</span><span class="clock-value game" id="game-clock">${S.gameTime}</span></div>
-      <div class="game-clock-controls">
-        <div class="gclock-row"><label>Set to</label><input type="text" id="game-time-input" placeholder="D+3 / 0600L" style="width:120px"><button class="tc-btn" onclick="setGameTime()">Set</button></div>
-        <div class="gclock-row" style="align-items:center;gap:6px">
-          <label>Advance</label>
-          <button class="tc-btn" onclick="advanceGameTime(-1)" style="font-size:14px;padding:3px 9px">−</button>
-          <input type="number" id="advance-hrs" value="6" style="width:46px;text-align:center">
-          <label>hrs</label>
-          <button class="tc-btn" onclick="advanceGameTime(1)" style="font-size:14px;padding:3px 9px">+</button>
+    </div>
+
+    <!-- CENTER: clocks -->
+    <div class="dir-top-clocks">
+      <div class="dir-clock-card">
+        <span class="dir-clock-label">Real Time</span>
+        <span class="dir-clock-val" id="real-clock">—</span>
+      </div>
+      <div class="dir-clock-divider"></div>
+      <div class="dir-clock-card">
+        <span class="dir-clock-label">Game Time</span>
+        <span class="dir-clock-val dir-clock-accent" id="game-clock">${S.gameTime}</span>
+      </div>
+      <div class="dir-clock-divider"></div>
+      <div class="dir-clock-card">
+        <span class="dir-clock-label">Turn Timer</span>
+        <span class="dir-clock-val" id="turn-timer">${S.timerDisplay}</span>
+      </div>
+    </div>
+
+    <!-- RIGHT: controls -->
+    <div class="dir-top-controls">
+      <!-- Game time controls -->
+      <div class="dir-ctrl-group">
+        <span class="dir-block-label">Game Time</span>
+        <div class="dir-ctrl-row">
+          <input type="text" id="game-time-input" placeholder="D-1 / 0600L" class="dir-text-input" style="width:110px">
+          <button class="dir-action-btn" onclick="setGameTime()">Set</button>
+        </div>
+        <div class="dir-ctrl-row">
+          <button class="dir-ctrl-btn" onclick="advanceGameTime(-1)">−</button>
+          <input type="number" id="advance-hrs" value="6" class="dir-num-input" style="width:44px;text-align:center">
+          <span class="dir-unit-label">hrs</span>
+          <button class="dir-ctrl-btn" onclick="advanceGameTime(1)">+</button>
+        </div>
+      </div>
+      <div class="dir-ctrl-divider"></div>
+      <!-- Timer controls -->
+      <div class="dir-ctrl-group">
+        <span class="dir-block-label">Timer</span>
+        <div class="dir-ctrl-row">
+          <button class="dir-action-btn" onclick="startTimer()" id="timer-btn">Start</button>
+          <button class="dir-action-btn" onclick="resetTimer()">Reset</button>
+        </div>
+        <div class="dir-ctrl-row">
+          <input type="number" id="timer-dur-input" value="15" min="1" max="120" onchange="updateTimerDur()" class="dir-num-input" style="width:44px;text-align:center">
+          <span class="dir-unit-label">min</span>
         </div>
       </div>
     </div>
@@ -1093,20 +1175,20 @@ window.resetGame = async () => {
   const cleared = { _cleared: true, turn: 0, at: new Date().toISOString() };
   await Promise.all([
     dbSet('turn', 0),
-    dbSet('gameTime', 'D+2 / 1900L'),
+    dbSet('gameTime', 'D-0 / 0600L'),
     dbSet('timerDisplay', '15:00'),
     dbSet('blueSubmit',  cleared),
     dbSet('redSubmit',   cleared),
-    dbSet('blueFb',      { turn:0, gameTime:'D+2 / 1900L', nextTime:'D+2 / 1900L',
+    dbSet('blueFb',      { turn:0, gameTime:'D-0 / 0600L', nextTime:'D-0 / 0600L',
                            collections:'', manMov:'', manBDA:'', fireRes:'', fireStat:'', dirNote:'' }),
-    dbSet('redFb',       { turn:0, gameTime:'D+2 / 1900L', nextTime:'D+2 / 1900L',
+    dbSet('redFb',       { turn:0, gameTime:'D-0 / 0600L', nextTime:'D-0 / 0600L',
                            collections:'', manMov:'', manBDA:'', fireRes:'', fireStat:'', dirNote:'' }),
     dbSet('injectLog',   { _placeholder: true }),
     dbSet('meta',        { gameEnded: null, aarNote: '', historyLocked: false, history: { _placeholder: true } }),
   ]);
 
   const gc=document.getElementById('game-clock');
-  if(gc) { gc.textContent='D+2 / 1900L'; gc.style.color=''; gc._ended=false; }
+  if(gc) { gc.textContent='D-0 / 0600L'; gc.style.color=''; gc._ended=false; }
   const ab=document.getElementById('aar-capture-block'); if(ab) ab.style.display='none';
   const aarInput=document.getElementById('aar-note-input'); if(aarInput) aarInput.value='';
   const dlBtn=document.getElementById('dl-pdf-btn'); if(dlBtn) dlBtn.style.display='none';
@@ -1411,7 +1493,7 @@ function teamRenderTurnCard(team) {
     </div>
   </div>
   <div class="section">
-    <div class="section-header"><span class="section-title">Collections</span><span class="section-tag">ISR tasking${S.turn===0?' — leave empty for initial laydown':''}</span></div>
+    <div class="section-header"><span class="section-title">Collections</span><span class="section-tag">ISR tasking${S.turn===0?' — enter initial collections tasking':''}</span></div>
     <div class="section-body">
       <div class="entry-row collections-row" style="margin-bottom:4px">
         <div class="col-head">Asset</div><div class="col-head">NAI center grid</div><div class="col-head">Box size</div><div class="col-head">PIR / targeting purpose</div><div></div>
@@ -1431,7 +1513,7 @@ function teamRenderTurnCard(team) {
     </div>
   </div>
   <div class="section">
-    <div class="section-header"><span class="section-title">Fires</span><span class="section-tag">Fire missions this turn${S.turn===0?' — leave empty for initial laydown':''}</span></div>
+    <div class="section-header"><span class="section-title">Fires</span><span class="section-tag">Fire missions this turn${S.turn===0?' — enter initial fire support plan':''}</span></div>
     <div class="section-body">
       <div class="entry-row fires-row" style="margin-bottom:4px">
         <div class="col-head">Asset</div><div class="col-head">Target grid</div><div class="col-head">Target description</div><div class="col-head">Desired effect</div><div class="col-head">Timing / trigger</div><div></div>
@@ -1515,9 +1597,10 @@ async function ghFetch(path) {
   if(!res.ok) throw new Error(`GitHub API error ${res.status}`);
   const d = await res.json(); return Array.isArray(d)?d:[];
 }
-async function fetchAllDocs() {
+async function fetchAllDocs(role) {
+  const paths = GH_PATH_MAP[role] || GH_PATH_MAP.director;
   const results=[], seen=new Set();
-  for(const path of GH_PATHS) {
+  for(const path of paths) {
     let items; try { items=await ghFetch(path); } catch(e) { continue; }
     for(const item of items) {
       if(item.type!=='file') continue;
@@ -1542,9 +1625,9 @@ window.renderDocRepo = async cid => {
   <div class="doc-search-bar"><input type="text" id="doc-search-${cid}" placeholder="Search documents…" oninput="filterDocs('${cid}')"></div>
   <div class="doc-filter-bar" id="doc-filters-${cid}"></div>
   <div id="doc-list-${cid}" class="doc-loading">Loading documents…</div>
-  <div class="doc-repo-note">📌 Upload files to <strong>${GH_OWNER}/${GH_REPO}</strong> (root, /references, /docs, or /documents). They appear here automatically after a refresh.</div>`;
+  <div class="doc-repo-note">Click any document to open or download.</div>`;
   try {
-    const docs=await fetchAllDocs(); el._docs=docs;
+    const docs=await fetchAllDocs(ROLE); el._docs=docs;
     const exts=[...new Set(docs.map(d=>d.ext).filter(Boolean))].sort();
     const fb=document.getElementById(`doc-filters-${cid}`);
     if(fb&&exts.length>1) fb.innerHTML=`<button class="doc-filter-btn active" onclick="setDocFilter('${cid}','all',this)">All (${docs.length})</button>`
