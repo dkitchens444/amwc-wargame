@@ -1096,19 +1096,21 @@ window.dirPushResults = async team => {
   const fb  = buildFb(team);
   const sub = team==='blue' ? S.blueSubmit : S.redSubmit;
 
-  // Archive to turn history BEFORE clearing submission
-  if (sub && !sub._cleared) {
-    const he = S.history[S.turn] || {turn:S.turn, blue:null, red:null, blueFb:null, redFb:null};
-    he[team]        = JSON.parse(JSON.stringify(sub));
-    he[team + 'Fb'] = JSON.parse(JSON.stringify(fb));
-    await dbSet('meta/history/' + S.turn, he);
+  // Submission is already in history from tcSubmit (Option A).
+  // Here we only need to add the adjudication feedback on top.
+  // Pull existing history entry — it should already have the submission.
+  const he = S.history[S.turn] || {turn:S.turn, blue:null, red:null, blueFb:null, redFb:null};
+  // If somehow submission isn't in history yet (edge case), add it now
+  if (sub && !sub._cleared && !he[team]) {
+    he[team] = JSON.parse(JSON.stringify(sub));
   }
+  he[team + 'Fb'] = JSON.parse(JSON.stringify(fb));
+  await dbSet('meta/history/' + S.turn, he);
 
   // Push feedback to team
   await dbSet(team+'Fb', fb);
 
-  // IMPORTANT: never set a Firebase node to null — it deletes the node and
-  // destabilizes listeners on the parent. Use a cleared sentinel instead.
+  // Mark submission cleared with sentinel (never set to null — destabilizes listeners)
   await dbSet(team+'Submit', { _cleared: true, turn: S.turn, at: new Date().toISOString() });
 
   const s = document.getElementById('status-'+team);
@@ -1673,7 +1675,19 @@ window.tcSubmit = async team => {
     timing:r.querySelector('.fire-timing')?.value||'',
   }));
   const gt = S.gameTime;
-  await dbSet(team+'Submit', {turn:S.turn, gameTime:gt, team, collections, maneuver, fires, cmdNote:note, submittedAt:new Date().toISOString()});
+  const submission = {turn:S.turn, gameTime:gt, team, collections, maneuver, fires, cmdNote:note, submittedAt:new Date().toISOString()};
+
+  // Write to Firebase submit path (director sees it immediately)
+  await dbSet(team+'Submit', submission);
+
+  // Archive to history immediately — ensures the final turn is always captured
+  // even if the director never pushes adjudication (e.g. end-of-game verbal brief).
+  // If adjudication is pushed later, dirPushResults will add the feedback on top.
+  const existing = S.history[S.turn] || {turn:S.turn, blue:null, red:null, blueFb:null, redFb:null};
+  // Only overwrite the team's submission slot — preserve the other team's data
+  existing[team] = JSON.parse(JSON.stringify(submission));
+  await dbSet('meta/history/' + S.turn, existing);
+
   showTcStatus(`${team==='blue'?'Blue':'Red'} ${S.turn===0?'initial laydown':'turn card'} submitted — ${gt}. Awaiting director's table.`, 'ok');
 };
 
