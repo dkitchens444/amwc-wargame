@@ -62,34 +62,124 @@ body.role-red{
 .gclock-row input{font-size:12px;border:1px solid var(--page-border);border-radius:3px;padding:4px 8px;background:var(--input-bg);color:var(--page-text);font-family:inherit}
 .team-clocks-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 
-/* ── DIRECTOR PREMIUM TOP BAR ─────────────────────────────── */
-.dir-top-bar{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:0;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:2px solid var(--page-accent);min-height:80px}
-.dir-top-identity{display:flex;flex-direction:column;gap:10px;padding-right:24px;border-right:1px solid var(--page-border)}
-.dir-top-title-row{display:flex;align-items:center;gap:10px}
-.dir-title{font-size:16px;font-weight:700;color:var(--page-text);letter-spacing:0.12em;text-transform:uppercase}
-.dir-turn-block{display:flex;align-items:center;gap:10px}
-.dir-block-label{font-size:10px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--page-text-muted);white-space:nowrap}
-.dir-turn-controls{display:flex;align-items:center;gap:6px}
-.dir-ctrl-btn{font-size:15px;line-height:1;padding:4px 10px;border:1px solid var(--page-border);border-radius:3px;background:var(--btn-surface);color:var(--page-text);cursor:pointer;font-family:inherit;font-weight:700}
+/* ── DIRECTOR PREMIUM TOP BAR — responsive ────────────────── */
+/* Outer bar wraps into rows only on narrow screens */
+.dir-top-bar{
+  display:flex;flex-wrap:wrap;align-items:stretch;gap:0;
+  margin-bottom:1.25rem;padding-bottom:1rem;
+  border-bottom:2px solid var(--page-accent);
+  width:100%;box-sizing:border-box;
+}
+
+/* ── LEFT: identity + turn ── */
+.dir-top-identity{
+  display:flex;flex-direction:column;justify-content:center;gap:7px;
+  padding:8px 16px 8px 0;
+  border-right:1px solid var(--page-border);
+  flex:0 0 auto;
+}
+.dir-top-title-row{display:flex;align-items:center;gap:7px}
+.dir-title{font-size:13px;font-weight:700;color:var(--page-text);letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap}
+.dir-turn-block{display:flex;align-items:center;gap:7px}
+.dir-block-label{font-size:9px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--page-text-muted);white-space:nowrap}
+.dir-turn-controls{display:flex;align-items:center;gap:4px}
+.dir-ctrl-btn{font-size:13px;line-height:1;padding:3px 8px;border:1px solid var(--page-border);border-radius:3px;background:var(--btn-surface);color:var(--page-text);cursor:pointer;font-family:inherit;font-weight:700;flex-shrink:0}
 .dir-ctrl-btn:hover{background:var(--btn-hover);border-color:var(--page-accent)}
-.dir-turn-val{font-size:20px;font-weight:700;min-width:28px;text-align:center;color:var(--page-text);font-variant-numeric:tabular-nums}
-.dir-top-clocks{display:flex;align-items:center;justify-content:center;gap:0;padding:0 20px}
-.dir-clock-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 20px}
-.dir-clock-label{font-size:10px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--page-text-muted)}
-.dir-clock-val{font-size:22px;font-weight:700;color:var(--page-text);font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:0.04em}
+.dir-turn-val{font-size:16px;font-weight:700;min-width:22px;text-align:center;color:var(--page-text);font-variant-numeric:tabular-nums}
+
+/* ── CENTER: 3 clocks always on one row ── */
+.dir-top-clocks{
+  display:flex;align-items:center;justify-content:center;flex:1 1 0;
+  padding:0 10px;
+  flex-wrap:nowrap;
+  /* No overflow:hidden — it collapses clocks to zero at narrow widths */
+  overflow:visible;
+  min-width:0;
+}
+.dir-clock-card{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:6px 8px;flex-shrink:1;min-width:0;
+}
+.dir-clock-label{
+  font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--page-text-muted);white-space:nowrap;
+}
+.dir-clock-val{
+  /* Fixed size — clamp(vw) collapses below 14px at 390px viewport; use fixed px */
+  font-size:14px;
+  font-weight:700;color:var(--page-text);
+  font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:0.02em;
+}
+/* Scale up on wider screens */
+@media (min-width:700px){
+  .dir-clock-val{font-size:18px;}
+}
+@media (min-width:900px){
+  .dir-clock-val{font-size:20px;}
+}
 .dir-clock-accent{color:var(--page-accent)}
-.dir-clock-divider{width:1px;height:40px;background:var(--page-border);flex-shrink:0}
-.dir-top-controls{display:flex;align-items:flex-start;gap:0;padding-left:24px;border-left:1px solid var(--page-border)}
-.dir-ctrl-group{display:flex;flex-direction:column;gap:6px;padding:0 16px}
+.dir-clock-divider{width:1px;height:30px;background:var(--page-border);flex-shrink:0;align-self:center}
+
+/* ── RIGHT: game time + timer controls ── */
+.dir-top-controls{
+  display:flex;align-items:flex-start;gap:0;
+  padding:8px 0 8px 16px;
+  border-left:1px solid var(--page-border);
+  flex:0 0 auto;flex-wrap:wrap;
+}
+.dir-ctrl-group{display:flex;flex-direction:column;gap:5px;padding:0 10px}
 .dir-ctrl-group:first-child{padding-left:0}
 .dir-ctrl-divider{width:1px;align-self:stretch;background:var(--page-border);flex-shrink:0}
-.dir-ctrl-row{display:flex;align-items:center;gap:5px}
-.dir-action-btn{font-size:11px;padding:5px 10px;border:1px solid var(--page-border);border-radius:3px;background:var(--btn-surface);color:var(--page-text);cursor:pointer;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;font-family:inherit;white-space:nowrap}
+.dir-ctrl-row{display:flex;align-items:center;gap:4px;flex-wrap:nowrap}
+.dir-action-btn{
+  font-size:10px;padding:4px 7px;border:1px solid var(--page-border);border-radius:3px;
+  background:var(--btn-surface);color:var(--page-text);cursor:pointer;font-weight:700;
+  letter-spacing:0.04em;text-transform:uppercase;font-family:inherit;white-space:nowrap;flex-shrink:0;
+}
 .dir-action-btn:hover{background:var(--btn-hover);border-color:var(--page-accent)}
-.dir-text-input{font-size:12px;border:1px solid var(--page-border);border-radius:3px;padding:5px 8px;background:var(--input-bg);color:var(--page-text);font-family:inherit}
+.dir-text-input{
+  font-size:11px;border:1px solid var(--page-border);border-radius:3px;
+  padding:4px 6px;background:var(--input-bg);color:var(--page-text);font-family:inherit;
+  width:90px;min-width:0;
+}
 .dir-text-input:focus{outline:2px solid var(--page-accent);outline-offset:1px}
-.dir-num-input{font-size:12px;border:1px solid var(--page-border);border-radius:3px;padding:5px 6px;background:var(--input-bg);color:var(--page-text);font-family:inherit}
-.dir-unit-label{font-size:11px;color:var(--page-text-muted);font-weight:500;letter-spacing:0.04em;text-transform:uppercase}
+.dir-num-input{
+  font-size:11px;border:1px solid var(--page-border);border-radius:3px;
+  padding:4px 4px;background:var(--input-bg);color:var(--page-text);font-family:inherit;
+  width:34px;text-align:center;flex-shrink:0;
+}
+.dir-unit-label{font-size:10px;color:var(--page-text-muted);font-weight:500;letter-spacing:0.04em;text-transform:uppercase;white-space:nowrap}
+
+/* ── RESPONSIVE: below 430px stack into vertical rows (mobile only) ── */
+@media (max-width:430px){
+  .dir-top-bar{flex-direction:column}
+  .dir-top-identity{
+    border-right:none;border-bottom:1px solid var(--page-border);
+    padding:8px 0;width:100%;
+  }
+  .dir-top-clocks{
+    display:flex;
+    border-bottom:1px solid var(--page-border);
+    padding:4px 0;width:100%;
+    flex-direction:column;align-items:stretch;
+    overflow:visible;
+  }
+  .dir-clock-card{
+    flex-direction:row;justify-content:space-between;align-items:center;
+    padding:6px 2px;border-bottom:1px solid var(--page-border);
+  }
+  .dir-clock-card:last-child{border-bottom:none}
+  .dir-clock-label{text-align:left}
+  .dir-clock-val{text-align:right;font-size:14px}
+  .dir-clock-divider{display:none}
+  .dir-top-controls{
+    border-left:none;padding:8px 0;width:100%;
+  }
+  .dir-ctrl-group{padding:0 8px}
+  .dir-ctrl-group:first-child{padding-left:0}
+}
+
+/* Team top bar untouched — uses .top-bar / .team-clocks-bar */
 /* ─────────────────────────────────────────────────────────── */
 .turn-controls{display:flex;align-items:center;gap:8px}
 .tc-label{font-size:11px;color:var(--page-text-muted);font-weight:500;letter-spacing:0.05em;text-transform:uppercase}
@@ -305,12 +395,12 @@ const SEED_RED     = [{unit:'1st Mech Co'},{unit:'2nd Mech Co'},{unit:'Assault G
 const INJECT_TYPES = ['Intelligence update','Early contact — mid-turn','Weather / environment change','Higher HQ order','Asset availability change','Force structure change','Other'];
 const GH_OWNER = 'dkitchens444', GH_REPO = 'amwc-wargame';
 // Each role has its own folder plus a shared folder
+// Blue/Red see shared + their own subfolder.
+// Director uses the GitHub tree API to recursively list all files under /references.
 const GH_PATH_MAP = {
-  director: ['references', 'references/director', 'docs'],
-  blue:     ['references', 'references/blue',     'docs'],
-  red:      ['references', 'references/red',       'docs'],
+  blue: ['references', 'references/blue', 'docs'],
+  red:  ['references', 'references/red',  'docs'],
 };
-// Fallback if a role-specific folder doesn't exist — fetchGithubPath returns [] on 404
 const FILE_ICONS   = {pdf:'📄',doc:'📝',docx:'📝',ppt:'📊',pptx:'📊',xls:'📋',xlsx:'📋',txt:'📃',md:'📃',png:'🖼',jpg:'🖼',jpeg:'🖼',gif:'🖼',zip:'🗜'};
 const SKIP_EXT     = new Set(['html','htm','js','css','json','gitignore','xml','yaml','yml']);
 
@@ -1597,8 +1687,43 @@ async function ghFetch(path) {
   if(!res.ok) throw new Error(`GitHub API error ${res.status}`);
   const d = await res.json(); return Array.isArray(d)?d:[];
 }
-async function fetchAllDocs(role) {
-  const paths = GH_PATH_MAP[role] || GH_PATH_MAP.director;
+// Recursively fetch all files under /references for director using the Git tree API
+async function fetchAllDocsDirector() {
+  // Get the default branch's tree SHA for the references folder
+  const refsUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/git/trees/HEAD:references?recursive=1`;
+  let tree;
+  try {
+    const res = await fetch(refsUrl, {headers:{Accept:'application/vnd.github.v3+json'}});
+    if (!res.ok) {
+      // HEAD:references may not exist yet — fall back to listing root references/
+      return fetchAllDocsByPaths(['references','docs']);
+    }
+    const data = await res.json();
+    tree = data.tree || [];
+  } catch(e) {
+    return fetchAllDocsByPaths(['references','docs']);
+  }
+  const results=[], seen=new Set();
+  for(const item of tree) {
+    if(item.type!=='blob') continue;
+    const name = item.path.split('/').pop();
+    const ext  = fExt(name);
+    if(SKIP_EXT.has(ext)||name.startsWith('.')||seen.has(item.sha)) continue;
+    seen.add(item.sha);
+    const fullPath = 'references/' + item.path;
+    // Build download URL from raw content path
+    const downloadUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${fullPath}`;
+    const htmlUrl     = `https://github.com/${GH_OWNER}/${GH_REPO}/blob/main/${fullPath}`;
+    // Show folder context in display name if in a subfolder
+    const displayName = item.path.includes('/') ? item.path : name;
+    results.push({name:displayName,ext,size:item.size||0,downloadUrl,htmlUrl});
+  }
+  results.sort((a,b)=>{ if(a.ext==='pdf'&&b.ext!=='pdf')return -1; if(b.ext==='pdf'&&a.ext!=='pdf')return 1; return a.name.localeCompare(b.name); });
+  return results;
+}
+
+// Fetch docs from explicit path list (used for blue/red and as fallback)
+async function fetchAllDocsByPaths(paths) {
   const results=[], seen=new Set();
   for(const path of paths) {
     let items; try { items=await ghFetch(path); } catch(e) { continue; }
@@ -1612,6 +1737,12 @@ async function fetchAllDocs(role) {
   }
   results.sort((a,b)=>{ if(a.ext==='pdf'&&b.ext!=='pdf')return -1; if(b.ext==='pdf'&&a.ext!=='pdf')return 1; return a.name.localeCompare(b.name); });
   return results;
+}
+
+async function fetchAllDocs(role) {
+  if (role === 'director') return fetchAllDocsDirector();
+  const paths = GH_PATH_MAP[role] || ['references','docs'];
+  return fetchAllDocsByPaths(paths);
 }
 
 window.renderDocRepo = async cid => {
