@@ -775,7 +775,7 @@ function renderDirector() {
     <div class="dir-top-clocks">
       <div class="dir-clock-card">
         <span class="dir-clock-label">Real Time</span>
-        <span class="dir-clock-val" id="real-clock">—</span>
+        <span class="dir-clock-val" id="real-clock"></span>
       </div>
       <div class="dir-clock-divider"></div>
       <div class="dir-clock-card">
@@ -877,11 +877,13 @@ function renderDirector() {
     </div>
   </div>`;
 
-  // Real-time clock
-  setInterval(() => {
+  // Real-time clock — set immediately then tick every second
+  const _dirClockTick = () => {
     const e = document.getElementById('real-clock');
     if(e) e.textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  }, 1000);
+  };
+  _dirClockTick();
+  setInterval(_dirClockTick, 1000);
 
   // Restore ended game clock display
   if (S.gameEnded?.ended) {
@@ -1331,7 +1333,7 @@ function renderTeam(team) {
       <div class="turn-controls"><span class="tc-label">Turn</span><span class="tc-val" id="team-turn">${S.turn}</span></div>
     </div>
     <div class="team-clocks-bar">
-      <div class="clock-block"><span class="clock-label">Real time</span><span class="clock-value" id="team-realclock">—</span></div>
+      <div class="clock-block"><span class="clock-label">Real time</span><span class="clock-value" id="team-realclock"></span></div>
       <div class="clock-block"><span class="clock-label">Turn timer</span><span class="clock-value" id="team-timer">${S.timerDisplay}</span></div>
       <div class="clock-block"><span class="clock-label">Game time</span><span class="clock-value" id="team-gametime" style="color:var(--page-accent)">${S.gameTime}</span></div>
     </div>
@@ -1356,10 +1358,13 @@ function renderTeam(team) {
     </div>
   </div>`;
 
-  setInterval(() => {
+  // Real-time clock — set immediately then tick every second
+  const _teamClockTick = () => {
     const e = document.getElementById('team-realclock');
     if(e) e.textContent = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  }, 1000);
+  };
+  _teamClockTick();
+  setInterval(_teamClockTick, 1000);
 
   teamRenderFeedback(team);
   teamRenderTurnCard(team);
@@ -1551,7 +1556,7 @@ function teamRenderTurnCard(team) {
     </div>`).join('');
 
   const t0Banner = S.turn===0
-    ? `<div class="turn0-banner" style="margin-bottom:1rem"><strong>Turn 0 — Initial Laydown.</strong> Enter force positions and commander's intent. Leave fires empty.</div>` : '';
+    ? `<div class="turn0-banner" style="margin-bottom:1rem"><strong>Turn 0 — Initial Laydown.</strong> Enter force positions and commander's intent.</div>` : '';
 
   const manRowsHtml = (manSource||[]).map(m => `
     <div class="entry-row maneuver-row">
