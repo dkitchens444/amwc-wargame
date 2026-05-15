@@ -360,8 +360,21 @@ const firebaseConfig = {
 const fbApp = initializeApp(firebaseConfig);
 const db    = getDatabase(fbApp);
 
-// Thin helpers
-const gRef  = path => ref(db, path ? 'game/' + path : 'game');
+// ─────────────────────────────────────────────
+// GAME ID  — read from ?game= URL param, fallback to 'default'
+// All Firebase reads/writes are scoped under games/<GAME_ID>/
+// This isolates simultaneous games from each other in the same database.
+// ─────────────────────────────────────────────
+const _gameParams = new URLSearchParams(location.search);
+const GAME_ID = (_gameParams.get('game') || 'default').toLowerCase().replace(/[^a-z0-9_-]/g, '-').slice(0, 40);
+
+// Register this game in the live-index so the Master Director view can find it
+// Uses serverTimestamp so the dashboard knows when it was last active
+const _liveRef = ref(db, `_live/${GAME_ID}`);
+set(_liveRef, { gameId: GAME_ID, lastSeen: Date.now(), active: true });
+
+// Thin helpers — all scoped to this game's namespace
+const gRef  = path => ref(db, path ? `games/${GAME_ID}/${path}` : `games/${GAME_ID}`);
 const dbSet = async (path, val) => set(gRef(path), val);
 const dbGet = async path => { const s = await get(gRef(path)); return s.exists() ? s.val() : null; };
 const dbDel = async path => remove(gRef(path));
@@ -371,7 +384,7 @@ const dbOn  = (path, cb) => { const u = onValue(gRef(path), s => cb(s.exists() ?
 // ─────────────────────────────────────────────
 // ROLE
 // ─────────────────────────────────────────────
-const params = new URLSearchParams(location.search);
+const _gameParams = new URLSearchParams(location.search);
 // Path-based role detection: /red → red, /blue → blue, /references → director
 // Falls back to ?role= param, then defaults to director
 const _path = location.pathname.replace(/\/+$/, '').toLowerCase();
@@ -379,10 +392,21 @@ const _pathRole = _path.endsWith('/red') ? 'red'
                 : _path.endsWith('/blue') ? 'blue'
                 : _path.endsWith('/references') ? 'director'
                 : null;
-const ROLE = _pathRole || params.get('role') || 'director';
+const ROLE = _pathRole || _gameParams.get('role') || 'director';
 document.body.classList.add('role-' + ROLE);
-document.title = ROLE === 'director' ? "Director's Table"
-               : ROLE === 'blue'     ? 'Blue Force' : 'Red Force';
+const _gameLabel = GAME_ID !== 'default' ? ` · ${GAME_ID.toUpperCase()}` : '';
+document.title = ROLE === 'director' ? `Director's Table${_gameLabel}`
+               : ROLE === 'blue'     ? `Blue Force${_gameLabel}` : `Red Force${_gameLabel}`;
+
+// Keep the live-index heartbeat fresh on any user interaction (throttled)
+let _heartbeatThrottle = 0;
+document.addEventListener('click', () => {
+  const now = Date.now();
+  if (now - _heartbeatThrottle > 30000) {
+    _heartbeatThrottle = now;
+    set(_liveRef, { gameId: GAME_ID, lastSeen: now, active: true, role: ROLE });
+  }
+});
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -759,6 +783,7 @@ function renderDirector() {
       <div class="dir-top-title-row">
         <span class="dir-title">Director's Table</span>
         <span class="role-badge dir">Director</span>
+        ${GAME_ID !== 'default' ? `<span class="role-badge dir" style="background:rgba(122,143,100,0.15);letter-spacing:0.08em">${GAME_ID.toUpperCase()}</span>` : ''}
         <span class="sync-dot connecting" id="sync-dot" title="Connecting…"></span>
       </div>
       <div class="dir-turn-block">
@@ -826,6 +851,7 @@ function renderDirector() {
     <button class="tab" id="tab-inject"  onclick="dirTab('inject')">Director Inject</button>
     <button class="tab" id="tab-history" onclick="dirTab('history')">Turn History</button>
     <button class="tab" id="tab-refs"    onclick="dirTab('refs')">References</button>
+    <a class="tab" href="doc-tool.html" target="_blank" style="text-decoration:none;opacity:0.85">📋 Doc Tool ↗</a>
   </div>
   <div class="panel active" id="panel-blue"></div>
   <div class="panel" id="panel-red"></div>
@@ -1234,6 +1260,8 @@ window.endGame = async () => {
   if(!confirm('Call end of game? Teams will be notified instantly.')) return;
   const gt = S.gameTime;
   await dbSet('meta/gameEnded', {ended:true, time:gt, at:new Date().toISOString()});
+  // Mark game as ended in live index
+  set(_liveRef, { gameId: GAME_ID, lastSeen: Date.now(), active: false, ended: true });
   const notice = `[GAME ENDED] End of game called at ${gt}. Submit final tasks and report to Director's Table.`;
   async function applyEnd(fbKey) {
     const ex = (fbKey==='blueFb'?S.blueFb:S.redFb) ||
@@ -1264,8 +1292,10 @@ window.submitAAR = async () => {
 window.resetGame = async () => {
   if(!confirm('Reset to Turn 0? Clears ALL Firebase game data. Cannot be undone.')) return;
 
-  // IMPORTANT: never delete the root game/ node (dbDel('')) — it kills all listeners.
+  // IMPORTANT: never delete the root games/<GAME_ID>/ node — it kills all listeners.
   // Instead, overwrite every key explicitly so the node structure stays intact.
+  // Mark as active again in live index
+  set(_liveRef, { gameId: GAME_ID, lastSeen: Date.now(), active: true });
   const cleared = { _cleared: true, turn: 0, at: new Date().toISOString() };
   await Promise.all([
     dbSet('turn', 0),
@@ -1330,6 +1360,7 @@ function renderTeam(team) {
       <div style="display:flex;align-items:center;gap:12px">
         <span class="top-title">${team==='blue'?'Blue Force':'Red Force'}</span>
         <span class="role-badge ${team}">${team==='blue'?'Blue':'Red'}</span>
+        ${GAME_ID !== 'default' ? `<span class="role-badge ${team}" style="opacity:0.7;letter-spacing:0.08em">${GAME_ID.toUpperCase()}</span>` : ''}
         <span class="sync-dot connecting" id="sync-dot" title="Connecting…"></span>
       </div>
       <div class="turn-controls"><span class="tc-label">Turn</span><span class="tc-val" id="team-turn">${S.turn}</span></div>
@@ -1350,6 +1381,7 @@ function renderTeam(team) {
     <button class="tab active" id="ttab-feedback" onclick="teamTab('feedback')">Director Feedback</button>
     <button class="tab"        id="ttab-turncard" onclick="teamTab('turncard')">Turn Card</button>
     <button class="tab"        id="ttab-refs"     onclick="teamTab('refs')">References</button>
+    <a class="tab" href="doc-tool-teams.html?force=${team}" target="_blank" style="text-decoration:none;opacity:0.85">📋 Doc Tool ↗</a>
   </div>
   <div class="panel active" id="tpanel-feedback"></div>
   <div class="panel"        id="tpanel-turncard"></div>
