@@ -384,7 +384,6 @@ const dbOn  = (path, cb) => { const u = onValue(gRef(path), s => cb(s.exists() ?
 // ─────────────────────────────────────────────
 // ROLE
 // ─────────────────────────────────────────────
-const _gameParams = new URLSearchParams(location.search);
 // Path-based role detection: /red → red, /blue → blue, /references → director
 // Falls back to ?role= param, then defaults to director
 const _path = location.pathname.replace(/\/+$/, '').toLowerCase();
