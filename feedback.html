@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMWC — Feedback</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Courier New',Courier,monospace;font-size:13px}
+:root{
+  --bg:#111510;--surf:#181E14;--surf2:#1E2619;
+  --bd:#2E3E26;--tx:#CED8C6;--mu:#6A8060;
+  --ac:#7A9064;--acb:#8AAC6A;
+  --ok:#5A8A4A;--warn:#C8B84A;--err:#C04A4A;
+}
+body{background:var(--bg);color:var(--tx)}
+a{color:var(--ac);text-decoration:none}
+
+/* layout */
+.wrap{max-width:900px;margin:0 auto;padding:1.25rem 1.25rem 4rem}
+
+/* top bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;
+  padding-bottom:0.75rem;margin-bottom:1.25rem;border-bottom:1px solid var(--ac)}
+.title{font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--tx)}
+.title span{color:var(--mu);font-weight:400}
+.syndot{display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:#8ACA6A;vertical-align:middle;margin-left:6px;box-shadow:0 0 5px #8ACA6A}
+.syndot.off{background:var(--err);box-shadow:0 0 5px var(--err)}
+.syndot.wait{background:var(--warn);box-shadow:none}
+
+/* nav tabs */
+.tabs{display:flex;gap:2px}
+.tab{font-family:inherit;font-size:11px;font-weight:700;letter-spacing:0.08em;
+  text-transform:uppercase;padding:4px 12px;border:1px solid var(--bd);
+  background:transparent;color:var(--mu);cursor:pointer;transition:all 0.12s}
+.tab:hover{color:var(--tx);border-color:var(--ac)}
+.tab.on{background:var(--ac);color:#0D1208;border-color:var(--ac)}
+
+/* views */
+.view{display:none}.view.on{display:block}
+
+/* ── FORM ── */
+.form{max-width:620px}
+.fsect{margin-bottom:1rem}
+.flabel{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--mu);margin-bottom:6px;display:block}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* radio pill grid */
+.pills{display:flex;flex-wrap:wrap;gap:5px}
+.pill{position:relative;cursor:pointer}
+.pill input{position:absolute;opacity:0;width:0;height:0}
+.pill-inner{display:flex;align-items:center;gap:6px;padding:4px 10px;
+  border:1px solid var(--bd);background:var(--surf2);
+  font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;
+  color:var(--mu);white-space:nowrap;transition:all 0.1s;cursor:pointer}
+.pill input:checked+.pill-inner{border-color:var(--ac);color:var(--acb);background:rgba(122,144,100,0.12)}
+.pill:hover .pill-inner{border-color:var(--ac);color:var(--tx)}
+.pdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.pdot.bug{background:#C04A4A}.pdot.feat{background:#4A8AC0}
+.pdot.fric{background:#C8B84A}.pdot.doc{background:#8A5AC0}.pdot.oth{background:var(--mu)}
+.pdot.broke{background:#C04A4A}.pdot.slow{background:#C8B84A}
+.pdot.minor{background:var(--mu)}.pdot.idea{background:#4A8AC0}
+.pdot.cadre{background:var(--acb)}.pdot.student{background:#4A8AC0}.pdot.fmf{background:#C8A84A}
+
+/* inputs */
+input[type=text],input[type=password],textarea,select{
+  font-family:inherit;font-size:12px;width:100%;
+  background:var(--surf2);color:var(--tx);
+  border:1px solid var(--bd);padding:6px 8px;outline:none;
+  transition:border-color 0.12s;border-radius:0}
+input[type=text]:focus,input[type=password]:focus,textarea:focus,select:focus{border-color:var(--ac)}
+textarea{resize:vertical;min-height:72px}
+select option{background:var(--surf2)}
+
+/* buttons — ALL same height, same padding */
+.btn,.btn-sec{font-family:inherit;font-size:11px;font-weight:700;letter-spacing:0.08em;
+  text-transform:uppercase;padding:6px 14px;border-radius:0;cursor:pointer;
+  transition:all 0.12s;display:inline-block;white-space:nowrap;line-height:1.4}
+.btn{background:var(--ac);color:#0D1208;border:1px solid var(--ac)}
+.btn:hover{background:var(--acb);border-color:var(--acb)}
+.btn:disabled{opacity:0.45;cursor:not-allowed}
+.btn-sec{background:transparent;color:var(--mu);border:1px solid var(--bd)}
+.btn-sec:hover{border-color:var(--ac);color:var(--tx)}
+.btn-sm{padding:4px 10px;font-size:10px}
+.btn-danger{background:rgba(192,74,74,0.15);color:#E08080;border:1px solid var(--err)}
+.btn-danger:hover{background:rgba(192,74,74,0.25)}
+
+/* action row */
+.arow{display:flex;align-items:center;gap:8px;margin-top:1rem}
+
+/* status */
+.smsg{font-size:11px;padding:5px 9px;display:none;letter-spacing:0.03em}
+.smsg.on{display:inline-block}
+.smsg.ok{background:rgba(90,138,74,0.15);color:#8ACA6A;border:1px solid var(--ok)}
+.smsg.warn{background:rgba(200,184,74,0.1);color:#C8B84A;border:1px solid var(--warn)}
+.smsg.err{background:rgba(192,74,74,0.1);color:#E08080;border:1px solid var(--err)}
+
+/* success */
+.success{display:none;padding:2.5rem 0}
+.success.on{display:block}
+.suc-mark{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--acb);margin-bottom:8px}
+.suc-sub{font-size:12px;color:var(--mu);margin-bottom:12px;line-height:1.6}
+.suc-id{font-size:11px;color:var(--mu);background:var(--surf2);border:1px solid var(--bd);
+  display:inline-block;padding:4px 10px;letter-spacing:0.06em}
+
+/* ── CHANGELOG ── */
+.cl-item{border:1px solid var(--bd);background:var(--surf);padding:10px 12px;margin-bottom:6px}
+.cl-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.cl-ver{font-size:11px;font-weight:700;letter-spacing:0.08em;color:var(--acb)}
+.cl-date{font-size:10px;color:var(--mu)}
+.cl-line{font-size:12px;color:var(--tx);line-height:1.5;padding-left:10px;position:relative;margin-bottom:3px}
+.cl-line::before{content:'—';position:absolute;left:0;color:var(--mu)}
+.cl-empty{font-size:12px;color:var(--mu);padding:1.5rem 0;letter-spacing:0.04em}
+
+/* ── TRIAGE ── */
+/* gate */
+.gate{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:2rem 0;max-width:280px}
+.gate-title{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--tx)}
+.gate-err{font-size:11px;color:var(--err);display:none}
+.gate-err.on{display:block}
+
+/* controls bar */
+.cbar{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:0.75rem}
+.cbar-search{font-family:inherit;font-size:12px;background:var(--surf2);color:var(--tx);
+  border:1px solid var(--bd);padding:4px 8px;outline:none;margin-left:auto;width:180px;
+  transition:border-color 0.12s}
+.cbar-search:focus{border-color:var(--ac)}
+
+/* stats row */
+.stats{display:flex;gap:8px;margin-bottom:0.75rem;flex-wrap:wrap}
+.stat{font-size:11px;padding:3px 8px;background:var(--surf2);border:1px solid var(--bd);letter-spacing:0.05em}
+.stat b{color:var(--acb)}
+
+/* filter btn — same height as .btn */
+.fbtn{font-family:inherit;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;
+  padding:4px 10px;border:1px solid var(--bd);background:transparent;color:var(--mu);cursor:pointer;transition:all 0.1s}
+.fbtn:hover{border-color:var(--ac);color:var(--tx)}
+.fbtn.on{border-color:var(--ac);color:var(--tx);background:var(--surf2)}
+
+/* feedback card */
+.fc{border:1px solid var(--bd);background:var(--surf);margin-bottom:5px;overflow:hidden}
+.fc:hover{border-color:var(--mu)}
+.fc-row{display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer}
+.fc-row:hover{background:var(--surf2)}
+.fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.fc-id{font-size:10px;color:var(--mu);letter-spacing:0.05em;flex-shrink:0;min-width:52px}
+.fc-desc{font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fc-tags{display:flex;align-items:center;gap:4px;flex-shrink:0;flex-wrap:nowrap}
+.fc-time{font-size:10px;color:var(--mu);flex-shrink:0;white-space:nowrap}
+
+/* tags */
+.tg{font-size:10px;font-weight:700;letter-spacing:0.05em;padding:2px 6px;
+  border:1px solid;white-space:nowrap}
+.tg.bug{color:#C04A4A;border-color:#C04A4A;background:rgba(192,74,74,0.08)}
+.tg.feat{color:#4A8AC0;border-color:#4A8AC0;background:rgba(74,138,192,0.08)}
+.tg.fric{color:#C8B84A;border-color:#C8B84A;background:rgba(200,184,74,0.08)}
+.tg.doc{color:#8A5AC0;border-color:#8A5AC0;background:rgba(138,90,192,0.08)}
+.tg.oth{color:var(--mu);border-color:var(--bd);background:transparent}
+.tg.broke{color:#C04A4A;border-color:#C04A4A;background:rgba(192,74,74,0.08)}
+.tg.slow{color:#C8B84A;border-color:#C8B84A;background:rgba(200,184,74,0.08)}
+.tg.minor{color:var(--mu);border-color:var(--bd);background:transparent}
+.tg.idea{color:#4A8AC0;border-color:#4A8AC0;background:rgba(74,138,192,0.08)}
+.tg.new{color:#C8B84A;border-color:#C8B84A;background:rgba(200,184,74,0.08)}
+.tg.ack{color:#4A8AC0;border-color:#4A8AC0;background:rgba(74,138,192,0.08)}
+.tg.wip{color:#C8A84A;border-color:#C8A84A;background:rgba(200,168,74,0.08)}
+.tg.fixed{color:var(--ok);border-color:var(--ok);background:rgba(90,138,74,0.08)}
+.tg.wont{color:var(--mu);border-color:var(--bd);background:transparent}
+.tg.def{color:#8A5AC0;border-color:#8A5AC0;background:rgba(138,90,192,0.08)}
+.tg.cadre{color:var(--acb);border-color:var(--acb);background:rgba(138,172,106,0.08)}
+.tg.student{color:#4A8AC0;border-color:#4A8AC0;background:rgba(74,138,192,0.08)}
+.tg.fmf{color:#C8A84A;border-color:#C8A84A;background:rgba(200,168,74,0.08)}
+
+/* expanded body */
+.fc-body{display:none;padding:10px 12px;border-top:1px solid var(--bd);background:var(--surf2)}
+.fc-body.open{display:block}
+.fc-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px 16px;margin-bottom:10px}
+.fc-fl{font-size:10px;color:var(--mu);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:2px}
+.fc-fv{font-size:12px;color:var(--tx)}
+.fc-text{font-size:12px;color:var(--tx);line-height:1.6;background:var(--bg);
+  border:1px solid var(--bd);padding:8px 10px;margin-bottom:10px}
+.fc-dev{border-top:1px solid var(--bd);padding-top:10px;margin-top:2px}
+.fc-devlabel{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--mu);margin-bottom:8px}
+.fc-devrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;align-items:start}
+.fc-devrow.full{grid-template-columns:1fr}
+.fc-saved{font-size:11px;color:var(--acb);display:none;margin-left:6px}
+.fc-saved.on{display:inline}
+
+/* cl editor */
+.cl-ed{border:1px solid var(--ac);padding:12px;background:var(--surf);margin-top:0.75rem;display:none}
+.cl-ed.open{display:block}
+
+/* divider */
+.div{border:none;border-top:1px solid var(--bd);margin:0.75rem 0}
+
+/* spinner */
+.spin{width:18px;height:18px;border:2px solid var(--bd);border-top-color:var(--ac);
+  border-radius:50%;animation:sp 0.7s linear infinite;margin:1.5rem 0}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+@media(max-width:600px){
+  .frow,.fc-grid{grid-template-columns:1fr}
+  .fc-tags{display:none}
+  .cbar-search{margin-left:0;width:100%}
+  .fc-devrow{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="title">AMWC Wargame<span> / Feedback</span><span class="syndot wait" id="syn"></span></div>
+    <div class="tabs">
+      <button class="tab on" onclick="nav('submit',this)">Submit</button>
+      <button class="tab" onclick="nav('changelog',this)">Changelog</button>
+      <button class="tab" onclick="nav('triage',this)">Triage ↗</button>
+    </div>
+  </div>
+
+  <!-- SUBMIT -->
+  <div class="view on" id="v-submit">
+    <div class="form">
+
+      <div class="success" id="suc">
+        <div class="suc-mark">✓ Feedback submitted</div>
+        <div class="suc-sub">Your feedback has been logged.<br>Check the Changelog to see what's been addressed.</div>
+        <div class="suc-id" id="suc-id"></div>
+        <div style="margin-top:12px"><button class="btn-sec btn-sm" onclick="resetForm()">Submit another</button></div>
+      </div>
+
+      <div id="form-inner">
+        <div class="fsect">
+          <span class="flabel">Role</span>
+          <div class="pills">
+            <label class="pill"><input type="radio" name="role" value="Cadre" checked><span class="pill-inner"><span class="pdot cadre"></span>Cadre</span></label>
+            <label class="pill"><input type="radio" name="role" value="Student"><span class="pill-inner"><span class="pdot student"></span>Student</span></label>
+            <label class="pill"><input type="radio" name="role" value="FMF"><span class="pill-inner"><span class="pdot fmf"></span>FMF</span></label>
+          </div>
+        </div>
+
+        <div class="fsect">
+          <span class="flabel">Category</span>
+          <div class="pills">
+            <label class="pill"><input type="radio" name="cat" value="Bug" checked><span class="pill-inner"><span class="pdot bug"></span>Bug</span></label>
+            <label class="pill"><input type="radio" name="cat" value="Feature request"><span class="pill-inner"><span class="pdot feat"></span>Feature request</span></label>
+            <label class="pill"><input type="radio" name="cat" value="Friction point"><span class="pill-inner"><span class="pdot fric"></span>Friction point</span></label>
+            <label class="pill"><input type="radio" name="cat" value="Doctrine / content"><span class="pill-inner"><span class="pdot doc"></span>Doctrine / content</span></label>
+            <label class="pill"><input type="radio" name="cat" value="Other"><span class="pill-inner"><span class="pdot oth"></span>Other</span></label>
+          </div>
+        </div>
+
+        <div class="fsect">
+          <span class="flabel">Severity</span>
+          <div class="pills">
+            <label class="pill"><input type="radio" name="sev" value="Broke the game" checked><span class="pill-inner"><span class="pdot broke"></span>Broke the game</span></label>
+            <label class="pill"><input type="radio" name="sev" value="Slowed me down"><span class="pill-inner"><span class="pdot slow"></span>Slowed me down</span></label>
+            <label class="pill"><input type="radio" name="sev" value="Minor annoyance"><span class="pill-inner"><span class="pdot minor"></span>Minor annoyance</span></label>
+            <label class="pill"><input type="radio" name="sev" value="Just an idea"><span class="pill-inner"><span class="pdot idea"></span>Just an idea</span></label>
+          </div>
+        </div>
+
+        <div class="fsect">
+          <span class="flabel">Area of the system</span>
+          <select id="f-area">
+            <option value="">— select —</option>
+            <option>Director interface</option>
+            <option>Blue team interface</option>
+            <option>Red team interface</option>
+            <option>Turn card / submission</option>
+            <option>Inject system</option>
+            <option>AAR / debrief</option>
+            <option>Scenario builder</option>
+            <option>MVD / game start form</option>
+            <option>References / documents</option>
+            <option>General / other</option>
+          </select>
+        </div>
+
+        <div class="fsect">
+          <span class="flabel">Description</span>
+          <textarea id="f-desc" placeholder="Be specific. What did you expect vs what occurred?"></textarea>
+        </div>
+
+        <div class="frow fsect">
+          <div>
+            <span class="flabel">Name <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></span>
+            <input type="text" id="f-name" placeholder="Leave blank to submit anonymously">
+          </div>
+          <div>
+            <span class="flabel">Game / turn <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></span>
+            <input type="text" id="f-game" placeholder="e.g. Game 3, Turn 4">
+          </div>
+        </div>
+
+        <div class="arow">
+          <button class="btn" id="sub-btn" onclick="submitFb()">Submit ↗</button>
+          <div class="smsg" id="form-msg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHANGELOG -->
+  <div class="view" id="v-changelog">
+    <div style="font-size:11px;color:var(--mu);margin-bottom:0.75rem;letter-spacing:0.03em">
+      Recent fixes and improvements. Most recent first.
+    </div>
+    <div id="cl-list"><div class="spin"></div></div>
+  </div>
+
+  <!-- TRIAGE -->
+  <div class="view" id="v-triage">
+
+    <div class="gate" id="gate">
+      <div class="gate-title">Developer access</div>
+      <input class="cbar-search" type="password" id="gate-in" placeholder="Passphrase"
+        onkeydown="if(event.key==='Enter')checkGate()" style="width:200px;margin-left:0">
+      <div class="arow" style="margin-top:0">
+        <button class="btn btn-sm" onclick="checkGate()">Enter</button>
+        <div class="gate-err" id="gate-err">Incorrect passphrase.</div>
+      </div>
+    </div>
+
+    <div id="dash" style="display:none">
+      <div class="stats" id="dash-stats"></div>
+
+      <div class="cbar">
+        <button class="fbtn on" onclick="setF('all',this)">All</button>
+        <button class="fbtn" onclick="setF('new',this)">New</button>
+        <button class="fbtn" onclick="setF('ack',this)">Ack</button>
+        <button class="fbtn" onclick="setF('wip',this)">WIP</button>
+        <button class="fbtn" onclick="setF('fixed',this)">Fixed</button>
+        <button class="fbtn" onclick="setF('wont',this)">Won't fix</button>
+        <button class="fbtn" onclick="setF('def',this)">Deferred</button>
+        <span style="width:1px;background:var(--bd);align-self:stretch;margin:0 2px"></span>
+        <button class="fbtn" onclick="setF('cat-bug',this)">Bugs</button>
+        <button class="fbtn" onclick="setF('cat-feat',this)">Features</button>
+        <button class="fbtn" onclick="setF('cat-fric',this)">Friction</button>
+        <input class="cbar-search" type="text" id="dsearch" placeholder="Search…" oninput="renderDash()">
+        <button class="btn-sec btn-sm" onclick="toggleClEd()">+ Changelog</button>
+      </div>
+
+      <div id="dash-list"><div class="spin"></div></div>
+
+      <div class="cl-ed" id="cl-ed">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--mu);margin-bottom:8px">New changelog entry</div>
+        <div class="frow" style="margin-bottom:8px">
+          <div><span class="flabel">Version / label</span><input type="text" id="cl-ver" placeholder="v1.3 — 25 May 2026"></div>
+          <div><span class="flabel">Date</span><input type="text" id="cl-date" placeholder="25 May 2026"></div>
+        </div>
+        <div style="margin-bottom:8px">
+          <span class="flabel">Entries (one per line)</span>
+          <textarea id="cl-ents" style="min-height:80px" placeholder="Fixed: turn card carry-forward bug&#10;Added: expanded inject types&#10;Improved: AAR PDF layout"></textarea>
+        </div>
+        <div class="arow" style="margin-top:0">
+          <button class="btn btn-sm" onclick="saveCl()">Save</button>
+          <button class="btn-sec btn-sm" onclick="toggleClEd()">Cancel</button>
+          <span class="fc-saved" id="cl-saved">Saved.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import{getDatabase,ref,push,onValue,update,get}from"https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+
+const cfg={apiKey:"AIzaSyBzHo-1FX9tHmBOSJzXygCUBrCDJL_2vsc",authDomain:"amwc-wargame.firebaseapp.com",
+  databaseURL:"https://amwc-wargame-default-rtdb.firebaseio.com",projectId:"amwc-wargame",
+  storageBucket:"amwc-wargame.firebasestorage.app",messagingSenderId:"216430887870",
+  appId:"1:216430887870:web:b4a02cb2c41c9ab21bac50"};
+const db=getDatabase(initializeApp(cfg));
+const fbRef=p=>ref(db,'feedback/'+(p||''));
+const clRef=p=>ref(db,'changelog/'+(p||''));
+
+const syn=document.getElementById('syn');
+const setSyn=s=>syn.className='syndot'+(s==='live'?' ':s==='off'?' off':' wait');
+onValue(ref(db,'.info/connected'),s=>{setSyn(s.val()?'live':'off')});
+
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+let items=[],activeF='all';
+const GATE='amwc-dev'; // ← change this
+
+// ── NAV ──
+window.nav=(v,btn)=>{
+  document.querySelectorAll('.view').forEach(e=>e.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('on'));
+  document.getElementById('v-'+v).classList.add('on');
+  btn.classList.add('on');
+  if(v==='changelog')loadCl();
+};
+
+// ── GATE ──
+window.checkGate=()=>{
+  if(document.getElementById('gate-in').value.trim()===GATE){
+    document.getElementById('gate').style.display='none';
+    document.getElementById('dash').style.display='block';
+    loadDash();loadCl();
+  } else {
+    const e=document.getElementById('gate-err');e.classList.add('on');
+    document.getElementById('gate-in').value='';
+    setTimeout(()=>e.classList.remove('on'),2000);
+  }
+};
+
+// ── SUBMIT ──
+window.submitFb=async()=>{
+  const desc=document.getElementById('f-desc').value.trim();
+  const area=document.getElementById('f-area').value;
+  const msg=document.getElementById('form-msg');
+  const btn=document.getElementById('sub-btn');
+  if(!desc){setMsg(msg,'Description required.','warn');return}
+  if(!area){setMsg(msg,'Select an area.','warn');return}
+  btn.disabled=true;
+  const role=document.querySelector('input[name=role]:checked')?.value||'Unknown';
+  const cat=document.querySelector('input[name=cat]:checked')?.value||'Other';
+  const sev=document.querySelector('input[name=sev]:checked')?.value||'Minor annoyance';
+  const id='FB-'+Date.now().toString(36).toUpperCase().slice(-5);
+  try{
+    await push(fbRef(),{id,role,category:cat,severity:sev,area,
+      description:desc,name:document.getElementById('f-name').value.trim()||'Anonymous',
+      game:document.getElementById('f-game').value.trim(),
+      submittedAt:new Date().toISOString(),status:'New',devNote:'',devResponse:''});
+    setSyn('live');
+    document.getElementById('form-inner').style.display='none';
+    const s=document.getElementById('suc');s.classList.add('on');
+    document.getElementById('suc-id').textContent='Reference: '+id;
+  }catch(e){setMsg(msg,'Submission failed. Check connection.','err');btn.disabled=false;}
+};
+window.resetForm=()=>{
+  document.getElementById('form-inner').style.display='';
+  document.getElementById('suc').classList.remove('on');
+  document.getElementById('f-desc').value='';
+  document.getElementById('f-name').value='';
+  document.getElementById('f-game').value='';
+  document.getElementById('f-area').value='';
+  document.getElementById('sub-btn').disabled=false;
+  ['role','cat','sev'].forEach(n=>document.querySelectorAll(`input[name=${n}]`)[0].checked=true);
+  setMsg(document.getElementById('form-msg'),'','');
+};
+function setMsg(el,t,k){el.textContent=t;el.className='smsg'+(t?' on '+k:'');}
+
+// ── DASH ──
+function loadDash(){
+  onValue(fbRef(),snap=>{
+    setSyn('live');items=[];
+    if(snap.exists())snap.forEach(c=>items.push({_k:c.key,...c.val()}));
+    items.sort((a,b)=>(b.submittedAt||'').localeCompare(a.submittedAt||''));
+    renderStats();renderDash();
+  },()=>setSyn('off'));
+}
+function renderStats(){
+  const t=items.length,nw=items.filter(i=>i.status==='New').length,fx=items.filter(i=>i.status==='Fixed').length;
+  document.getElementById('dash-stats').innerHTML=
+    `<div class="stat">Total <b>${t}</b></div><div class="stat">New <b style="color:var(--warn)">${nw}</b></div><div class="stat">Fixed <b style="color:var(--ok)">${fx}</b></div>`;
+}
+window.renderDash=()=>{
+  const q=(document.getElementById('dsearch')?.value||'').toLowerCase();
+  const stMap={new:'New',ack:'Acknowledged',wip:'In progress',fixed:'Fixed',wont:"Won't fix",def:'Deferred'};
+  const catMap={'cat-bug':'Bug','cat-feat':'Feature request','cat-fric':'Friction point'};
+  let list=items;
+  if(activeF!=='all'){
+    if(stMap[activeF])list=list.filter(i=>i.status===stMap[activeF]);
+    else if(catMap[activeF])list=list.filter(i=>i.category===catMap[activeF]);
+  }
+  if(q)list=list.filter(i=>(i.description+i.category+i.area+i.name+i.id||'').toLowerCase().includes(q));
+  const el=document.getElementById('dash-list');
+  if(!list.length){el.innerHTML='<div style="font-size:12px;color:var(--mu);padding:1rem 0">No items.</div>';return}
+
+  const catCls=c=>c==='Bug'?'bug':c==='Feature request'?'feat':c==='Friction point'?'fric':c==='Doctrine / content'?'doc':'oth';
+  const sevCls=s=>s==='Broke the game'?'broke':s==='Slowed me down'?'slow':s==='Minor annoyance'?'minor':'idea';
+  const stCls=s=>s==='New'?'new':s==='Acknowledged'?'ack':s==='In progress'?'wip':s==='Fixed'?'fixed':s==="Won't fix"?'wont':'def';
+  const ts=d=>d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+
+  el.innerHTML=list.map(i=>{
+    const cc=catCls(i.category),sc=sevCls(i.severity),st=stCls(i.status);
+    const rc=i.role==='Cadre'?'cadre':i.role==='FMF'?'fmf':'student';
+    return `<div class="fc" id="fc-${esc(i._k)}">
+      <div class="fc-row" onclick="toggleFc('${esc(i._k)}')">
+        <span class="fc-dot pdot ${cc}"></span>
+        <span class="fc-id">${esc(i.id||i._k)}</span>
+        <span class="fc-desc">${esc((i.description||'').slice(0,100))}</span>
+        <div class="fc-tags">
+          <span class="tg ${cc}">${esc(i.category)}</span>
+          <span class="tg ${sc}">${esc(i.severity)}</span>
+          <span class="tg ${st}">${esc(i.status)}</span>
+          <span class="tg ${rc}">${esc(i.role)}</span>
+        </div>
+        <span class="fc-time">${ts(i.submittedAt)}</span>
+      </div>
+      <div class="fc-body" id="fb-${esc(i._k)}">
+        <div class="fc-grid">
+          <div><div class="fc-fl">Area</div><div class="fc-fv">${esc(i.area||'—')}</div></div>
+          <div><div class="fc-fl">Game / turn</div><div class="fc-fv">${esc(i.game||'—')}</div></div>
+          <div><div class="fc-fl">Submitted by</div><div class="fc-fv">${esc(i.name||'Anonymous')}</div></div>
+          <div><div class="fc-fl">Date</div><div class="fc-fv">${ts(i.submittedAt)}</div></div>
+        </div>
+        <div class="fc-text">${esc(i.description)}</div>
+        <div class="fc-dev">
+          <div class="fc-devlabel">Developer</div>
+          <div class="fc-devrow">
+            <div><span class="flabel">Status</span>
+              <select id="st-${esc(i._k)}">
+                ${['New','Acknowledged','In progress','Fixed',"Won't fix",'Deferred'].map(s=>`<option${i.status===s?' selected':''}>${s}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="fc-devrow full"><span class="flabel">Internal note</span>
+            <textarea id="dn-${esc(i._k)}" style="min-height:52px" placeholder="Priority, root cause, related items…">${esc(i.devNote||'')}</textarea>
+          </div>
+          <div class="fc-devrow full"><span class="flabel">Public response</span>
+            <textarea id="dr-${esc(i._k)}" style="min-height:52px" placeholder="What was done, or why it won't be addressed…">${esc(i.devResponse||'')}</textarea>
+          </div>
+          <div class="arow" style="margin-top:6px">
+            <button class="btn btn-sm" onclick="saveTriage('${esc(i._k)}')">Save</button>
+            <span class="fc-saved" id="ss-${esc(i._k)}">Saved.</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+};
+window.toggleFc=k=>{document.getElementById('fb-'+k)?.classList.toggle('open')};
+window.setF=(f,btn)=>{
+  activeF=f;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');renderDash();
+};
+window.saveTriage=async k=>{
+  const ss=document.getElementById('ss-'+k);
+  try{
+    await update(ref(db,'feedback/'+k),{
+      status:document.getElementById('st-'+k)?.value||'New',
+      devNote:document.getElementById('dn-'+k)?.value||'',
+      devResponse:document.getElementById('dr-'+k)?.value||''});
+    ss.classList.add('on');setTimeout(()=>ss.classList.remove('on'),2000);
+  }catch(e){ss.textContent='Error.';ss.classList.add('on');setTimeout(()=>{ss.classList.remove('on');ss.textContent='Saved.';},2000);}
+};
+
+// ── CHANGELOG ──
+async function loadCl(){
+  const el=document.getElementById('cl-list');
+  if(!el)return;
+  try{
+    const snap=await get(clRef());
+    if(!snap.exists()){el.innerHTML='<div class="cl-empty">No changelog entries yet.</div>';return;}
+    const arr=[];snap.forEach(c=>arr.push(c.val()));
+    arr.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+    el.innerHTML=arr.map(i=>`<div class="cl-item">
+      <div class="cl-head"><span class="cl-ver">${esc(i.version)}</span><span class="cl-date">${esc(i.date)}</span></div>
+      ${(i.entries||[]).map(e=>`<div class="cl-line">${esc(e)}</div>`).join('')}
+    </div>`).join('');
+  }catch(e){el.innerHTML='<div class="cl-empty">Could not load changelog.</div>';}
+}
+window.toggleClEd=()=>document.getElementById('cl-ed').classList.toggle('open');
+window.saveCl=async()=>{
+  const ver=document.getElementById('cl-ver').value.trim();
+  const ents=document.getElementById('cl-ents').value.trim();
+  const ss=document.getElementById('cl-saved');
+  if(!ver||!ents){ss.textContent='Version and entries required.';ss.classList.add('on');return;}
+  try{
+    await push(clRef(),{version:ver,date:document.getElementById('cl-date').value.trim(),
+      entries:ents.split('\n').map(s=>s.trim()).filter(Boolean),createdAt:new Date().toISOString()});
+    ss.textContent='Saved.';ss.classList.add('on');setTimeout(()=>ss.classList.remove('on'),2000);
+    document.getElementById('cl-ver').value='';document.getElementById('cl-ents').value='';
+    loadCl();
+  }catch(e){ss.textContent='Error.';ss.classList.add('on');}
+};
+</script>
+</body>
+</html>
