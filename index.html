@@ -5,19 +5,9 @@
 <link rel="icon" type="image/svg+xml" href="MCTOG.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AMWC Wargame System</title>
+<link rel="stylesheet" href="./shared/theme.css">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0D1008;--bg2:#13180E;--bg3:#1A2014;--bg4:#222A1A;
-  --border:#2A3820;--border2:#3A4A2C;
-  --text:#C8D4B8;--text2:#8A9E78;--text3:#556045;
-  --gold:#8A7A2A;--gold-bright:#C8B44A;--gold-dim:#2A2408;
-  --green:#5A8A3A;--green-bright:#7AB84A;--green-dim:#182810;
-  --blue:#3A6A9A;--blue-bright:#5A9ACA;--blue-dim:#0A1828;
-  --red:#8A3A3A;--red-bright:#C05A5A;--red-dim:#200C0C;
-  --font:'Courier New',Courier,monospace;
-  --radius:3px;
-}
+/* index.html — page-specific styles. Reset, font, and palette from shared/theme.css. */
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px)}
 
@@ -147,6 +137,38 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;b
 
 /* ── FOOTER ── */
 .page-footer{text-align:center;font-size:10px;color:var(--text3);letter-spacing:0.08em;border-top:1px solid var(--border);padding-top:20px;margin-top:20px;line-height:1.8}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────── */
+@media(max-width:768px){
+  .page{padding:24px 16px 60px}
+  .topbar{padding:0 16px}
+  .header-title{font-size:22px}
+  .start-card{padding:20px}
+  .link-row{flex-wrap:wrap;gap:6px}
+  .link-url{min-width:0;flex:1 1 100%;order:3}
+  .link-role{order:1}
+  .btn-copy,.btn-open{order:2}
+}
+@media(max-width:480px){
+  .page{padding:16px 12px 48px}
+  .topbar{padding:0 12px;height:48px}
+  .tb-sub{display:none}
+  .header-title{font-size:18px;letter-spacing:0.06em}
+  .page-header{margin-bottom:32px}
+  .start-card{padding:16px}
+  .game-input-row{flex-direction:column}
+  .game-input-group{min-width:0;width:100%}
+  .btn-start{width:100%;min-height:44px}
+  /* 16px prevents iOS auto-zoom on input focus */
+  .game-input-group input{font-size:16px}
+  .btn-copy,.btn-open,.btn-remove,.btn-clear-all{min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+  .tool-card{padding:16px}
+  .ref-grid{grid-template-columns:1fr}
+  .link-rows{gap:12px}
+  .link-row{flex-direction:column;align-items:flex-start;gap:6px}
+  .link-url{width:100%;white-space:normal;word-break:break-all;font-size:10px}
+  .recent-session{padding:10px 12px}
+}
 </style>
 </head>
 <body>
@@ -258,6 +280,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;b
 
 </div>
 
+<script src="./shared/utils.js"></script>
 <script>
 const GH_OWNER   = 'dkitchens444';
 const GH_REPO    = 'amwc-wargame';
@@ -268,7 +291,7 @@ const FILE_ICONS = {pdf:'📄',doc:'📝',docx:'📝',ppt:'📊',pptx:'📊',xls
 const SKIP_EXT   = new Set(['html','htm','js','css','json','gitignore','xml','yaml','yml','map','lock']);
 const fExt       = n => { const p = n.split('.'); return p.length > 1 ? p[p.length-1].toLowerCase() : ''; };
 const fIcon      = n => FILE_ICONS[fExt(n)] || '📁';
-const esc        = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+/* esc() loaded from shared/utils.js */
 
 function baseUrl() {
   return location.origin + location.pathname.replace(/\/[^/]*$/, '/');

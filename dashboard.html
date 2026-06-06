@@ -5,8 +5,10 @@
 <link rel="icon" type="image/svg+xml" href="MCTOG.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Master Director — Live Dashboard</title>
+<link rel="stylesheet" href="./shared/theme.css">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+/* dashboard.html — page-specific styles. Reset and font from shared/theme.css.
+   Overrides palette with slightly darker values and adds --amber / --amber-bright. */
 :root{
   --bg:#0A0C08;--bg2:#10130D;--bg3:#161A12;--bg4:#1E2418;
   --border:#222A18;--border2:#2E3A22;
@@ -16,8 +18,6 @@
   --blue:#3A6A9A;--blue-bright:#5A9ACA;--blue-dim:#0A1E30;
   --red:#8A3A3A;--red-bright:#C05A5A;--red-dim:#200C0C;
   --amber:#8A5A2A;--amber-bright:#C8844A;
-  --font:'Courier New',Courier,monospace;
-  --radius:3px;
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px}
 
@@ -192,6 +192,38 @@ body::before{
 }
 .gate-btn:hover{background:var(--gold-bright);color:var(--bg)}
 .gate-error{font-size:10px;color:var(--red-bright);letter-spacing:0.08em;min-height:14px}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────── */
+@media(max-width:768px){
+  .topbar{padding:0 14px}
+  .tb-stat{display:none} /* hide redundant stats to prevent overflow */
+  .page{padding:14px 14px}
+  .controls{padding:8px 14px;gap:8px}
+  .ctrl-input{width:auto;flex:1}
+  .game-grid{grid-template-columns:1fr}
+  .gate-box{min-width:0;width:90%;max-width:360px;padding:28px 24px}
+}
+@media(max-width:480px){
+  .topbar{height:44px}
+  .tb-title{font-size:10px;letter-spacing:0.12em}
+  .tb-badge{display:none}
+  .tb-clock{font-size:11px}
+  .page{padding:12px 10px}
+  .controls{padding:6px 10px;gap:6px}
+  .ctrl-input,.ctrl-select{font-size:13px;padding:8px 10px}
+  .stale-note{display:none}
+  /* Touch targets */
+  .gate-btn,.tile-open-link{min-height:44px;display:flex;align-items:center;justify-content:center}
+  .gate-input{font-size:16px}
+  /* Tiles */
+  .tile-header{padding:10px 12px 8px}
+  .tile-body{padding:10px 12px}
+  .tile-footer{padding:7px 12px}
+  .tile-game-id{font-size:12px}
+  /* Submission pills — tighter on phone */
+  .sub-pill{padding:6px 4px}
+  .sub-pill-label{font-size:8px}
+}
 </style>
 </head>
 <body>
@@ -250,21 +282,9 @@ body::before{
   </div>
 </div>
 
+<script src="./shared/utils.js"></script>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey:            "AIzaSyBdKRyZWpmr0YgZhrwI97WSH5ZG0ER_bAg",
-  authDomain:        "amwc-wargame.firebaseapp.com",
-  databaseURL:       "https://amwc-wargame-default-rtdb.firebaseio.com",
-  projectId:         "amwc-wargame",
-  storageBucket:     "amwc-wargame.firebasestorage.app",
-  messagingSenderId: "1044419739959",
-  appId:             "1:1044419739959:web:486d7dbc673b5cb5ebdab2"
-};
-const fbApp = initializeApp(firebaseConfig);
-const db    = getDatabase(fbApp);
+import { db, ref, onValue } from './shared/firebase.js';
 
 // ── State ──
 const liveIndex  = {};  // gameId → { gameId, lastSeen, active, ended }
@@ -429,9 +449,7 @@ function formatAge(ms) {
   return `${Math.floor(h/24)}d ago`;
 }
 
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+/* esc() loaded from shared/utils.js */
 
 // Expose filter/sort to window for onchange handlers
 window.applyFilters = render;
@@ -451,24 +469,16 @@ function gateSubmit() {
     sessionStorage.setItem(GATE_KEY, '1');
     document.getElementById('passcode-gate').style.display = 'none';
   } else {
-    const inp = document.getElementById('gate-input');
-    const err = document.getElementById('gate-error');
-    err.textContent = 'Incorrect passcode.';
-    inp.value = '';
-    inp.classList.remove('shake');
-    void inp.offsetWidth; // reflow to restart animation
-    inp.classList.add('shake');
-    inp.focus();
+  document.getElementById('gate-error').textContent = 'Incorrect passcode.';
   }
 }
-window.gateSubmit = gateSubmit;
 
-// Check on load — skip gate if already authenticated this session
-if (sessionStorage.getItem(GATE_KEY) === '1') {
-  document.getElementById('passcode-gate').style.display = 'none';
-} else {
-  setTimeout(() => document.getElementById('gate-input')?.focus(), 50);
-}
+// Auto-unlock if already authenticated this session
+(function() {
+  if (sessionStorage.getItem(GATE_KEY) === '1') {
+    document.getElementById('passcode-gate').style.display = 'none';
+  }
+})();
 </script>
 </body>
 </html>

@@ -5,9 +5,11 @@
 <link rel="icon" type="image/svg+xml" href="MCTOG.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AMWC Wargame System</title>
+<link rel="stylesheet" href="./shared/theme.css">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:'Courier New',Courier,monospace}
+/* director.html — page-specific styles. Reset and font from shared/theme.css. */
+/* Role-based palette (--page-*) defined on body.role-* classes below. */
+html,body{height:100%}
 :root{
   --mil-green:#3B4A2F;--mil-green-mid:#4E6238;--mil-green-light:#7A8F64;
   --mil-gold:#7A6A2A;--mil-ok-border:#8A9E72;--mil-warn-border:#C8B84A;
@@ -355,6 +357,69 @@ body.role-red{
 .turn0-banner strong{text-transform:uppercase;letter-spacing:0.05em}
 .conn-warn{background:rgba(192,74,74,0.12);border:1px solid #C04A4A;border-radius:3px;padding:8px 14px;font-size:12px;color:#C04A4A;margin-bottom:1rem;display:none}
 .conn-warn.visible{display:block}
+
+/* ── RESPONSIVE ─────────────────────────────────────────────────
+   Tablet ≤768px | Phone ≤480px
+   Supplements the existing 430px/700px/900px top-bar breakpoints.
+   ─────────────────────────────────────────────────────────────── */
+@media (max-width:768px){
+  .app{padding:1rem 1rem 3rem}
+  .sub-row{grid-template-columns:1fr 1fr;gap:6px}
+  .sub-row.fires-sub-row{grid-template-columns:1fr 1fr}
+  .entry-row.collections-row{grid-template-columns:1fr 1fr 1fr 1fr}
+  .entry-row.fires-row{grid-template-columns:1fr 1fr 1fr 1fr 1fr}
+  .doc-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+}
+@media (max-width:480px){
+  .app{padding:0.75rem 0.75rem 3rem}
+
+  /* Tabs — tighter text, hide sub-badges to fit three tabs */
+  .tab{font-size:11px;padding:10px 4px;letter-spacing:0.02em}
+  .tab .sub-badge{display:none}
+
+  /* Submission display rows — two columns */
+  .sub-row,.sub-row.fires-sub-row{grid-template-columns:1fr 1fr;font-size:11px;gap:4px}
+
+  /* Entry input rows — single column stack */
+  .entry-row.collections-row,
+  .entry-row.maneuver-row,
+  .entry-row.fires-row{grid-template-columns:1fr}
+  .col-head{display:none} /* labels on each input provide context */
+  .remove-btn{margin-top:0;align-self:flex-end}
+
+  /* Adjudication pairs — single column */
+  .adj-row{grid-template-columns:1fr}
+
+  /* Button rows — stack and stretch */
+  .push-row,.submit-row{flex-direction:column;align-items:stretch}
+  .push-row .btn-primary,.push-row .btn-secondary,
+  .submit-row .btn-primary,.submit-row .btn-secondary{width:100%;text-align:center}
+  .end-block-btns{flex-direction:column}
+  .end-block-btns button{width:100%}
+  .inject-reply-send-row{flex-direction:column;align-items:stretch}
+  .btn-reply{width:100%;text-align:center}
+
+  /* Minimum 44px touch targets on all interactive elements */
+  .btn-primary,.btn-secondary,.btn-end,.btn-reset,
+  .recv-btn,.tc-btn,.dir-ctrl-btn,.dir-action-btn,
+  .tab,.add-btn,.btn-reply{min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+
+  /* 16px font on inputs prevents iOS from zooming on focus */
+  .field input,.field select,.field textarea,
+  .adj-input,.inject-reply-form textarea{font-size:16px}
+
+  /* History and inject headers — adequate tap area */
+  .history-turn-header,.history-inject-block-header{padding:12px 14px;min-height:44px}
+
+  /* Section headers wrap if needed */
+  .section-header,.phase-header{flex-wrap:wrap;gap:6px}
+
+  /* Docs grid — single column on phone */
+  .doc-grid{grid-template-columns:1fr}
+
+  /* Feedback block height — less on small screen */
+  .feedback-block{max-height:180px}
+}
 </style>
 </head>
 <body>
@@ -366,10 +431,9 @@ body.role-red{
   </div>
 </div>
 
+<script src="./shared/utils.js"></script>
 <script type="module">
-import { initializeApp }      from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getDatabase, ref, set, get, onValue, remove, serverTimestamp }
-                               from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+import { db, ref, set, get, onValue, remove, serverTimestamp } from './shared/firebase.js';
 
 // ─────────────────────────────────────────────
 // ROLE + GAME_ID  (must precede Firebase init)
@@ -387,19 +451,8 @@ document.title = ROLE === 'director' ? "Director's Table"
                : ROLE === 'blue'     ? 'Blue Force' : 'Red Force';
 
 // ─────────────────────────────────────────────
-// FIREBASE
+// FIREBASE  (initialized in shared/firebase.js)
 // ─────────────────────────────────────────────
-const firebaseConfig = {
-  apiKey:            "AIzaSyBdKRyZWpmr0YgZhrwI97WSH5ZG0ER_bAg",
-  authDomain:        "amwc-wargame.firebaseapp.com",
-  databaseURL:       "https://amwc-wargame-default-rtdb.firebaseio.com",
-  projectId:         "amwc-wargame",
-  storageBucket:     "amwc-wargame.firebasestorage.app",
-  messagingSenderId: "1044419739959",
-  appId:             "1:1044419739959:web:486d7dbc673b5cb5ebdab2"
-};
-const fbApp = initializeApp(firebaseConfig);
-const db    = getDatabase(fbApp);
 
 // ── Per-game Firebase root ──────────────────────────────────────────────────
 // All game state is scoped under games/<GAME_ID>/ so concurrent sessions never
@@ -474,7 +527,7 @@ const S = {
 // UTILS
 // ─────────────────────────────────────────────
 const pad = n => String(n).padStart(2, '0');
-const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+/* esc() loaded from shared/utils.js */
 const mkSel = (opts, ph, val='') => {
   let s = `<select><option value="" disabled ${val?'':'selected'}>${ph}</option>`;
   opts.forEach(o => s += `<option${o===val?' selected':''}>${o}</option>`);

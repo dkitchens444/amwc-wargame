@@ -4,9 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AMWC — Feedback</title>
+<link rel="stylesheet" href="./shared/theme.css">
+<script src="./shared/utils.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:'Courier New',Courier,monospace;font-size:13px}
+/* feedback.html — page-specific styles. Reset and font from shared/theme.css.
+   Uses its own naming convention (--surf, --tx, etc.) for distinct styling. */
 :root{
   --bg:#111510;--surf:#181E14;--surf2:#1E2619;
   --bd:#2E3E26;--tx:#CED8C6;--mu:#6A8060;
@@ -201,11 +203,32 @@ select option{background:var(--surf2)}
   border-radius:50%;animation:sp 0.7s linear infinite;margin:1.5rem 0}
 @keyframes sp{to{transform:rotate(360deg)}}
 
+@media(max-width:768px){
+  .wrap{padding:1rem 1rem 3rem}
+  .fc-grid{grid-template-columns:1fr 1fr}
+}
 @media(max-width:600px){
   .frow,.fc-grid{grid-template-columns:1fr}
   .fc-tags{display:none}
   .cbar-search{margin-left:0;width:100%}
   .fc-devrow{grid-template-columns:1fr}
+  /* Touch targets */
+  .tab,.fbtn{min-height:40px;padding:6px 14px}
+  .btn{min-height:40px}
+  input[type=text],input[type=password],textarea,select{font-size:16px}
+  /* Stats wrap tightly */
+  .stats{gap:5px}
+  .stat{font-size:10px;padding:3px 6px}
+  /* Topbar */
+  .topbar{flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:0.5rem}
+  .tabs{flex-wrap:wrap;gap:4px}
+}
+@media(max-width:430px){
+  .wrap{padding:0.75rem 0.75rem 3rem}
+  .title{font-size:11px}
+  .cbar{gap:4px}
+  .fc-row{padding:6px 8px;gap:6px}
+  .fc-id{min-width:44px}
 }
 </style>
 </head>
@@ -367,14 +390,11 @@ select option{background:var(--surf2)}
 
 </div>
 <script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import{getDatabase,ref,push,onValue,update,get}from"https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
-
-const cfg={apiKey:"AIzaSyBzHo-1FX9tHmBOSJzXygCUBrCDJL_2vsc",authDomain:"amwc-wargame.firebaseapp.com",
-  databaseURL:"https://amwc-wargame-default-rtdb.firebaseio.com",projectId:"amwc-wargame",
-  storageBucket:"amwc-wargame.firebasestorage.app",messagingSenderId:"216430887870",
-  appId:"1:216430887870:web:b4a02cb2c41c9ab21bac50"};
-const db=getDatabase(initializeApp(cfg));
+/* Firebase initialized in shared/firebase.js.
+   NOTE: feedback.html previously used a separate Firebase app registration
+   (different apiKey/appId). Now uses the primary config. If feedback
+   submissions fail after this change, see the note in shared/firebase.js. */
+import { db, ref, push, onValue, update, get } from './shared/firebase.js';
 const fbRef=p=>ref(db,'feedback/'+(p||''));
 const clRef=p=>ref(db,'changelog/'+(p||''));
 
@@ -382,7 +402,7 @@ const syn=document.getElementById('syn');
 const setSyn=s=>syn.className='syndot'+(s==='live'?' ':s==='off'?' off':' wait');
 onValue(ref(db,'.info/connected'),s=>{setSyn(s.val()?'live':'off')});
 
-const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+/* esc() loaded from shared/utils.js */
 
 let items=[],activeF='all';
 const GATE='amwc-dev'; // ← change this
@@ -565,12 +585,11 @@ window.saveCl=async()=>{
   const ss=document.getElementById('cl-saved');
   if(!ver||!ents){ss.textContent='Version and entries required.';ss.classList.add('on');return;}
   try{
-    await push(clRef(),{version:ver,date:document.getElementById('cl-date').value.trim(),
-      entries:ents.split('\n').map(s=>s.trim()).filter(Boolean),createdAt:new Date().toISOString()});
-    ss.textContent='Saved.';ss.classList.add('on');setTimeout(()=>ss.classList.remove('on'),2000);
-    document.getElementById('cl-ver').value='';document.getElementById('cl-ents').value='';
+    const date=document.getElementById('cl-date').value.trim();
+    await push(clRef(),{version:ver,date,entries:ents.split('\n').filter(Boolean),createdAt:new Date().toISOString()});
+    ss.classList.add('on');setTimeout(()=>ss.classList.remove('on'),2000);
     loadCl();
-  }catch(e){ss.textContent='Error.';ss.classList.add('on');}
+  }catch(e){ss.textContent='Error.';ss.classList.add('on');setTimeout(()=>{ss.classList.remove('on');ss.textContent='Saved.';},2000);}
 };
 </script>
 </body>

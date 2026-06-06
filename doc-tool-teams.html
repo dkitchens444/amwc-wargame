@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AMWC — Document Automation Tool</title>
 <link rel="icon" type="image/svg+xml" href="MCTOG.svg">
+<link rel="stylesheet" href="./shared/theme.css">
+<script src="./shared/utils.js"></script>
 <script src="docx.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
@@ -51,7 +53,8 @@ window.JSZip.prototype.generateAsync=function(opts){
 </script>
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+/* doc-tool-teams.html — page-specific styles. Reset and font from shared/theme.css.
+   Uses a distinct blue-gray palette (intentional — different tool context). */
 :root{
   --bg:#0E1012;--bg2:#14171A;--bg3:#1C2128;--bg4:#252C36;
   --border:#2A3340;--border2:#3A4450;
@@ -61,7 +64,6 @@ window.JSZip.prototype.generateAsync=function(opts){
   --red:#C84A4A;--red-dim:#3A1414;
   --green:#4A9868;--green-dim:#143A24;
   --amber:#C8842A;
-  --font:'Courier New',Courier,monospace;
   --radius:4px;
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px}
@@ -191,6 +193,42 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .pbo{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:12px}
 .pbi{height:100%;background:var(--gold);transition:width .3s;width:0%}
 .pb-msg{font-size:11px;color:var(--text2)}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────── */
+@media(max-width:768px){
+  .sidebar{width:170px}
+  .pb{padding:16px 18px}
+  .ph{padding:14px 18px 12px}
+}
+@media(max-width:540px){
+  /* Hamburger button visible */
+  .menu-btn{display:inline-flex !important}
+  .brand-label{font-size:10px;letter-spacing:0.1em}
+  /* Sidebar becomes overlay drawer */
+  .layout{position:relative}
+  .sidebar{
+    position:fixed;top:48px;left:-210px;width:210px;
+    height:calc(100vh - 48px);z-index:200;
+    transition:left 0.22s ease;
+    box-shadow:none;
+  }
+  .sidebar.open{left:0;box-shadow:4px 0 24px rgba(0,0,0,0.6)}
+  /* Backdrop */
+  .sb-backdrop{display:none;position:fixed;inset:0;top:48px;background:rgba(0,0,0,0.55);z-index:199}
+  .sb-backdrop.open{display:block}
+  .main{width:100%}
+  /* Form */
+  .fr{grid-template-columns:1fr}
+  .pb{padding:14px 14px}
+  .ph{padding:12px 14px 10px}
+  /* Touch targets */
+  .btn{min-height:36px}
+  .gen-btn{min-height:44px;font-size:12px}
+  .field input,.field select,.field textarea,
+  .mf input,.mf select,.mf textarea{font-size:16px}
+  /* Row cards */
+  .rg{grid-template-columns:1fr !important}
+}
 </style>
 </head>
 <body>
@@ -201,6 +239,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     <span class="brand-label">AMWC — Document Automation &nbsp;|&nbsp; Phase 2.2</span>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
+    <button id="menuBtn" class="btn sm menu-btn" onclick="toggleSidebar()" aria-label="Toggle menu" style="display:none">☰</button>
     <span id="sessionLabel" style="font-size:10px;color:var(--text3);letter-spacing:.06em">NO SESSION</span>
     <button class="btn sm" onclick="saveSession()" title="Save all current inputs to browser storage. You can restore this session later on the same device and browser.">Save Session</button>
     <button class="btn sm" onclick="loadSession()" title="Restore previously saved inputs for this force.">Load Session</button>
@@ -208,6 +247,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   </div>
 </div>
 
+<div class="sb-backdrop" id="sbBackdrop" onclick="toggleSidebar()"></div>
 <div class="layout">
   <!-- SIDEBAR -->
   <div class="sidebar">
@@ -1006,7 +1046,7 @@ function collectOrbatGroups(){
     .map(e=>({element:e, task:(elMeta[e]?.task)||'', purpose:(elMeta[e]?.purpose)||'', units:cols[e]}));
 }
 
-function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+/* esc() loaded from shared/utils.js */
 
 // ══════════════════════════════════════════════════════════
 // RENDER ORBAT — unit list cards + symbol column preview
@@ -1816,25 +1856,15 @@ function applyPlaceholders(force) {
 
   show('game');
   setTimeout(refreshPreview, 800);
-  startAutoSave();
-
-  // Check for existing saved session and prompt to restore
-  try{
-    const raw=localStorage.getItem(`amwc-session-${force}`);
-    if(raw){
-      const data=JSON.parse(raw);
-      const t=new Date(data.savedAt).toLocaleString();
-      document.getElementById('sessionLabel').textContent='SESSION SAVED';
-      // Small delay so the UI is fully rendered before prompting
-      setTimeout(()=>{
-        if(confirm(`A saved ${force.toUpperCase()} session from ${t} was found.\nRestore it?`)){
-          restoreSession(data);
-          document.getElementById('sessionLabel').textContent='RESTORED '+new Date(data.savedAt).toLocaleTimeString();
-        }
-      }, 600);
-    }
-  } catch(e){}
 })();
+
+function toggleSidebar() {
+  const sb = document.querySelector('.sidebar');
+  const bd = document.getElementById('sbBackdrop');
+  if (!sb) return;
+  const isOpen = sb.classList.toggle('open');
+  if (bd) bd.classList.toggle('open', isOpen);
+}
 </script>
 </body>
 </html>
