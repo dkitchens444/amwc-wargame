@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="MCTOG.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMWC Wargame System</title>
+<link rel="stylesheet" href="./shared/theme.css">
+<style>
+/* index.html — page-specific styles. Reset, font, and palette from shared/theme.css. */
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px)}
+
+/* ── TOP BAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:52px;background:var(--bg2);border-bottom:1px solid var(--border2);position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.tb-diamond{width:16px;height:16px;background:var(--gold-bright);transform:rotate(45deg);flex-shrink:0}
+.tb-title{font-size:12px;letter-spacing:0.18em;font-weight:700;color:var(--gold-bright);text-transform:uppercase}
+.tb-sub{font-size:10px;letter-spacing:0.1em;color:var(--text3);text-transform:uppercase}
+.tb-right{font-size:11px;color:var(--text3);letter-spacing:0.06em}
+
+/* ── PAGE ── */
+.page{max-width:900px;margin:0 auto;padding:40px 24px 80px}
+
+/* ── HEADER ── */
+.page-header{text-align:center;margin-bottom:48px}
+.header-tag{font-size:10px;letter-spacing:0.2em;color:var(--text3);text-transform:uppercase;margin-bottom:10px}
+.header-title{font-size:28px;font-weight:700;letter-spacing:0.12em;color:var(--text);text-transform:uppercase;line-height:1.2;margin-bottom:6px}
+.header-title span{color:var(--gold-bright)}
+.header-sub{font-size:11px;color:var(--text3);letter-spacing:0.08em}
+
+/* ── SECTION DIVIDER ── */
+.sect-label{font-size:9px;letter-spacing:0.2em;color:var(--text3);text-transform:uppercase;display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.sect-label::before,.sect-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── START CARD ── */
+.start-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:28px 32px;margin-bottom:16px}
+.start-card-title{font-size:13px;font-weight:700;letter-spacing:0.1em;color:var(--gold-bright);text-transform:uppercase;margin-bottom:6px}
+.start-card-desc{font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:18px}
+.naming-rules{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:18px;font-size:11px;color:var(--text2);line-height:1.8}
+.naming-rules strong{color:var(--text);font-weight:700}
+.naming-rules code{color:var(--gold-bright);font-family:var(--font);background:var(--gold-dim);padding:1px 5px;border-radius:2px;font-size:10px}
+.game-input-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.game-input-group{flex:1;min-width:200px}
+.game-input-group label{display:block;font-size:10px;letter-spacing:0.1em;color:var(--text2);text-transform:uppercase;margin-bottom:6px}
+.game-input-group input{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:9px 12px;font-family:var(--font);font-size:13px;border-radius:var(--radius);outline:none;transition:border-color .15s;letter-spacing:0.06em}
+.game-input-group input:focus{border-color:var(--gold-bright)}
+.game-input-group input::placeholder{color:var(--text3);font-size:12px;letter-spacing:0}
+.btn-start{background:var(--gold-dim);border:1px solid var(--gold-bright);color:var(--gold-bright);padding:9px 22px;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;border-radius:var(--radius);cursor:pointer;white-space:nowrap;transition:all .15s}
+.btn-start:hover{background:var(--gold-bright);color:var(--bg)}
+
+/* ── LINK RESULT ── */
+.link-result{display:none;margin-top:18px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:18px 20px}
+.link-result.visible{display:block}
+.link-result-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.link-result-title{font-size:10px;letter-spacing:0.15em;color:var(--text3);text-transform:uppercase}
+.link-result-game{font-size:12px;font-weight:700;color:var(--gold-bright);letter-spacing:0.1em;text-transform:uppercase}
+.link-rows{display:flex;flex-direction:column;gap:8px}
+.link-row{display:flex;align-items:center;gap:10px}
+.link-role{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:2px;border:1px solid;white-space:nowrap;min-width:80px;text-align:center}
+.link-role.dir{color:#7A8F64;border-color:#7A8F64;background:rgba(122,143,100,0.12)}
+.link-role.blue{color:#5A9ACA;border-color:#5A9ACA;background:rgba(90,154,202,0.12)}
+.link-role.red{color:#C05A5A;border-color:#C05A5A;background:rgba(192,90,90,0.12)}
+.link-url{flex:1;font-size:11px;color:var(--text2);background:var(--bg);border:1px solid var(--border);padding:5px 10px;border-radius:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--font);letter-spacing:0.03em}
+.btn-copy{background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 10px;font-family:var(--font);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;border-radius:2px;cursor:pointer;transition:all .12s;white-space:nowrap}
+.btn-copy:hover{border-color:var(--text2);color:var(--text)}
+.btn-copy.copied{border-color:var(--green-bright);color:var(--green-bright)}
+.btn-open{background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 12px;font-family:var(--font);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;border-radius:2px;cursor:pointer;transition:all .12s;white-space:nowrap;text-decoration:none;display:inline-block}
+.btn-open:hover{border-color:var(--text2);color:var(--text)}
+.link-note{font-size:10px;color:var(--text2);margin-top:10px;line-height:1.6}
+
+/* ── RECENT SESSIONS ── */
+.recent-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:40px;overflow:hidden}
+.recent-header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;cursor:pointer;user-select:none;transition:background .12s}
+.recent-header:hover{background:var(--bg3)}
+.recent-header-left{display:flex;align-items:center;gap:10px}
+.recent-title{font-size:11px;font-weight:700;letter-spacing:0.12em;color:var(--text2);text-transform:uppercase}
+.recent-count{font-size:10px;color:var(--text3)}
+.recent-chevron{font-size:11px;color:var(--text3);transition:transform .2s;display:inline-block}
+.recent-chevron.open{transform:rotate(180deg)}
+.recent-body{display:none;border-top:1px solid var(--border)}
+.recent-body.open{display:block}
+.recent-session{border-bottom:1px solid var(--border);padding:12px 18px}
+.recent-session:last-child{border-bottom:none}
+.recent-session-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:0;cursor:pointer;padding:2px 0}
+.recent-session-id{font-size:12px;font-weight:700;color:var(--gold-bright);letter-spacing:0.1em;text-transform:uppercase}
+.recent-session-time{font-size:10px;color:var(--text3)}
+.recent-session-links{display:none;margin-top:10px;flex-direction:column;gap:6px}
+.recent-session-links.open{display:flex}
+.recent-session-footer{display:flex;justify-content:flex-end;margin-top:8px}
+.btn-remove{background:transparent;border:1px solid var(--border);color:var(--text3);padding:3px 8px;font-family:var(--font);font-size:10px;border-radius:2px;cursor:pointer;transition:all .12s}
+.btn-remove:hover{border-color:var(--red-bright);color:var(--red-bright)}
+.btn-clear-all{background:transparent;border:1px solid var(--border);color:var(--text3);padding:4px 10px;font-family:var(--font);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;border-radius:2px;cursor:pointer;transition:all .12s;white-space:nowrap}
+.btn-clear-all:hover{border-color:var(--red-bright);color:var(--red-bright)}
+
+/* ── TOOLS ── */
+.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:40px}
+@media(max-width:540px){.tool-grid{grid-template-columns:1fr}}
+.tool-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s;display:flex;flex-direction:column;gap:8px}
+.tool-card:hover{background:var(--bg3)}
+.tool-card.gold:hover{border-color:var(--gold)}
+.tool-card.green:hover{border-color:var(--green)}
+.tool-card.blue:hover{border-color:var(--blue)}
+.tool-card.red-t:hover{border-color:var(--red)}
+.tool-card-icon{font-size:20px;line-height:1}
+.tool-card-title{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase}
+.tool-card.gold .tool-card-title{color:var(--gold-bright)}
+.tool-card.green .tool-card-title{color:var(--green-bright)}
+.tool-card.blue .tool-card-title{color:var(--blue-bright)}
+.tool-card.red-t .tool-card-title{color:var(--red-bright)}
+.tool-card-desc{font-size:11px;color:var(--text2);line-height:1.55}
+
+/* ── REFERENCE DOCS ── */
+.ref-section{margin-bottom:40px}
+.ref-subsect{margin-bottom:24px}
+.ref-subsect-label{font-size:10px;letter-spacing:0.14em;color:var(--text3);text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.ref-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;text-decoration:none;color:inherit;transition:border-color .12s;display:flex;align-items:flex-start;gap:10px}
+.ref-card:hover{border-color:var(--border2)}
+.ref-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.ref-info{min-width:0;flex:1}
+.ref-name{font-size:11px;color:var(--text2);line-height:1.4;word-break:break-word}
+.ref-folder{font-size:9px;letter-spacing:0.08em;color:var(--text3);text-transform:uppercase;margin-top:3px}
+.ref-empty{font-size:11px;color:var(--text2);padding:10px 0;font-style:italic}
+.ref-loading{font-size:11px;color:var(--text3);padding:12px 0;animation:blink 1.5s ease-in-out infinite}
+.ref-sub-label{font-size:10px;letter-spacing:0.1em;color:var(--text2);text-transform:uppercase;margin:10px 0 6px;padding-left:2px}
+.ref-game-section{margin-bottom:12px}
+.ref-game-hdr{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:0;user-select:none;transition:border-color .12s}
+.ref-game-hdr:hover{border-color:var(--border2)}
+.ref-game-name{font-size:11px;font-weight:700;letter-spacing:0.12em;color:var(--gold-bright);text-transform:uppercase}
+.ref-game-count{font-size:10px;color:var(--text2)}
+.ref-game-chev{font-size:10px;color:var(--text3);transition:transform .2s;display:inline-block}
+.ref-game-chev.open{transform:rotate(180deg)}
+.ref-game-body{display:none;padding:12px 4px 4px}
+.ref-game-body.open{display:block}
+@keyframes blink{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* ── FOOTER ── */
+.page-footer{text-align:center;font-size:10px;color:var(--text3);letter-spacing:0.08em;border-top:1px solid var(--border);padding-top:20px;margin-top:20px;line-height:1.8}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────── */
+@media(max-width:768px){
+  .page{padding:24px 16px 60px}
+  .topbar{padding:0 16px}
+  .header-title{font-size:22px}
+  .start-card{padding:20px}
+  .link-url{min-width:0;max-width:200px}
+}
+@media(max-width:540px){
+  /* Full-width button strip — role badge + Copy + Open on one line */
+  .link-url{display:none}
+  .link-row{gap:4px;flex-wrap:nowrap;align-items:stretch}
+  .link-role{
+    min-width:82px;width:82px;flex-shrink:0;
+    font-size:9px;padding:0 6px;
+    display:flex;align-items:center;justify-content:center;
+    min-height:40px;
+  }
+  .btn-copy,.btn-open{
+    flex:1;min-height:40px;height:auto;
+    display:flex !important;align-items:center;justify-content:center;
+    padding:0;font-size:10px;letter-spacing:0.06em;
+  }
+}
+@media(max-width:480px){
+  .page{padding:16px 12px 48px}
+  .topbar{padding:0 12px;height:48px}
+  .tb-sub{display:none}
+  .header-title{font-size:18px;letter-spacing:0.06em}
+  .page-header{margin-bottom:32px}
+  .start-card{padding:16px}
+  .game-input-row{flex-direction:column}
+  .game-input-group{min-width:0;width:100%}
+  .btn-start{width:100%;min-height:44px}
+  /* 16px prevents iOS auto-zoom on input focus */
+  .game-input-group input{font-size:16px}
+  .btn-remove,.btn-clear-all{min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+  .btn-copy,.btn-open{min-height:44px}
+  .tool-card{padding:16px}
+  .ref-grid{grid-template-columns:1fr}
+  .link-rows{gap:12px}
+  .link-row{flex-direction:column;align-items:flex-start;gap:6px}
+  .link-url{width:100%;white-space:normal;word-break:break-all;font-size:10px}
+  .recent-session{padding:10px 12px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="tb-diamond"></div>
+    <div>
+      <div class="tb-title">AMWC Wargame System</div>
+      <div class="tb-sub">Advanced Maneuver Warfare Course</div>
+    </div>
+  </div>
+  <div class="tb-right">UNCLASSIFIED // FOR TRAINING USE ONLY</div>
+</div>
+
+<div class="page">
+
+  <div class="page-header">
+    <div class="header-tag">Advanced Maneuver Warfare Course</div>
+    <div class="header-title">Wargame <span>Operations Portal</span></div>
+    <div class="header-sub">Start a game · Access tools · Reference documents · Monitor live games</div>
+  </div>
+
+  <!-- ── CREATE GAME ── -->
+  <div class="sect-label">Start or Join a Game</div>
+  <div class="start-card">
+    <div class="start-card-title">Create Game Session</div>
+    <div class="start-card-desc">Enter a game name to generate role-specific URLs for the Director, Blue Force, and Red Force tables. Share each URL with the appropriate table — all three connect automatically to the same game session.</div>
+
+    <div class="naming-rules">
+      <strong>Game Name Rules</strong> — The game name becomes the Firebase session ID and must match the folder name under <code>references/games/</code> in GitHub exactly for game-specific documents to appear.<br>
+      Use <strong>lowercase letters, numbers, and hyphens only</strong> — no spaces, no uppercase, no special characters.<br>
+      The six course games are: <code>alpha</code> &nbsp;<code>bravo</code> &nbsp;<code>central</code> &nbsp;<code>east</code> &nbsp;<code>south</code> &nbsp;<code>west</code><br>
+      External units may use any unique name following the same convention — e.g. <code>tf-kilo</code> or <code>jrtc-25-04</code>.
+    </div>
+
+    <div class="game-input-row">
+      <div class="game-input-group">
+        <label>Game Name</label>
+        <input type="text" id="game-name-input"
+               placeholder="e.g. alpha  ·  bravo  ·  tf-kilo"
+               maxlength="40"
+               oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9-]/g,'')"
+               onkeydown="if(event.key==='Enter')generateLinks()">
+      </div>
+      <button class="btn-start" onclick="generateLinks()">Generate Links →</button>
+    </div>
+
+    <div class="link-result" id="link-result">
+      <div class="link-result-header">
+        <span class="link-result-title">Session Links</span>
+        <span class="link-result-game" id="result-game-label"></span>
+      </div>
+      <div class="link-rows" id="result-link-rows"></div>
+      <div class="link-note" id="result-link-note"></div>
+    </div>
+  </div>
+
+  <!-- ── RECENT SESSIONS ── -->
+  <div class="recent-card" id="recent-card" style="display:none">
+    <div class="recent-header" onclick="toggleRecent()">
+      <div class="recent-header-left">
+        <span class="recent-title">Recent Sessions</span>
+        <span class="recent-count" id="recent-count"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="btn-clear-all" onclick="event.stopPropagation();clearAllRecent()">Clear all</button>
+        <span class="recent-chevron" id="recent-chevron">▼</span>
+      </div>
+    </div>
+    <div class="recent-body" id="recent-body"></div>
+  </div>
+
+  <!-- ── TOOLS ── -->
+  <div class="sect-label">Tools</div>
+  <div class="tool-grid">
+    <a class="tool-card green" href="dashboard.html" target="_blank">
+      <div class="tool-card-icon">📡</div>
+      <div class="tool-card-title">Master Director View</div>
+      <div class="tool-card-desc">Live read-only dashboard showing all currently active game sessions. Turn status, submission state, inject activity, and connection health per game.</div>
+    </a>
+    <a class="tool-card gold" href="feedback.html" target="_blank">
+      <div class="tool-card-icon">💬</div>
+      <div class="tool-card-title">Feedback</div>
+      <div class="tool-card-desc">Submit feedback, report bugs, or request features. Cadre, students, and FMF units. Developer triage dashboard included.</div>
+    </a>
+    <a class="tool-card blue" href="doc-tool-teams.html?force=blue" target="_blank">
+      <div class="tool-card-icon">📘</div>
+      <div class="tool-card-title">Doc Tool — Blue Force</div>
+      <div class="tool-card-desc">Force-locked document builder for Blue team. Generates Blue planning products — OPORD, DSM, collections, and fire support. Red fields hidden.</div>
+    </a>
+    <a class="tool-card red-t" href="doc-tool-teams.html?force=red" target="_blank">
+      <div class="tool-card-icon">📕</div>
+      <div class="tool-card-title">Doc Tool — Red Force</div>
+      <div class="tool-card-desc">Force-locked document builder for Red team. Generates Red planning products with Red-specific placeholders and terminology throughout.</div>
+    </a>
+  </div>
+
+  <!-- ── REFERENCE DOCUMENTS ── -->
+  <div class="sect-label">Reference Documents</div>
+  <div class="ref-section" id="ref-section">
+    <div class="ref-loading" id="ref-loading">Loading documents from repository…</div>
+  </div>
+
+  <div class="page-footer">
+    AMWC Wargame System · Unclassified // For Training Use Only<br>
+    Hosted on GitHub Pages · Real-time sync via Firebase
+  </div>
+
+</div>
+
+<script src="./shared/utils.js"></script>
+<script>
+const GH_OWNER   = 'dkitchens444';
+const GH_REPO    = 'amwc-wargame';
+const RECENT_KEY = 'amwc_recent_sessions';
+const MAX_RECENT = 10;
+
+const FILE_ICONS = {pdf:'📄',doc:'📝',docx:'📝',ppt:'📊',pptx:'📊',xls:'📋',xlsx:'📋',txt:'📃',md:'📃',png:'🖼',jpg:'🖼',jpeg:'🖼',gif:'🖼'};
+const SKIP_EXT   = new Set(['html','htm','js','css','json','gitignore','xml','yaml','yml','map','lock']);
+const fExt       = n => { const p = n.split('.'); return p.length > 1 ? p[p.length-1].toLowerCase() : ''; };
+const fIcon      = n => FILE_ICONS[fExt(n)] || '📁';
+/* esc() loaded from shared/utils.js */
+
+function baseUrl() {
+  return location.origin + location.pathname.replace(/\/[^/]*$/, '/');
+}
+
+// ── RECENT SESSIONS ──
+function loadRecent() { try { return JSON.parse(localStorage.getItem(RECENT_KEY)||'[]'); } catch{ return []; } }
+function saveRecent(a) { localStorage.setItem(RECENT_KEY, JSON.stringify(a.slice(0,MAX_RECENT))); }
+
+function addToRecent(gameId, links) {
+  const recent = loadRecent().filter(r => r.gameId !== gameId);
+  recent.unshift({ gameId, links, at: Date.now() });
+  saveRecent(recent);
+  renderRecent();
+}
+
+window.removeRecent = gameId => {
+  saveRecent(loadRecent().filter(r => r.gameId !== gameId));
+  renderRecent();
+};
+
+window.clearAllRecent = () => {
+  if (!confirm('Clear all recent sessions?')) return;
+  localStorage.removeItem(RECENT_KEY);
+  renderRecent();
+};
+
+function formatAgo(ts) {
+  const s = Math.floor((Date.now()-ts)/1000);
+  if (s < 60)    return 'just now';
+  if (s < 3600)  return Math.floor(s/60)+'m ago';
+  if (s < 86400) return Math.floor(s/3600)+'h ago';
+  return new Date(ts).toLocaleDateString();
+}
+
+function linkRowsHtml(links) {
+  return links.map(l => `
+    <div class="link-row">
+      <span class="link-role ${l.role}">${esc(l.label)}</span>
+      <span class="link-url" title="${esc(l.url)}">${esc(l.url)}</span>
+      <button class="btn-copy" onclick="copyText('${encodeURIComponent(l.url)}',this)">Copy</button>
+      <a class="btn-open" href="${esc(l.url)}" target="_blank">Open ↗</a>
+    </div>`).join('');
+}
+
+function renderRecent() {
+  const recent  = loadRecent();
+  const card    = document.getElementById('recent-card');
+  const body    = document.getElementById('recent-body');
+  const countEl = document.getElementById('recent-count');
+  if (!recent.length) { card.style.display='none'; return; }
+  card.style.display = '';
+  countEl.textContent = `${recent.length} session${recent.length!==1?'s':''}`;
+  body.innerHTML = recent.map(r => `
+    <div class="recent-session">
+      <div class="recent-session-hdr" onclick="toggleSess('rsess-${r.gameId}')">
+        <span class="recent-session-id">${esc(r.gameId)}</span>
+        <span class="recent-session-time">${formatAgo(r.at)}</span>
+      </div>
+      <div class="recent-session-links" id="rsess-${r.gameId}">
+        <div class="link-rows">${linkRowsHtml(r.links)}</div>
+        <div class="recent-session-footer">
+          <button class="btn-remove" onclick="removeRecent('${esc(r.gameId)}')">Remove</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+window.toggleRecent = () => {
+  const body = document.getElementById('recent-body');
+  const chev = document.getElementById('recent-chevron');
+  const open = body.classList.toggle('open');
+  chev.classList.toggle('open', open);
+};
+
+window.toggleSess = id => {
+  document.getElementById(id)?.classList.toggle('open');
+};
+
+// ── LINK GENERATION ──
+window.generateLinks = () => {
+  const raw = document.getElementById('game-name-input').value.trim();
+  if (!raw) { document.getElementById('game-name-input').focus(); return; }
+  const gameId = raw.toLowerCase().replace(/[^a-z0-9-]/g,'').slice(0,40);
+  if (!gameId) { document.getElementById('game-name-input').focus(); return; }
+  const base = baseUrl();
+  const links = [
+    { role:'dir',  label:'Director',   url:`${base}director.html?game=${gameId}&role=director` },
+    { role:'blue', label:'Blue Force', url:`${base}director.html?game=${gameId}&role=blue` },
+    { role:'red',  label:'Red Force',  url:`${base}director.html?game=${gameId}&role=red` },
+  ];
+
+  // Show inline result
+  document.getElementById('result-game-label').textContent = gameId.toUpperCase();
+  document.getElementById('result-link-rows').innerHTML = linkRowsHtml(links);
+  document.getElementById('result-link-note').textContent =
+    `Share each link with the appropriate table. Links are saved to Recent Sessions below.`;
+  const result = document.getElementById('link-result');
+  result.classList.add('visible');
+  setTimeout(() => result.scrollIntoView({behavior:'smooth',block:'nearest'}), 50);
+
+  // Save and expand recent
+  addToRecent(gameId, links);
+  const body = document.getElementById('recent-body');
+  const chev = document.getElementById('recent-chevron');
+  body.classList.add('open');
+  chev.classList.add('open');
+  setTimeout(() => {
+    const el = document.getElementById(`rsess-${gameId}`);
+    if (el) el.classList.add('open');
+  }, 60);
+
+  // Auto-expand matching game doc section if it exists
+  setTimeout(() => expandGameDocs(gameId), 400);
+};
+
+window.copyText = (encoded, btn) => {
+  navigator.clipboard.writeText(decodeURIComponent(encoded)).then(() => {
+    if (!btn) return;
+    btn.textContent = 'Copied ✓'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+};
+
+// ── REFERENCE DOCUMENTS ──
+let _tree = null;
+
+async function fetchTree() {
+  if (_tree) return _tree;
+  const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/git/trees/HEAD?recursive=1`);
+  const d = await r.json();
+  _tree = (d.tree||[]).filter(f => {
+    if (f.type !== 'blob') return false;
+    if (!f.path.startsWith('references/')) return false;
+    const name = f.path.split('/').pop();
+    if (name.startsWith('.')) return false;
+    return !SKIP_EXT.has(fExt(name));
+  });
+  return _tree;
+}
+
+function rawUrl(path) {
+  return `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/HEAD/${path}`;
+}
+
+function refCard(f) {
+  const name   = f.path.split('/').pop();
+  const folder = f.path.split('/').slice(0,-1).join('/');
+  return `<a class="ref-card" href="${esc(rawUrl(f.path))}" target="_blank" rel="noopener">
+    <div class="ref-icon">${fIcon(name)}</div>
+    <div class="ref-info">
+      <div class="ref-name">${esc(name)}</div>
+      <div class="ref-folder">${esc(folder)}</div>
+    </div>
+  </a>`;
+}
+
+function gridOrEmpty(files, msg) {
+  return files.length
+    ? `<div class="ref-grid">${files.map(refCard).join('')}</div>`
+    : `<div class="ref-empty">${msg}</div>`;
+}
+
+async function loadRefs() {
+  const section = document.getElementById('ref-section');
+  const loading = document.getElementById('ref-loading');
+  try {
+    const files = await fetchTree();
+
+    // ── Course-wide ──
+    const cShared = files.filter(f => f.path.split('/').length === 2);
+    const cBlue   = files.filter(f => f.path.startsWith('references/blue/'));
+    const cRed    = files.filter(f => f.path.startsWith('references/red/'));
+    const cDir    = files.filter(f => f.path.startsWith('references/director/'));
+
+    let html = `<div class="ref-subsect">
+      <div class="ref-subsect-label">Course Documents — All Games</div>`;
+
+    if (!cShared.length && !cBlue.length && !cRed.length && !cDir.length) {
+      html += `<div class="ref-empty">No course-wide documents found. Upload files to <em>references/</em> or its subfolders.</div>`;
+    } else {
+      if (cShared.length) html += gridOrEmpty(cShared,'');
+      if (cBlue.length)   html += `<div class="ref-sub-label">Blue Force</div>${gridOrEmpty(cBlue,'')}`;
+      if (cRed.length)    html += `<div class="ref-sub-label">Red Force</div>${gridOrEmpty(cRed,'')}`;
+      if (cDir.length)    html += `<div class="ref-sub-label">Director</div>${gridOrEmpty(cDir,'')}`;
+    }
+    html += `</div>`;
+
+    // ── Per-game ──
+    const gameNames = [...new Set(
+      files
+        .filter(f => f.path.startsWith('references/games/'))
+        .map(f => f.path.split('/')[2])
+        .filter(Boolean)
+    )].sort();
+
+    if (gameNames.length) {
+      html += `<div class="ref-subsect"><div class="ref-subsect-label">Game Documents — By Session</div>`;
+      gameNames.forEach(g => {
+        const prefix  = `references/games/${g}/`;
+        const gShared = files.filter(f => f.path.startsWith(prefix) && f.path.split('/').length === 4);
+        const gBlue   = files.filter(f => f.path.startsWith(`${prefix}blue/`));
+        const gRed    = files.filter(f => f.path.startsWith(`${prefix}red/`));
+        const gDir    = files.filter(f => f.path.startsWith(`${prefix}director/`));
+        const total   = gShared.length + gBlue.length + gRed.length + gDir.length;
+
+        html += `<div class="ref-game-section">
+          <div class="ref-game-hdr" onclick="toggleGame('gd-${g}',this)">
+            <span class="ref-game-name">${esc(g)}</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="ref-game-count">${total} file${total!==1?'s':''}</span>
+              <span class="ref-game-chev">▼</span>
+            </div>
+          </div>
+          <div class="ref-game-body" id="gd-${g}">`;
+
+        if (!total) {
+          html += `<div class="ref-empty">No documents in this game folder yet.</div>`;
+        } else {
+          if (gShared.length) html += gridOrEmpty(gShared,'');
+          if (gBlue.length)   html += `<div class="ref-sub-label">Blue Force</div>${gridOrEmpty(gBlue,'')}`;
+          if (gRed.length)    html += `<div class="ref-sub-label">Red Force</div>${gridOrEmpty(gRed,'')}`;
+          if (gDir.length)    html += `<div class="ref-sub-label">Director</div>${gridOrEmpty(gDir,'')}`;
+        }
+        html += `</div></div>`;
+      });
+      html += `</div>`;
+    }
+
+    if (loading) loading.remove();
+    section.insertAdjacentHTML('afterbegin', html);
+
+  } catch(e) {
+    if (loading) {
+      loading.className = 'ref-empty';
+      loading.textContent = 'Could not load reference documents. Confirm internet connectivity and GitHub repository access.';
+    }
+  }
+}
+
+window.toggleGame = (id, hdr) => {
+  const el   = document.getElementById(id); if (!el) return;
+  const open = el.classList.toggle('open');
+  const ch   = hdr.querySelector('.ref-game-chev');
+  if (ch) ch.classList.toggle('open', open);
+};
+
+function expandGameDocs(gameId) {
+  const el = document.getElementById(`gd-${gameId}`);
+  if (!el || el.classList.contains('open')) return;
+  el.classList.add('open');
+  const hdr = el.previousElementSibling;
+  if (hdr) { const ch = hdr.querySelector('.ref-game-chev'); if(ch) ch.classList.add('open'); }
+  setTimeout(() => el.scrollIntoView({behavior:'smooth',block:'nearest'}), 100);
+}
+
+// ── INIT ──
+renderRecent();
+loadRefs();
+</script>
+</body>
+</html>
