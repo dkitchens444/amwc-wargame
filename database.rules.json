@@ -1,0 +1,37 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "_live": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+
+    "games": {
+      "$gameId": {
+        ".read": "auth != null && root.child('gameRoles/' + $gameId + '/' + auth.uid).exists()",
+        ".write": "auth != null && root.child('gameRoles/' + $gameId + '/' + auth.uid).exists()"
+      }
+    },
+
+    "gameRoles": {
+      "$gameId": {
+        "$uid": {
+          ".read": "auth != null && auth.uid == $uid",
+          ".write": "auth != null && auth.uid == $uid && !data.exists()"
+        }
+      }
+    },
+
+    "feedback": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+
+    "scenarioGen": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}

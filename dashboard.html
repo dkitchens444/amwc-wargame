@@ -284,7 +284,7 @@ body::before{
 
 <script src="./shared/utils.js"></script>
 <script type="module">
-import { db, ref, onValue } from './shared/firebase.js';
+import { db, ref, onValue, claimGameRole } from './shared/firebase.js';
 
 // ── State ──
 const liveIndex  = {};  // gameId → { gameId, lastSeen, active, ended }
@@ -303,11 +303,21 @@ onValue(ref(db, '_live'), snap => {
   const val = snap.val() || {};
   Object.entries(val).forEach(([gid, meta]) => {
     liveIndex[gid] = meta;
-    // Subscribe to this game's state if not already watching
+    // Subscribe to this game's state if not already watching. This view
+    // spans every active game, so it has to self-claim each one it
+    // discovers before database.rules.json will let it read games/<gid>
+    // (security-hardening pass, July 2026) — same claim mechanism a
+    // director/blue/red uses when opening one game's own link.
     if (!gameState[gid]) {
       gameState[gid] = { _loading: true };
-      onValue(ref(db, `games/${gid}`), gsnap => {
-        gameState[gid] = gsnap.val() || {};
+      claimGameRole(gid, 'observer').then(() => {
+        onValue(ref(db, `games/${gid}`), gsnap => {
+          gameState[gid] = gsnap.val() || {};
+          render();
+        });
+      }).catch(e => {
+        console.warn('Could not claim access to game', gid, e);
+        gameState[gid] = { _error: true };
         render();
       });
     }

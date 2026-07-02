@@ -387,10 +387,22 @@ window.toggleSess = id => {
 };
 
 // ── LINK GENERATION ──
+// Random suffix appended to every generated game ID (security-hardening
+// pass, July 2026). Game IDs used to be exactly what a director typed
+// ("iron-anvil-25-1") — recognizable, but guessable by anyone familiar with
+// course naming patterns. The per-game Firebase access gate (database.rules
+// .json) means someone would need to already know a game's ID to touch it
+// at all, so making that ID non-guessable is what actually closes the gap.
+// Still human-readable — just no longer predictable.
+function randomSuffix(len = 4) {
+  const chars = '0123456789abcdefghijklmnopqrstuvwxyz';
+  return Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
 window.generateLinks = () => {
   const raw = document.getElementById('game-name-input').value.trim();
   if (!raw) { document.getElementById('game-name-input').focus(); return; }
-  const gameId = raw.toLowerCase().replace(/[^a-z0-9-]/g,'').slice(0,40);
+  const gameId = raw.toLowerCase().replace(/[^a-z0-9-]/g,'').slice(0,40) + '-' + randomSuffix();
   if (!gameId) { document.getElementById('game-name-input').focus(); return; }
   const base = baseUrl();
   const links = [

@@ -67,6 +67,43 @@ signInAnonymously(auth).catch(err => {
 });
 
 /**
+ * Self-claims this browser's Firebase UID for a specific game, once.
+ *
+ * Security model (added in the security-hardening pass, July 2026):
+ * database.rules.json grants read/write on games/{gameId} only to UIDs that
+ * have a gameRoles/{gameId}/{uid} entry. This function is what creates that
+ * entry — a director/blue/red opening a game's real link, or the dashboard
+ * discovering a game, calls this once and is then recognized for that game.
+ * The write is enforced write-once by the rules (!data.exists()), so
+ * re-claiming an already-claimed game is a harmless no-op.
+ *
+ * Deliberately does NOT distinguish director/blue/red for access purposes —
+ * all three get equal read/write on their game once claimed. Per-game
+ * scoping (you need that game's link to get in at all) was the actual goal;
+ * separating roles from each other was explicitly out of scope.
+ *
+ * Waits for anonymous auth to resolve if it hasn't yet (auth.currentUser
+ * can be null for a moment right after page load).
+ */
+export async function claimGameRole(gameId, role) {
+  if (!gameId) return null;
+  const user = auth.currentUser || await new Promise(resolve => {
+    const unsub = onAuthStateChanged(auth, u => { if (u) { unsub(); resolve(u); } });
+  });
+  const claimRef = ref(db, `gameRoles/${gameId}/${user.uid}`);
+  try {
+    const existing = await get(claimRef);
+    if (!existing.exists()) {
+      await set(claimRef, { role, claimedAt: serverTimestamp() });
+    }
+  } catch (err) {
+    console.warn('[AMWC] claimGameRole failed:', gameId, err.code || err.message);
+    throw err; // let the caller decide how to surface this
+  }
+  return user.uid;
+}
+
+/**
  * Re-export all Firebase database functions used across pages.
  * Import what you need: import { db, ref, onValue } from './shared/firebase.js';
  */

@@ -452,7 +452,7 @@ body.role-red{
 
 <script src="./shared/utils.js"></script>
 <script type="module">
-import { db, ref, set, get, onValue, remove, serverTimestamp } from './shared/firebase.js';
+import { db, ref, set, get, onValue, remove, serverTimestamp, claimGameRole } from './shared/firebase.js';
 
 // ─────────────────────────────────────────────
 // ROLE + GAME_ID  (must precede Firebase init)
@@ -822,6 +822,16 @@ async function boot() {
   setSyncDot('connecting');
   const sub = document.getElementById('ls-sub');
   if(sub) sub.textContent = 'Loading game state…';
+
+  // Claim this browser's role for this game before touching game data —
+  // database.rules.json only grants read/write on games/<GAME_ID> to a UID
+  // that holds this claim (security-hardening pass, July 2026). A failure
+  // here isn't fatal on its own: the dbGet() below will simply fail too and
+  // fall back to defaults, same as any other connectivity problem.
+  if (GAME_ID) {
+    try { await claimGameRole(GAME_ID, ROLE); }
+    catch (e) { console.warn('Game role claim failed — data access may be denied:', e); }
+  }
 
   // One get() fetches the entire game node at once — single network round-trip
   let snap;
