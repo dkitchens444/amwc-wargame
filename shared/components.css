@@ -1,0 +1,145 @@
+/* =============================================================
+   AMWC WARGAME SYSTEM — Shared Components
+   shared/components.css
+
+   Canonical button / field / card / form-row styles, extracted
+   from doc-tool-teams.html's inline <style> block (June 2026 UX
+   pass), plus the semantic design tokens described in the UX
+   Modernization recommendations:
+
+     - semantic color roles (--accent / --success / --warning /
+       --danger) so --gold stops meaning four different things
+     - spacing scale (--space-1..6)
+     - elevation scale (--elev-1 raised card, --elev-2 overlay)
+     - prose typography split (--font-prose) — system font stack
+       for narrative text, Courier stays for data/labels
+     - AI-generation loading state (.skeleton shimmer)
+     - :focus-visible keyboard focus + reduced-motion support
+
+   Load AFTER theme.css, BEFORE the page's inline <style>:
+     <link rel="stylesheet" href="./shared/theme.css">
+     <link rel="stylesheet" href="./shared/components.css">
+
+   Pages keep their own :root palette overrides — every rule here
+   reads palette vars (--bg3, --border, --text2, …) defined in
+   theme.css and overridden per page.
+
+   Currently linked by: doc-tool-teams.html.
+   Follow-on pass: index.html, director.html, dashboard.html,
+   feedback.html (see 07_UX_Modernization_Recommendations.md).
+   ============================================================= */
+
+:root {
+  /* ── Semantic color roles ── */
+  --accent:      var(--gold, #B8962A);
+  --accent-dim:  var(--gold-dim, #3A2E10);
+  --success:     var(--green, #4A9868);
+  --success-dim: var(--green-dim, #143A24);
+  --warning:     var(--amber, #C8842A);
+  --danger:      var(--red, #C84A4A);
+  --danger-dim:  var(--red-dim, #3A1414);
+
+  /* ── Spacing scale ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* ── Elevation scale (flat panel = no shadow) ── */
+  --elev-1: 0 1px 3px rgba(0,0,0,.4);   /* raised card   */
+  --elev-2: 0 8px 24px rgba(0,0,0,.5);  /* overlay/modal */
+
+  /* ── Prose typography — OS-native stack, no webfont ── */
+  --font-prose: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ── FORM FIELDS ─────────────────────────────────────────────── */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:10px;letter-spacing:.08em;color:var(--text2);margin-bottom:5px;text-transform:uppercase}
+.field input,.field select,.field textarea{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;font-family:var(--font);font-size:12px;border-radius:var(--radius);outline:none;transition:border-color .12s,box-shadow .12s}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue-dim, rgba(74,138,200,.25))}
+.field select{cursor:pointer}
+.field select option{background:var(--bg3)}
+.field textarea{resize:vertical;min-height:70px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.slabel{font-size:10px;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:6px;margin:18px 0 14px}
+
+/* Prose variant — narrative fields a director actually reads/edits
+   (situation narratives, AI-generated text, intent prose) */
+.field textarea.prose,.field input.prose{font-family:var(--font-prose);font-size:13px;line-height:1.55}
+
+/* ── BUTTONS ─────────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;font-family:var(--font);font-size:11px;letter-spacing:.07em;cursor:pointer;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);color:var(--text2);transition:all .12s}
+.btn:hover{border-color:var(--blue);color:var(--blue-bright);background:var(--bg4);box-shadow:var(--elev-1)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--blue-dim);border-color:var(--blue);color:var(--blue-bright)}
+.btn.primary:hover{background:var(--blue);color:#fff}
+.btn.danger{color:var(--danger);border-color:var(--danger-dim)}
+.btn.danger:hover{background:var(--danger-dim);border-color:var(--danger);color:var(--danger)}
+.btn.red-active{background:var(--danger-dim);border-color:var(--danger);color:#FF8888}
+.btn.red-active:hover{background:var(--danger);color:#fff}
+.btn.sm{padding:4px 9px;font-size:10px}
+.btn.atog{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+.gen-btn{width:100%;padding:9px;background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent);font-family:var(--font);font-size:11px;letter-spacing:.1em;cursor:pointer;border-radius:var(--radius);transition:all .15s;text-transform:uppercase}
+.gen-btn:hover{background:var(--accent);color:#000;box-shadow:var(--elev-1)}
+.gen-btn:active{transform:scale(.98)}
+.gen-btn:disabled{opacity:.55;cursor:not-allowed;background:var(--accent-dim);color:var(--accent);box-shadow:none;transform:none}
+
+/* Keyboard focus — visible ring without the mouse-focus border noise */
+.btn:focus-visible,.gen-btn:focus-visible,
+.field input:focus-visible,.field select:focus-visible,.field textarea:focus-visible,
+.mf input:focus-visible,.mf select:focus-visible,.mf textarea:focus-visible{
+  outline:2px solid var(--blue-bright);outline-offset:1px;
+}
+
+/* ── ROW CARDS (repeatable form rows) ────────────────────────── */
+.row-card{border:1px solid var(--border);background:var(--bg3);border-radius:var(--radius);padding:10px;margin-bottom:8px;box-shadow:var(--elev-1)}
+.rg{display:grid;gap:8px;align-items:start}
+.mf{display:flex;flex-direction:column;gap:3px}
+.mf label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
+.mf input,.mf select,.mf textarea{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 8px;font-family:var(--font);font-size:11px;border-radius:var(--radius);outline:none;width:100%;transition:border-color .12s}
+.mf input:focus,.mf select:focus,.mf textarea:focus{border-color:var(--blue)}
+.mf textarea{resize:vertical;min-height:48px}
+.mf textarea.prose,.mf input.prose{font-family:var(--font-prose);font-size:12px;line-height:1.5}
+
+/* ── DOC REVIEW CARDS ────────────────────────────────────────── */
+.doc-card{border:1px solid var(--border);background:var(--bg3);border-radius:var(--radius);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;box-shadow:var(--elev-1)}
+.doc-info{display:flex;align-items:center;gap:12px}
+.doc-title{font-size:12px;color:var(--text);margin-bottom:2px}
+.doc-sub{font-size:10px;color:var(--text2)}
+.doc-status{font-size:10px;letter-spacing:.06em}
+
+/* ── CLASSIFICATION / GUARDRAIL BANNER ───────────────────────── */
+.class-banner{padding:7px 12px;border:1px solid var(--warning);background:rgba(200,132,42,.08);color:var(--warning);font-size:10px;letter-spacing:.08em;border-radius:var(--radius);line-height:1.6;margin-bottom:var(--space-4)}
+
+/* ── AI GENERATION LOADING STATE ─────────────────────────────
+   Apply .skeleton to inputs/textareas about to be populated by
+   the scenario generator. Pure CSS shimmer — no JS, no images. */
+@keyframes amwc-shimmer{
+  0%{background-position:-400px 0}
+  100%{background-position:400px 0}
+}
+.skeleton{
+  color:transparent !important;
+  pointer-events:none;
+  background-image:linear-gradient(90deg,var(--bg3) 0%,var(--bg4) 40%,var(--bg3) 80%) !important;
+  background-size:800px 100% !important;
+  animation:amwc-shimmer 1.4s linear infinite;
+}
+.skeleton::placeholder{color:transparent}
+
+/* Small inline "thinking" dots for status text next to the button */
+@keyframes amwc-pulse{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.ai-dots span{animation:amwc-pulse 1.2s infinite;display:inline-block}
+.ai-dots span:nth-child(2){animation-delay:.2s}
+.ai-dots span:nth-child(3){animation-delay:.4s}
+
+/* ── REDUCED MOTION ──────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce){
+  .skeleton{animation:none}
+  .ai-dots span{animation:none;opacity:.7}
+  .btn,.gen-btn,.btn:active,.gen-btn:active{transition:none;transform:none}
+}

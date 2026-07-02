@@ -6,6 +6,7 @@
 <title>AMWC — Document Automation Tool</title>
 <link rel="icon" type="image/svg+xml" href="MCTOG.svg">
 <link rel="stylesheet" href="./shared/theme.css">
+<link rel="stylesheet" href="./shared/components.css">
 <script src="./shared/utils.js"></script>
 <script src="docx.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -95,38 +96,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .ph p{font-size:11px;color:var(--text2);line-height:1.5}
 .pb{padding:22px 26px;flex:1;overflow-y:auto}
 
-/* ── FORM ELEMENTS ── */
-.field{margin-bottom:14px}
-.field label{display:block;font-size:10px;letter-spacing:.08em;color:var(--text2);margin-bottom:5px;text-transform:uppercase}
-.field input,.field select,.field textarea{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;font-family:var(--font);font-size:12px;border-radius:var(--radius);outline:none;transition:border-color .12s}
-.field input:focus,.field textarea:focus{border-color:var(--blue)}
-.field select{cursor:pointer}
-.field select option{background:var(--bg3)}
-.field textarea{resize:vertical;min-height:70px}
-.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.slabel{font-size:10px;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:6px;margin:18px 0 14px}
-
-/* ── BUTTONS ── */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;font-family:var(--font);font-size:11px;letter-spacing:.07em;cursor:pointer;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);color:var(--text2);transition:all .12s}
-.btn:hover{border-color:var(--blue);color:var(--blue-bright);background:var(--bg4)}
-.btn.primary{background:var(--blue-dim);border-color:var(--blue);color:var(--blue-bright)}
-.btn.primary:hover{background:var(--blue);color:#fff}
-.btn.danger{color:var(--red);border-color:var(--red-dim)}
-.btn.danger:hover{background:var(--red-dim);border-color:var(--red)}
-.btn.red-active{background:var(--red-dim);border-color:var(--red);color:#FF8888}
-.btn.red-active:hover{background:var(--red);color:#fff}
-.btn.sm{padding:4px 9px;font-size:10px}
-.btn.atog{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
-.gen-btn{width:100%;padding:9px;background:var(--gold-dim);border:1px solid var(--gold);color:var(--gold);font-family:var(--font);font-size:11px;letter-spacing:.1em;cursor:pointer;border-radius:var(--radius);transition:all .15s;text-transform:uppercase}
-.gen-btn:hover{background:var(--gold);color:#000}
-
-/* ── ROW CARDS (DSM / COLL / FIRES) ── */
-.row-card{border:1px solid var(--border);background:var(--bg3);border-radius:var(--radius);padding:10px;margin-bottom:8px}
-.rg{display:grid;gap:8px;align-items:start}
-.mf{display:flex;flex-direction:column;gap:3px}
-.mf label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
-.mf input,.mf select,.mf textarea{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 8px;font-family:var(--font);font-size:11px;border-radius:var(--radius);outline:none;width:100%}
-.mf textarea{resize:vertical;min-height:48px}
+/* ── FORM ELEMENTS / BUTTONS / ROW CARDS / DOC CARDS ──
+   Extracted to shared/components.css (June 2026 UX pass) along
+   with the semantic tokens (--accent/--success/--warning/--danger),
+   spacing + elevation scales, prose typography split, and the
+   AI-generation skeleton loading state. This block keeps only
+   page-specific styles. */
 
 /* ── ORBAT STYLES ── */
 .add-strip{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px}
@@ -160,6 +135,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .unit-type{font-size:11px;color:#2A3A4A;font-weight:600}
 .unit-del{background:transparent;border:none;cursor:pointer;color:#5A6A7A;font-size:15px;padding:0 4px;line-height:1;flex-shrink:0}
 .unit-del:hover{color:#C84A4A}
+/* Qty/loadout inputs on unit rows — light background to match row */
+.unit-ext{width:190px;flex-shrink:0;background:#EDF0F5;border:1px solid #A8B0BC;color:#1A2430;padding:4px 7px;font-family:var(--font);font-size:10px;border-radius:3px;outline:none}
+.unit-ext::placeholder{color:#8A96A6}
+.unit-ext:focus{border-color:#4A8AC8}
+@media(max-width:768px){.unit-ext{width:120px}}
 
 /* Symbol preview — matching medium-light gray */
 .sym-preview{background:#C8CDD6;border:1px solid var(--border);border-radius:var(--radius);padding:16px;overflow-x:auto;min-height:120px}
@@ -176,12 +156,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .mod-chip:hover{border-color:var(--blue-bright);color:var(--blue-bright)}
 .mod-chip.on{border-color:var(--gold);color:var(--gold);background:var(--gold-dim)}
 
-/* DOC REVIEW */
-.doc-card{border:1px solid var(--border);background:var(--bg3);border-radius:var(--radius);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
-.doc-info{display:flex;align-items:center;gap:12px}
-.doc-title{font-size:12px;color:var(--text);margin-bottom:2px}
-.doc-sub{font-size:10px;color:var(--text2)}
-.doc-status{font-size:10px;letter-spacing:.06em}
+/* DOC REVIEW cards — see shared/components.css */
 
 /* MISC */
 .status-bar{padding:7px 26px;background:var(--bg2);border-top:1px solid var(--border);font-size:10px;color:var(--text3);letter-spacing:.05em;display:flex;align-items:center;gap:16px;flex-shrink:0}
@@ -258,6 +233,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </div>
 
     <div class="sb-sect">Inputs</div>
+    <div class="nav-item"        id="nav-scenario"    onclick="show('scenario')">    <span class="nn">S</span> Scenario · AI</div>
     <div class="nav-item active" id="nav-game"        onclick="show('game')">        <span class="nn">1</span> Game Conditions</div>
     <div class="nav-item"        id="nav-intent"      onclick="show('intent')">      <span class="nn">2</span> Commander's Intent</div>
     <div class="nav-item"        id="nav-orbat"       onclick="show('orbat')">       <span class="nn">3</span> Order of Battle</div>
@@ -281,6 +257,98 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
   <!-- MAIN -->
   <div class="main">
+
+    <!-- S. SCENARIO GENERATOR (Spec §4 — POA&M 2.SG1) -->
+    <div class="panel" id="panel-scenario">
+      <div class="ph"><h2>S — Scenario Generator</h2><p>Describe the scenario in plain-language parameters. AI drafts Blue and Red situation content into the form fields for your review — nothing goes to a document until you check it and click Generate.</p></div>
+      <div class="pb">
+
+        <div class="class-banner">
+          UNCLASSIFIED // FOR TRAINING USE ONLY — this tool must never be prompted with real operational, deployment, or classified information. Use fictional or exercise data only.
+        </div>
+
+        <div class="slabel" style="margin-top:0">Scenario Parameters</div>
+        <div style="font-size:10px;color:var(--text3);line-height:1.6;margin-bottom:12px">
+          Exercise name, classification, unit designation, and higher HQ are reused from <a href="#" onclick="show('game');return false" style="color:var(--blue-bright)">Game Conditions</a> — fill those in first.
+        </div>
+
+        <div class="fr">
+          <div class="field"><label>Area of Operations — Name</label><input id="s-ao-name" placeholder="e.g. AO South"></div>
+          <div class="field"><label>Adversary Profile</label>
+            <select id="s-adversary" onchange="syncAdversary(this.value)">
+              <option value="A">Threat A — Russian BTG</option>
+              <option value="C">Threat C — PLA Medium Combined Arms Bn</option>
+            </select>
+          </div>
+        </div>
+        <div class="fr">
+          <div class="field"><label>Scenario Date/Time Reference</label><input id="s-dtg" placeholder="e.g. D+2, 1900L"></div>
+          <div class="field"><label>Calendar Month</label>
+            <select id="s-month">
+              <option>January</option><option>February</option><option>March</option>
+              <option>April</option><option>May</option><option selected>June</option>
+              <option>July</option><option>August</option><option>September</option>
+              <option>October</option><option>November</option><option>December</option>
+            </select>
+          </div>
+        </div>
+        <div class="fr">
+          <div class="field"><label>Force Status / Attrition State</label>
+            <select id="s-status">
+              <option value="fresh">Fresh</option>
+              <option value="attrited">Attrited</option>
+              <option value="reinforced">Reinforced</option>
+              <option value="attrited-reinforced">Attrited + Reinforced</option>
+            </select>
+          </div>
+          <div class="field"><label>Status Detail (attrition % / reinforcing asset)</label><input id="s-status-detail" placeholder="e.g. rifle companies at 2 platoons; +1 ACV company"></div>
+        </div>
+        <div class="field"><label>Reinforcement / Attachment State</label><input id="s-attach" placeholder="e.g. reinforced with 1 x LAR Plt; DS M777 Battery (-)"></div>
+        <div class="field"><label>Primary Learning Objective</label>
+          <textarea id="s-objective" class="prose" placeholder="e.g. battalion defense in sector; combined-arms breach of a defended obstacle"></textarea>
+        </div>
+
+        <!-- AO boundary grid points (Spec §5 — new repeatable list) -->
+        <div class="slabel">AO Boundary — Numbered Grid Points</div>
+        <button class="btn primary sm" onclick="addAOPoint()" style="margin-bottom:10px">+ Add Grid Point</button>
+        <div id="ao-list"></div>
+
+        <!-- Weather block (Spec §5 — structured field) -->
+        <div class="slabel">Weather / Environment <span style="text-transform:none;letter-spacing:0">— AI derives from month and region; override anything below</span></div>
+        <div class="fr">
+          <div class="field"><label>Temperature — completes "Temperatures …"</label><input id="s-w-temp" placeholder="e.g. are mild, ranging from 60 – 78 degrees F"></div>
+          <div class="field"><label>Sky / Precipitation — completes "Skies …"</label><input id="s-w-sky" placeholder="e.g. are clear with no rain forecast for the next six days"></div>
+        </div>
+        <div class="fr">
+          <div class="field"><label>Wind — completes "Winds …"</label><input id="s-w-wind" placeholder="e.g. are not forecast to exceed 5 mph"></div>
+          <div class="field"><label>Ground Condition — full sentence</label><input id="s-w-ground" placeholder="e.g. Unimproved roads are dry and dusty from lack of rainfall"></div>
+        </div>
+
+        <!-- General Situation narrative (Spec §5 — AI-drafted, director-editable) -->
+        <div class="slabel">General Situation Narrative</div>
+        <div class="field"><label>Status Update Paragraphs (one bullet per line on the handout)</label>
+          <textarea id="s-gensit" class="prose" style="min-height:120px" placeholder="AI-drafted from the parameters above; edit freely. Each line becomes a bullet on the Situation Handout."></textarea>
+        </div>
+
+        <!-- Additional assets (Spec §5 — distinct from Order of Battle) -->
+        <div class="slabel">Additional Assets <span style="text-transform:none;letter-spacing:0">— attached enablers, time-on-station, ordnance loadout (not organic task organization)</span></div>
+        <button class="btn primary sm" onclick="addAsset()" style="margin-bottom:10px">+ Add Asset</button>
+        <div id="assets-list"></div>
+
+        <!-- Generation controls -->
+        <div style="margin-top:20px;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--elev-1)">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.6">
+            Generates Blue and Red content together in a single request so AO, timeline, and weather stay consistent across both handouts. The current force's fields populate immediately; the other force's package is held for when that side's page loads. Review every field before generating documents.
+          </div>
+          <button class="gen-btn" id="scen-gen-btn" onclick="generateScenario()">✦ Generate Scenario (AI)</button>
+          <div id="scen-status" style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.5"></div>
+          <div style="margin-top:10px;text-align:right">
+            <button class="btn sm" onclick="loadSampleScenario()" title="Populates the form from a built-in example response — works offline, no API call. Use to preview the round trip before the Cloud Function is deployed.">Load example (no API)</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
 
     <!-- 1. GAME CONDITIONS -->
     <div class="panel active" id="panel-game">
@@ -454,7 +522,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
             <!-- Designation input -->
             <input id="o-desig" placeholder="Unit designation (e.g. V17 Baker Co)"
               style="flex:1;min-width:160px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 8px;font-family:var(--font);font-size:11px;border-radius:var(--radius);outline:none"
-              placeholder="Unit designation" onkeydown="if(event.key==='Enter')addUnit()">
+              onkeydown="if(event.key==='Enter')addUnit()">
 
             <button class="btn primary" onclick="addUnit()" style="white-space:nowrap;flex-shrink:0">+ Add</button>
           </div>
@@ -508,13 +576,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
     <!-- 7. REVIEW -->
     <div class="panel" id="panel-review">
-      <div class="ph"><h2>Review & Generate</h2><p>Four .docx files. ORBAT includes MIL-STD-2525E symbol page.</p></div>
+      <div class="ph"><h2>Review & Generate</h2><p>Up to five .docx files. ORBAT includes MIL-STD-2525E symbol page. Situation Handout is included when Scenario fields have content.</p></div>
       <div class="pb">
         <div id="review-badge" style="margin-bottom:18px;font-size:11px;letter-spacing:.08em;padding:6px 11px;border:1px solid var(--blue);color:var(--blue-bright);display:inline-block">BLUE FORCE PACKAGE</div>
         <div class="doc-card"><div class="doc-info"><span style="font-size:16px;color:var(--text3)">◼</span><div><div class="doc-title">Decision Support Matrix</div><div class="doc-sub">Landscape</div></div></div><span class="doc-status" id="st-dsm" style="color:var(--text3)">PENDING</span></div>
         <div class="doc-card"><div class="doc-info"><span style="font-size:16px;color:var(--text3)">◼</span><div><div class="doc-title">Collections Synchronization Matrix</div><div class="doc-sub">Landscape · 2-hr resolution</div></div></div><span class="doc-status" id="st-coll" style="color:var(--text3)">PENDING</span></div>
         <div class="doc-card"><div class="doc-info"><span style="font-size:16px;color:var(--text3)">◼</span><div><div class="doc-title">Order of Battle — Task Organization</div><div class="doc-sub">Landscape · + MIL-STD-2525E symbol page</div></div></div><span class="doc-status" id="st-orbat" style="color:var(--text3)">PENDING</span></div>
         <div class="doc-card"><div class="doc-info"><span style="font-size:16px;color:var(--text3)">◼</span><div><div class="doc-title">Essential Fire Support Tasks</div><div class="doc-sub">Portrait</div></div></div><span class="doc-status" id="st-fires" style="color:var(--text3)">PENDING</span></div>
+        <div class="doc-card"><div class="doc-info"><span style="font-size:16px;color:var(--text3)">◼</span><div><div class="doc-title">Situation Handout</div><div class="doc-sub">Portrait · Blue_South/Red_South format · from Scenario tab</div></div></div><span class="doc-status" id="st-sit" style="color:var(--text3)">PENDING</span></div>
         <div style="margin-top:20px;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius)">
           <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.6">All generation runs in the browser. No server required.</div>
           <button class="gen-btn" onclick="generateDocs()">▲ Generate All Documents</button>
@@ -547,7 +616,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     <div id="om-filename" style="font-size:13px;color:var(--text);font-weight:700;margin-bottom:20px;word-break:break-all"></div>
 
     <!-- Download ZIP -->
-    <button id="om-download" class="gen-btn" style="margin-bottom:22px">⬇ Download ZIP (4 .docx files)</button>
+    <button id="om-download" class="gen-btn" style="margin-bottom:22px">⬇ Download ZIP</button>
 
     <!-- GitHub section -->
     <div style="border-top:1px solid var(--border);padding-top:18px;margin-top:4px">
@@ -994,6 +1063,10 @@ function setForce(f){
   if(pubStatus) pubStatus.textContent='';
   populateElSelect();
   renderOrbat();
+  // A paired scenario generation from the other force may be waiting for
+  // this force — offer it once the switch has painted (also fires on the
+  // initial setForce() during init)
+  setTimeout(maybeOfferPendingScenario, 400);
 }
 
 function populateElSelect(){
@@ -1022,10 +1095,17 @@ function addUnit(){
   const desig = document.getElementById('o-desig').value.trim();
   if(!desig){ document.getElementById('o-desig').focus(); return; }
   S.uid++;
-  getUnits().push({id:S.uid, el, entity, ech, mob, desig});
+  // qty/loadout carry the Blue_South/Red_South roster detail
+  // (e.g. qty "4 x tubes, 10 x JLTVs", loadout "800 HE, 200 RP, 40 Illum")
+  getUnits().push({id:S.uid, el, entity, ech, mob, desig, qty:'', loadout:''});
   document.getElementById('o-desig').value='';
   document.getElementById('o-desig').focus();
   renderOrbat();
+}
+
+function updateUnitField(id,field,val){
+  const u=getUnits().find(u=>u.id===id);
+  if(u) u[field]=val;
 }
 
 function removeUnit(id){
@@ -1046,15 +1126,8 @@ function clearOrbat(){
 
 function countUnits(){ return getUnits().length; }
 
-function collectOrbatGroups(){
-  const els=getEls(), elMeta=getElMeta(), units=getUnits();
-  const cols={};
-  els.forEach(e=>cols[e]=[]);
-  units.forEach(u=>{ if(cols[u.el]) cols[u.el].push(u); });
-  return els
-    .filter(e=>cols[e].length>0)
-    .map(e=>({element:e, task:(elMeta[e]?.task)||'', purpose:(elMeta[e]?.purpose)||'', units:cols[e]}));
-}
+/* collectOrbatGroups() lives with the other collect* functions below —
+   a second identical copy used to be declared here (removed June 2026). */
 
 /* esc() loaded from shared/utils.js */
 
@@ -1096,8 +1169,14 @@ function renderOrbat(){
         const mobLbl = u.mob?(', '+(MOB_LABEL[u.mob]||u.mob)):'';
         gh+=`<div class="unit-row">
           <div class="unit-sym">${svg||'<span style="font-size:9px;color:#8A9BB0">…</span>'}</div>
-          <div class="unit-desig">${esc(u.desig)}</div>
-          <div class="unit-type">${echLbl} · ${entLbl}${mobLbl}</div>
+          <div style="flex:1;min-width:0">
+            <div class="unit-desig">${esc(u.desig)}</div>
+            <div class="unit-type">${echLbl} · ${entLbl}${mobLbl}</div>
+          </div>
+          <input class="unit-ext" placeholder="Qty (e.g. 4 x tubes, 10 x JLTVs)" value="${esc(u.qty||'')}"
+            oninput="updateUnitField(${u.id},'qty',this.value)" title="Quantity / composition — printed with the unit on the Situation Handout roster">
+          <input class="unit-ext" placeholder="Loadout (e.g. 800 HE, 200 RP)" value="${esc(u.loadout||'')}"
+            oninput="updateUnitField(${u.id},'loadout',this.value)" title="Ordnance / capability loadout — printed with the unit on the Situation Handout roster">
           <button class="unit-del" onclick="removeUnit(${u.id})" title="Remove">×</button>
         </div>`;
       });
@@ -1262,6 +1341,287 @@ async function publishToGame(){
 }
 
 // ══════════════════════════════════════════════════════════
+// SCENARIO GENERATOR — Spec §3–§7, POA&M 2.SG1–2.SG4
+// Client half of the AI generation flow. The parameter form is
+// sent to a Firebase Cloud Function (functions/index.js), which
+// calls the Claude API server-side and returns structured JSON
+// matching the field IDs below. Generated content populates the
+// form for director review — it never goes straight to a docx.
+// ══════════════════════════════════════════════════════════
+
+// Deploy-ready endpoint — us-central1 is the default Functions region.
+// If the function is deployed elsewhere, update the region segment.
+const SCENARIO_FN_URL = 'https://us-central1-amwc-wargame.cloudfunctions.net/generateScenario';
+
+// Fields the AI populates — shimmer these while the request is in flight
+const SCEN_TARGET_IDS = ['s-ao-name','s-dtg','s-w-temp','s-w-sky','s-w-wind','s-w-ground',
+  's-gensit','i-hhqmission','i-mission','i-purpose','i-method','i-endstate'];
+
+// ── AO grid-point list (repeatable rows) ──
+function addAOPoint(val){
+  const list=document.getElementById('ao-list');
+  const n=list.children.length+1;
+  const d=document.createElement('div'); d.className='row-card';
+  d.innerHTML=`<div style="display:flex;gap:8px;align-items:center">
+    <span style="font-size:10px;color:var(--text3);width:20px;flex-shrink:0" class="ao-num">${n}.</span>
+    <input placeholder="4-digit grid, e.g. 52T BK 99 46" value="${esc(val||'')}"
+      style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 8px;font-family:var(--font);font-size:11px;border-radius:var(--radius);outline:none">
+    <button class="btn sm danger" onclick="this.closest('.row-card').remove();renumberAOPoints()">✕</button></div>`;
+  list.appendChild(d);
+}
+function renumberAOPoints(){
+  document.querySelectorAll('#ao-list .ao-num').forEach((s,i)=>s.textContent=(i+1)+'.');
+}
+function collectAOPoints(){
+  return Array.from(document.querySelectorAll('#ao-list input')).map(i=>i.value.trim()).filter(Boolean);
+}
+function setAOPoints(points){
+  document.getElementById('ao-list').innerHTML='';
+  (points||[]).forEach(p=>addAOPoint(p));
+}
+
+// ── Additional assets list (distinct from Order of Battle) ──
+function addAsset(name,details){
+  const d=document.createElement('div'); d.className='row-card';
+  d.innerHTML=`<div class="rg" style="grid-template-columns:1fr 1.6fr auto">
+    <div class="mf"><label>Asset</label><input class="a-name" placeholder="e.g. 1 x MQ-9 (unarmed)" value="${esc(name||'')}"></div>
+    <div class="mf"><label>Details — time on station / loadout / constraints</label><input class="a-details prose" placeholder="e.g. 24 hours TOS" value="${esc(details||'')}"></div>
+    <button class="btn sm danger" style="align-self:end" onclick="this.closest('.row-card').remove()">✕</button></div>`;
+  document.getElementById('assets-list').appendChild(d);
+}
+function collectAssets(){
+  return Array.from(document.getElementById('assets-list').children).map(c=>({
+    name:c.querySelector('.a-name')?.value.trim()||'',
+    details:c.querySelector('.a-details')?.value.trim()||'',
+  })).filter(a=>a.name);
+}
+function setAssets(assets){
+  document.getElementById('assets-list').innerHTML='';
+  (assets||[]).forEach(a=>addAsset(a.name,a.details));
+}
+
+// Keep the Adversary Profile select and the ORBAT Threat toggle as ONE state
+function syncAdversary(t){
+  if(S.force==='red') setThreat(t); else S.threat=t;
+}
+
+// ── Collect the Situation fields (used by session save + docx) ──
+function collectScenario(){
+  return {
+    aoName:$v('s-ao-name'), dtg:$v('s-dtg'), month:$v('s-month'),
+    adversary:$v('s-adversary')||S.threat,
+    status:$v('s-status'), statusDetail:$v('s-status-detail'),
+    attachments:$v('s-attach'), objective:$v('s-objective'),
+    weather:{temp:$v('s-w-temp'), sky:$v('s-w-sky'), wind:$v('s-w-wind'), ground:$v('s-w-ground')},
+    gensit:$v('s-gensit'),
+    aoPoints:collectAOPoints(),
+    assets:collectAssets(),
+  };
+}
+
+// ── Apply one side's generated package to the form (review step) ──
+function applyScenarioSide(shared, side){
+  const set=(id,val)=>{const el=document.getElementById(id); if(el&&val!=null&&val!=='') el.value=val;};
+  set('s-ao-name', shared.aoName);
+  set('s-dtg',     side.dtg||shared.dtg);
+  set('s-month',   shared.month);
+  set('s-w-temp',  shared.weather?.temp);
+  set('s-w-sky',   shared.weather?.sky);
+  set('s-w-wind',  shared.weather?.wind);
+  set('s-w-ground',shared.weather?.ground);
+  set('s-gensit',  side.gensit);
+  set('i-hhqmission', side.hhqMission);
+  set('i-mission',    side.mission);
+  set('i-purpose',    side.purpose);
+  set('i-method',     side.method);
+  set('i-endstate',   side.endstate);
+  if(Array.isArray(side.aoPoints)&&side.aoPoints.length) setAOPoints(side.aoPoints);
+  if(Array.isArray(side.assets)&&side.assets.length) setAssets(side.assets);
+  // Task organization → ORBAT units (constrained server-side to the
+  // unit vocabulary in the #o-type option list, so symbols render)
+  if(Array.isArray(side.taskOrg)&&side.taskOrg.length){
+    const els=getEls();
+    S.units[S.force]=side.taskOrg.map(u=>{
+      S.uid++;
+      const {entity,ech,mob}=parseType(u.type||'inf|15|');
+      return {id:S.uid, el:els.includes(u.element)?u.element:els[0],
+              entity, ech, mob, desig:u.desig||'', qty:u.qty||'', loadout:u.loadout||''};
+    });
+    renderOrbat();
+  }
+}
+
+const pendingScenKey=f=>`amwc-scenario-pending-${f}`;
+
+function applyScenarioResponse(data){
+  const mine  = S.force==='blue' ? data.blue : data.red;
+  const other = S.force==='blue' ? 'red' : 'blue';
+  const adversary = data.shared.adversary || $v('s-adversary') || S.threat;
+  // Adversary profile drives the existing threat state, not a parallel one
+  document.getElementById('s-adversary').value=adversary;
+  syncAdversary(adversary);
+  applyScenarioSide(data.shared, mine);
+  // Hold the paired side for the other force's (locked) page on this browser
+  try{
+    localStorage.setItem(pendingScenKey(other), JSON.stringify({
+      shared:data.shared, side:S.force==='blue'?data.red:data.blue,
+      adversary, savedAt:new Date().toISOString(),
+    }));
+  }catch(e){ /* storage full — the active side still applied */ }
+}
+
+// Offer a stored paired package when the matching force loads
+function maybeOfferPendingScenario(){
+  let raw=null;
+  try{ raw=localStorage.getItem(pendingScenKey(S.force)); }catch(e){ return; }
+  if(!raw) return;
+  try{
+    const p=JSON.parse(raw);
+    const t=new Date(p.savedAt).toLocaleString();
+    if(confirm(`A generated ${S.force.toUpperCase()} scenario package from ${t} is waiting (paired with the other force's generation).\nApply it to this form? Existing field values will be overwritten.`)){
+      document.getElementById('s-adversary').value=p.adversary||S.threat;
+      syncAdversary(p.adversary||S.threat);
+      applyScenarioSide(p.shared,p.side);
+      localStorage.removeItem(pendingScenKey(S.force));
+      notify('Paired scenario package applied — review every field.','ok');
+    }
+  }catch(e){ localStorage.removeItem(pendingScenKey(S.force)); }
+}
+
+// ── The generation call ──
+// Stable per-browser identity for the Cloud Function's rate limiter — NOT
+// the same as the game/session state above. Classroom Wi-Fi puts many
+// directors' devices behind one shared public IP (NAT), so the function
+// can't tell directors apart by IP alone; this localStorage ID, generated
+// once and persisted the same way session state already is, lets it rate-
+// limit per director/browser instead of per network. See functions/index.js
+// clientKey() for the server side of this.
+function getClientId(){
+  let id=localStorage.getItem('amwc-client-id');
+  if(!id){
+    id='c-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);
+    localStorage.setItem('amwc-client-id', id);
+  }
+  return id;
+}
+
+async function generateScenario(){
+  const btn=document.getElementById('scen-gen-btn');
+  const status=document.getElementById('scen-status');
+  const G=collectGame(), sc=collectScenario();
+  if(!sc.aoName&&!sc.objective){
+    notify('Give the scenario at least an AO name or a learning objective first.','warn'); return;
+  }
+  const payload={
+    exercise:G.exercise, classification:G.classification, unit:G.unit, hhq:G.hhq,
+    aoName:sc.aoName, aoPoints:sc.aoPoints, dtg:sc.dtg, month:sc.month,
+    adversary:sc.adversary, status:sc.status, statusDetail:sc.statusDetail,
+    attachments:sc.attachments, objective:sc.objective,
+    weatherOverride:sc.weather,
+    clientId:getClientId(),
+  };
+  btn.disabled=true; btn.dataset.label=btn.textContent; btn.textContent='GENERATING — PAIRED BLUE + RED…';
+  status.innerHTML='Calling scenario generator<span class="ai-dots"><span>.</span><span>.</span><span>.</span></span> A paired generation typically takes 30–90 seconds.';
+  SCEN_TARGET_IDS.forEach(id=>document.getElementById(id)?.classList.add('skeleton'));
+  try{
+    const res=await fetch(SCENARIO_FN_URL,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload),
+    });
+    if(!res.ok){
+      let msg='HTTP '+res.status;
+      try{ const j=await res.json(); msg=j.error||msg; }catch(_){}
+      throw new Error(msg);
+    }
+    const data=await res.json();
+    if(!data||!data.shared||!data.blue||!data.red)
+      throw new Error('response missing shared/blue/red sections');
+    applyScenarioResponse(data);
+    status.textContent=`Generated ${new Date().toLocaleTimeString()}. The ${S.force==='blue'?'RED':'BLUE'} package is stored on this browser and will be offered when that force's page loads. Review and edit every field, then use Generate Documents.`;
+    notify('Scenario drafted into the form — review before generating documents.','ok');
+  }catch(e){
+    const notDeployed = e instanceof TypeError; // network-level: function likely not deployed yet
+    status.textContent='Generation failed: '+e.message+(notDeployed
+      ? ' — if the Cloud Function has not been deployed yet, see 10_Deployment_Checklist.md. "Load example (no API)" works offline.'
+      : '');
+    notify('Scenario generation failed: '+e.message,'warn');
+  }finally{
+    SCEN_TARGET_IDS.forEach(id=>document.getElementById(id)?.classList.remove('skeleton'));
+    btn.disabled=false; btn.textContent=btn.dataset.label||'✦ Generate Scenario (AI)';
+  }
+}
+
+// ── Built-in example response — offline round-trip test (Spec §3 review
+// step, POA&M validation). Mirrors the Cloud Function output contract and
+// the Blue_South/Red_South baseline documents. ──
+const SAMPLE_SCENARIO={
+  shared:{
+    aoName:'AO South', dtg:'D+2, 1900L', month:'June', adversary:'C',
+    weather:{temp:'are mild, ranging from 60 – 78 degrees F',
+             sky:'are clear with no rain forecast for the next six days',
+             wind:'are not forecast to exceed 5 mph',
+             ground:'Unimproved roads are dry and dusty from lack of rainfall'},
+  },
+  blue:{
+    dtg:'D+2, 1900L',
+    aoPoints:['52T BK 99 46','52S BK 99 17','52S CK 30 17','52T CK 30 46'],
+    gensit:'It is now D+2 at 1900L. You are the staff of 2d Battalion 8th Marines.\nOver the past 48 hours, V28 completed a resupply of Class I, III and V. Due to casualties from the initial offensive actions, each rifle company is down to two platoons, one section of 81mm Mortars was destroyed, and 2 M777s were destroyed. Regiment has reinforced your battalion with an additional ACV company.\n2d MARDIV G-2 received intelligence that a PRC reinforced mechanized battalion will attack from the west into V28\'s AO within 24 – 48 hours. The adversary has limited close air support they can employ — we do not have air superiority at this time.',
+    hhqMission:'RLT-2 defends in sector to prevent enemy interference with logistics operations south and east of the RLT area of operations.',
+    mission:'Upon contact, defeat the adversary in your sector IOT prevent adversary penetration east of your AO. BPT resume the attack to the west.',
+    purpose:'The overarching purpose of our operation is protection of joint logistics operations IVO SPODs and APODs on the coast to the south and east, as well as the GLOCs connecting those sites to the ground forces fighting decisive actions in the west.',
+    method:'Having defeated enemy forces in zone, RLT-2 will defend in sector in four dispersed non-contiguous battalion areas of operation focused on major mobility corridors and recently opened GLOCs and APODs.',
+    endstate:'The enemy is unable to penetrate, infiltrate elements larger than platoon size, or emplace indirect fire systems that can range south/east of the regimental AO boundary. RLT-2 is prepared to conduct a RIP with coalition forces.',
+    taskOrg:[
+      {element:'HQ', type:'med|15|hq',        desig:'H&S Company',           qty:'1 x RQ-20 Puma GCS, 2 x Air Vehicles', loadout:''},
+      {element:'ME', type:'inf|15|',          desig:'Rifle Company x 3 (reduced)', qty:'2 platoons each', loadout:''},
+      {element:'SE1',type:'caat|14|',         desig:'CAAT Platoon',          qty:'8 x HMG, 4 x TOW JLTVs', loadout:''},
+      {element:'SE1',type:'hk|11|',           desig:'Hunter Killer Teams',   qty:'12 teams — 1 x UTV, 1 x CLU per team', loadout:'4 x missiles per team'},
+      {element:'SE2',type:'mortar-med|13|',   desig:'81mm Mortar Section',   qty:'4 x tubes, 10 x JLTVs', loadout:'800 HE, 200 RP, 40 Illum, 40 IR Illum'},
+      {element:'SE2',type:'arty|15|',         desig:'M777 Battery (-) DS',   qty:'', loadout:'324 HE, 150 DPICM, 42 Illum, 42 Smoke, 60 WP, 90 RAP, 24 EXCAL'},
+      {element:'SE3',type:'armor-amphib|15|', desig:'ACV Company x 2',       qty:'can transport 2 x rifle companies', loadout:''},
+      {element:'SE3',type:'lar|14|',          desig:'LAR Platoon',           qty:'4 x LAV-25', loadout:''},
+      {element:'SE4',type:'engr|14|',         desig:'Combat Engineer Platoon', qty:'', loadout:'2 x turn/disrupt obstacles, 1 x fix/block obstacle'},
+      {element:'SE4',type:'aad|11|',          desig:'LAAD Section',          qty:'4 x Firing Teams', loadout:''},
+    ],
+    assets:[
+      {name:'1 x MQ-9 (unarmed)', details:'24 hours TOS'},
+      {name:'2 x RQ-21A Blackjack sorties', details:'10 hour TOS, no less than 4 hours between sorties, can range entire AO'},
+      {name:'2 x Sections of AH-1Z', details:'1 hour TOS; 8 x AGM-114K2, 16 x 2.75" rockets per section'},
+      {name:'MV-22 air insert capability for scout sniper teams', details:'time now'},
+    ],
+  },
+  red:{
+    dtg:'expecting to enter AO in 24 hours',
+    aoPoints:['52T BK 91 44','52T CK 24 45','52T CK 30 40','52S CK 29 28','52S CK 13 14','52S BK 91 11'],
+    gensit:'You are the 4th PLA Medium Combined Arms Battalion (4th MCA Bn). American forces have advanced beyond the coast and are conducting offensive operations northwest. An American regiment of four battalions has fortified a defense in depth around key terrain in order to build combat power.\nYou are currently west of the AO moving east; you are expecting to enter your AO in 24 hours.\nThe 4th MCA Bn\'s start box is to the West of the 91 Easting. You must enter your AO from it.',
+    hhqMission:'',
+    mission:'NLT 48 hours, seize key GLOCs IVO Taehung (52T CK 24 40) IOT prevent US sustainment operations.',
+    purpose:'We must disrupt enemy offensive preparations and drive enemy forces from staging areas. The overarching purpose is to prevent US forces from employing long range aerial and precision fires and extending their operational reach.',
+    method:'Identify and secure critical objectives in your AO. US forces are assessed to be arrayed in an area defense, holding key terrain to build combat power for follow-on operations.',
+    endstate:'US forces are unable to use choke points along the high-speed avenues of approach to halt our advance or bring close air support and precision fires to bear before objectives are engaged.',
+    taskOrg:[
+      {element:'AG',  type:'inf-mech|15|',  desig:'Mechanized Infantry Company x 3', qty:'10 x IFVs per Co (ZBL-08/09)', loadout:''},
+      {element:'FRAG',type:'sp-assault|15|',desig:'Assault Gun Company',   qty:'14 x SP Assault Guns (ZTL-11)', loadout:''},
+      {element:'DAG', type:'sp-mortar|14|', desig:'Firepower Company',     qty:'6–9 x SP Mortars PLL-05', loadout:'MANPADS, ATGMs, AGLs, anti-materiel rifles'},
+      {element:'CG',  type:'log|15|',       desig:'Operations Support Company', qty:'1 x Comm Plt, 1 x EW Plt, 1 x Engineer Plt, 1 x CBRN Plt', loadout:''},
+    ],
+    assets:[
+      {name:'4 x CH-802 UAS', details:''},
+      {name:'1 x Golden Ray EW Truck', details:'high-powered jamming HF/VHF/UHF, direction finding'},
+      {name:'1 x Tank Platoon', details:'4 x ZTQ-15 Light Tank'},
+      {name:'1 x Section of J-10s', details:'1 hour TOS; 7 x PGMs, 4 x AAMs, 150 rds 30mm per J-10'},
+    ],
+  },
+};
+
+function loadSampleScenario(){
+  applyScenarioResponse(JSON.parse(JSON.stringify(SAMPLE_SCENARIO)));
+  document.getElementById('scen-status').textContent=
+    'Example scenario loaded (no API call). Fields, ORBAT, AO points, and assets are populated exactly as a live generation would populate them — save/restore and Generate Documents to test the full round trip.';
+  notify('Example scenario loaded into the form.','ok');
+}
+
+// ══════════════════════════════════════════════════════════
 // SYMBOL PAGE CAPTURE — renders SVGs to canvas PNG for DOCX embed
 // ══════════════════════════════════════════════════════════
 async function buildSymbolPagePng() {
@@ -1348,11 +1708,17 @@ async function generateDocs(){
   const dsmData=collectDSM(), collData=collectColl();
   const efstData=collectEFST(), hptlData=collectHPTL();
   const orbatGroups=collectOrbatGroups();
-  if(!orbatGroups.length&&!dsmData.length&&!efstData.length){notify('Add data to at least one section','warn');return;}
+  const scen=collectScenario();
+  const hasSit=!!(scen.gensit||scen.aoPoints.length||scen.assets.length||scen.aoName);
+  if(!orbatGroups.length&&!dsmData.length&&!efstData.length&&!hasSit){notify('Add data to at least one section','warn');return;}
 
   document.getElementById('progress-overlay').style.display='flex';
   setP(0,'Initializing…'); show('review');
-  ['dsm','coll','orbat','fires'].forEach(k=>{const e=document.getElementById('st-'+k);e.textContent='GENERATING…';e.style.color='var(--amber)';});
+  ['dsm','coll','orbat','fires',...(hasSit?['sit']:[])].forEach(k=>{const e=document.getElementById('st-'+k);if(e){e.textContent='GENERATING…';e.style.color='var(--amber)';}});
+  if(!hasSit){const e=document.getElementById('st-sit');if(e){e.textContent='SKIPPED — no scenario data';e.style.color='var(--text3)';}}
+
+  // Any failure below must not strand the progress overlay — see finally
+  try{
 
   const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,
          Header,Footer,AlignmentType,WidthType,ShadingType,VerticalAlign,
@@ -1552,6 +1918,84 @@ async function generateDocs(){
       ]}),blank()],
   }]});
 
+  // ── SITUATION HANDOUT (Spec §5 — matches Blue_South/Red_South) ──
+  let docSit=null;
+  if(hasSit){
+    setP(86,'Building Situation Handout…'); await sleep(30);
+    const isBlue=S.force==='blue';
+    const strip=s=>String(s||'').trim().replace(/[.\s]+$/,'');
+    const uline=txt=>new Paragraph({spacing:{before:200,after:80},
+      children:[new TextRun({text:txt,font:FONT,size:20,bold:true,underline:{}})]});
+    const bullet=txt=>new Paragraph({children:[t(txt,{sz:18})],bullet:{level:0},spacing:{before:0,after:70}});
+    const bodyP=txt=>new Paragraph({children:[t(txt,{sz:18})],spacing:{before:0,after:90}});
+    const labeled=(label,txt)=>new Paragraph({spacing:{before:40,after:90},children:[
+      new TextRun({text:label,font:FONT,size:18,underline:{}}),
+      new TextRun({text:': ',font:FONT,size:18}),
+      t(txt,{sz:18})]});
+
+    // Weather bullet — same clause structure as both baseline documents
+    const w=scen.weather,wParts=[`It is ${scen.month||'—'}.`];
+    if(w.temp)   wParts.push(`Temperatures ${strip(w.temp)}.`);
+    if(w.sky)    wParts.push(`Skies ${strip(w.sky)}.`);
+    if(w.ground) wParts.push(`${strip(w.ground)}.`);
+    if(w.wind)   wParts.push(`Winds ${strip(w.wind)}.`);
+
+    const sitKids=[
+      new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:140},
+        children:[new TextRun({text:'***Do not write on handout. Return at completion.***',font:FONT,size:20,bold:true})]}),
+      new Paragraph({spacing:{before:0,after:140},
+        children:[new TextRun({text:`${isBlue?'Blue':'Red'} Forces – ${G.unit||(isBlue?'Blue Force':'Red Force')}${scen.aoName?` (${scen.aoName})`:''}`,font:FONT,size:24,bold:true})]}),
+      new Paragraph({spacing:{before:0,after:80},
+        children:[new TextRun({text:'General Situation:',font:FONT,size:20,bold:true})]}),
+    ];
+    String(scen.gensit||'').split('\n').map(s=>s.trim()).filter(Boolean)
+      .forEach(line=>sitKids.push(bullet(line)));
+    sitKids.push(bullet(wParts.join(' ')));
+    if(scen.aoPoints.length){
+      sitKids.push(bullet(`${G.unit||'The unit'}'s AO is bounded by: (4 digit grid)`));
+      scen.aoPoints.forEach((pt,i)=>sitKids.push(bullet(`${i+1}. ${pt}`)));
+    }
+    if(isBlue){
+      // Blue_South order: HHQ mission → labeled Commander's Intent → unit mission
+      if($v('i-hhqmission')){ sitKids.push(uline(`${G.hhq||'Higher HQ'} Mission:`)); sitKids.push(bodyP($v('i-hhqmission'))); }
+      if($v('i-purpose')||$v('i-method')||$v('i-endstate')){
+        sitKids.push(new Paragraph({spacing:{before:200,after:80},children:[new TextRun({text:"Commander's Intent:",font:FONT,size:20,bold:true})]}));
+        if($v('i-purpose'))  sitKids.push(labeled('Purpose',  $v('i-purpose')));
+        if($v('i-method'))   sitKids.push(labeled('Method',   $v('i-method')));
+        if($v('i-endstate')) sitKids.push(labeled('Endstate', $v('i-endstate')));
+      }
+      if($v('i-mission')){ sitKids.push(uline(`${G.unit||'Unit'} Mission:`)); sitKids.push(bodyP($v('i-mission'))); }
+    } else {
+      // Red_South order: unlabeled intent block (paragraph + bullets) → mission statement.
+      // No HHQ-mission section — the baseline Red handout doesn't carry one.
+      if($v('i-purpose')||$v('i-method')||$v('i-endstate')){
+        sitKids.push(uline("Commander's Intent:"));
+        if($v('i-purpose'))  sitKids.push(bodyP($v('i-purpose')));
+        if($v('i-method'))   sitKids.push(bullet($v('i-method')));
+        if($v('i-endstate')) sitKids.push(bullet($v('i-endstate')));
+      }
+      if($v('i-mission')){ sitKids.push(uline('Mission Statement:')); sitKids.push(bodyP($v('i-mission'))); }
+    }
+    if(orbatGroups.length){
+      sitKids.push(uline('Task Organization:'));
+      orbatGroups.forEach(g=>g.units.forEach(u=>{
+        let line=u.desig||'';
+        if(u.qty)     line+=` (${u.qty})`;
+        if(u.loadout) line+=` (${u.loadout})`;
+        sitKids.push(bullet(line));
+      }));
+    }
+    if(scen.assets.length){
+      sitKids.push(uline('Additional assets:'));
+      scen.assets.forEach(a=>sitKids.push(bullet(a.details?`${a.name} (${a.details})`:a.name)));
+    }
+    docSit=new Document({sections:[{
+      properties:{page:{size:{width:12240,height:15840},margin:MAR}},
+      headers:{default:mkHdr()},footers:{default:mkFtr('Situation Handout')},
+      children:sitKids,
+    }]});
+  }
+
   // ── PACK INTO ZIP & DOWNLOAD ─────────────────────────────
   setP(90,'Packing documents…'); await sleep(30);
   const px=(G.exercise||'AMWC').replace(/[^A-Za-z0-9]/g,'_'),fc=S.force.toUpperCase();
@@ -1563,6 +2007,7 @@ async function generateDocs(){
     {doc:docORBAT, fname:`${px}_ORBAT_${fc}.docx`,       sid:'st-orbat'},
     {doc:docFires, fname:`${px}_Fires_${fc}.docx`,       sid:'st-fires'},
   ];
+  if(docSit) docFiles.push({doc:docSit, fname:`${px}_Situation_${fc}.docx`, sid:'st-sit'});
 
   const zipEntries = [];
   for(const {doc,fname,sid} of docFiles){
@@ -1582,14 +2027,25 @@ async function generateDocs(){
   window._lastDocs = { entries: zipEntries, zipBlob, zipName };
 
   setP(100,'Complete.'); await sleep(400);
-  document.getElementById('progress-overlay').style.display='none';
 
-  showOutputModal(zipBlob, zipName);
+  showOutputModal(zipBlob, zipName, docFiles.length);
+
+  }catch(err){
+    console.error('[AMWC] Document generation failed:', err);
+    ['dsm','coll','orbat','fires','sit'].forEach(k=>{
+      const e=document.getElementById('st-'+k);
+      if(e&&e.textContent.indexOf('GENERATING')===0){e.textContent='FAILED';e.style.color='var(--red)';}
+    });
+    notify('Document generation failed: '+err.message,'warn');
+  }finally{
+    document.getElementById('progress-overlay').style.display='none';
+  }
 }
 
-function showOutputModal(zipBlob, zipName){
+function showOutputModal(zipBlob, zipName, fileCount){
   document.getElementById('output-modal').style.display='flex';
   document.getElementById('om-filename').textContent = zipName;
+  document.getElementById('om-download').textContent = `⬇ Download ZIP (${fileCount||''} .docx files)`;
   document.getElementById('om-download').onclick = function(){
     const url=URL.createObjectURL(zipBlob);
     const a=document.createElement('a');
@@ -1599,7 +2055,7 @@ function showOutputModal(zipBlob, zipName){
     a.click();
     document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 1000);
-    notify('ZIP downloaded — extract to get 4 .docx files.');
+    notify('ZIP downloaded — extract to get the .docx files.');
   };
 }
 
@@ -1666,10 +2122,13 @@ function notify(msg,type='ok'){
 function sessionKey(){ return `amwc-session-${S.force}`; }
 
 function captureSession(){
-  // Static fields
+  // Static fields — includes the Scenario panel (Spec §4/§5) so generated
+  // content survives a refresh like everything else
   const fields={};
   ['g-exercise','g-scenario','g-unit','g-date','g-class','g-hhq',
-   'i-hhqmission','i-mission','i-purpose','i-method','i-endstate']
+   'i-hhqmission','i-mission','i-purpose','i-method','i-endstate',
+   's-ao-name','s-dtg','s-month','s-adversary','s-status','s-status-detail',
+   's-attach','s-objective','s-w-temp','s-w-sky','s-w-wind','s-w-ground','s-gensit']
     .forEach(id=>{ const el=document.getElementById(id); if(el) fields[id]=el.value; });
 
   // DSM rows
@@ -1699,8 +2158,13 @@ function captureSession(){
   // ORBAT — already in S
   return {
     fields, dsm, coll, efst, hptl,
+    aoPoints: collectAOPoints(),
+    assets: collectAssets(),
     units: JSON.parse(JSON.stringify(S.units[S.force])),
     elMeta: JSON.parse(JSON.stringify(S.elMeta[S.force]||{})),
+    // threat must persist: restoring a Threat-C ORBAT while S.threat==='A'
+    // silently drops every unit whose element isn't in the Threat-A list
+    threat: S.threat,
     uid: S.uid,
     savedAt: new Date().toISOString()
   };
@@ -1709,10 +2173,21 @@ function captureSession(){
 function restoreSession(data){
   if(!data) return;
 
+  // Threat FIRST — element vocabulary must match before units re-render
+  if(data.threat && data.threat!==S.threat){
+    if(S.force==='red') setThreat(data.threat); else S.threat=data.threat;
+  }
+
   // Static fields
   Object.entries(data.fields||{}).forEach(([id,val])=>{
     const el=document.getElementById(id); if(el) el.value=val;
   });
+  const advEl=document.getElementById('s-adversary');
+  if(advEl && data.threat) advEl.value=data.threat;
+
+  // Scenario lists
+  if(data.aoPoints) setAOPoints(data.aoPoints);
+  if(data.assets)   setAssets(data.assets);
 
   // Clear and rebuild DSM
   document.getElementById('dsm-list').innerHTML='';
@@ -1751,8 +2226,8 @@ function restoreSession(data){
     const inp=c.querySelector('input'); if(inp) inp.value=r.unit||'';
   });
 
-  // Restore ORBAT
-  if(data.units){ S.units[S.force]=data.units; S.uid=data.uid||S.uid; }
+  // Restore ORBAT — never lower the id counter below live ids
+  if(data.units){ S.units[S.force]=data.units; S.uid=Math.max(S.uid, data.uid||0); }
   if(data.elMeta){ S.elMeta[S.force]=data.elMeta; }
   renderOrbat();
   refreshPreview();
@@ -1798,9 +2273,11 @@ let _autoSaveTimer=null;
 function startAutoSave(){
   if(_autoSaveTimer) return;
   _autoSaveTimer=setInterval(()=>{
-    // Only auto-save if something has been entered
-    const g=document.getElementById('g-exercise');
-    if(g && g.value.trim()){
+    // Only auto-save if something has been entered (any headline field,
+    // or units on the board — generated scenarios count too)
+    const hasInput=['g-exercise','s-ao-name','s-gensit','i-mission']
+      .some(id=>document.getElementById(id)?.value.trim()) || countUnits()>0;
+    if(hasInput){
       try{
         localStorage.setItem(sessionKey(), JSON.stringify(captureSession()));
         document.getElementById('sessionLabel').textContent='AUTO-SAVED '+new Date().toLocaleTimeString();
@@ -1912,8 +2389,16 @@ function applyPlaceholders(force) {
     }
   }
 
+  // Keep the Adversary Profile select aligned with the default threat state
+  const advEl=document.getElementById('s-adversary');
+  if(advEl) advEl.value=S.threat;
+
   show('game');
   setTimeout(refreshPreview, 800);
+
+  // Auto-save was previously defined but never started — a refresh lost
+  // everything unless the director had clicked Save Session manually.
+  startAutoSave();
 })();
 
 function toggleSidebar() {
