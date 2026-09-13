@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMWC — Scenario Generator</title>
+<link rel="icon" type="image/svg+xml" href="MCTOG.svg">
+<link rel="stylesheet" href="./shared/theme.css">
+<link rel="stylesheet" href="./shared/components.css">
+<script src="./shared/utils.js"></script>
+<script src="docx.js"></script>
+<script src="jszip.js"></script>
+<script>
+// MiniZip fallback — used only if the vendored jszip.js fails to load.
+// Produces uncompressed (stored) zips; functional, just larger.
+if(!window.JSZip){
+window.JSZip=function(){this.files={};};
+window.JSZip.prototype.file=function(n,d){this.files[n]=d;return this;};
+window.JSZip.prototype.generateAsync=function(opts){
+  const self=this;
+  return new Promise(function(res){
+    const t=new Uint32Array(256);
+    for(let i=0;i<256;i++){let c=i;for(let j=0;j<8;j++)c=c&1?(0xEDB88320^(c>>>1)):(c>>>1);t[i]=c;}
+    function crc(buf){let c=0xFFFFFFFF;for(let i=0;i<buf.length;i++)c=t[(c^buf[i])&0xFF]^(c>>>8);return(c^0xFFFFFFFF)>>>0;}
+    const enc=new TextEncoder(),parts=[],cd=[];
+    let offset=0;
+    for(const [name,raw] of Object.entries(self.files)){
+      const data=raw instanceof ArrayBuffer?new Uint8Array(raw):(raw instanceof Uint8Array?raw:new Uint8Array(raw));
+      const nm=enc.encode(name);
+      const cr=crc(data),sz=data.length;
+      const d=new Date(),dos=((d.getFullYear()-1980)<<9|(d.getMonth()+1)<<5|d.getDate())<<16|(d.getHours()<<11|d.getMinutes()<<5|Math.floor(d.getSeconds()/2));
+      const lh=new DataView(new ArrayBuffer(30+nm.length));
+      lh.setUint32(0,0x04034B50,true);lh.setUint16(4,20,true);lh.setUint16(8,0,true);
+      lh.setUint32(10,dos,true);lh.setUint32(14,cr,true);lh.setUint32(18,sz,true);lh.setUint32(22,sz,true);
+      lh.setUint16(26,nm.length,true);lh.setUint16(28,0,true);
+      new Uint8Array(lh.buffer).set(nm,30);
+      parts.push(new Uint8Array(lh.buffer),data);
+      const ce=new DataView(new ArrayBuffer(46+nm.length));
+      ce.setUint32(0,0x02014B50,true);ce.setUint16(4,20,true);ce.setUint16(6,20,true);
+      ce.setUint32(12,dos,true);ce.setUint32(16,cr,true);ce.setUint32(20,sz,true);ce.setUint32(24,sz,true);
+      ce.setUint16(28,nm.length,true);ce.setUint32(42,offset,true);
+      new Uint8Array(ce.buffer).set(nm,46);
+      cd.push(new Uint8Array(ce.buffer));
+      offset+=30+nm.length+sz;
+    }
+    function cat(arrs){const tot=arrs.reduce((s,a)=>s+a.length,0),o=new Uint8Array(tot);let i=0;for(const a of arrs){o.set(a,i);i+=a.length;}return o;}
+    const cdd=cat(cd),cds=cdd.length;
+    const eo=new DataView(new ArrayBuffer(22));
+    eo.setUint32(0,0x06054B50,true);eo.setUint16(8,Object.keys(self.files).length,true);
+    eo.setUint16(10,Object.keys(self.files).length,true);eo.setUint32(12,cds,true);eo.setUint32(16,offset,true);
+    res(new Blob([cat(parts),cdd,new Uint8Array(eo.buffer)],{type:'application/zip'}));
+  });
+};
+}
+</script>
+
+<style>
+/* scenario-tool.html — page-specific styles. Reset/font from shared/theme.css,
+   components from shared/components.css. Same blue-gray palette family as
+   doc-tool-teams.html — both are document-builder tools. */
+:root{
+  --bg:#0E1012;--bg2:#14171A;--bg3:#1C2128;--bg4:#252C36;
+  --border:#2A3340;--border2:#3A4450;
+  --text:#C8D4E0;--text2:#8A9BB0;--text3:#566070;
+  --blue:#4A8AC8;--blue-dim:#1E3A52;--blue-bright:#6AAAE8;
+  --gold:#B8962A;--gold-dim:#3A2E10;--gold-bright:#D4B03A;
+  --red:#C84A4A;--red-dim:#3A1414;--red-bright:#E86A6A;
+  --green:#4A9868;--green-dim:#143A24;
+  --amber:#C8842A;
+  --radius:4px;
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px}
+
+/* ── TOP BAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:48px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;gap:8px;flex-wrap:wrap}
+.diamond{width:18px;height:18px;background:var(--gold);transform:rotate(45deg);flex-shrink:0}
+.brand-label{font-size:11px;letter-spacing:0.15em;font-weight:700;color:var(--gold)}
+
+/* ── PAGE ── */
+.page{max-width:1160px;margin:0 auto;padding:22px 26px 60px}
+.sect{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:18px;box-shadow:var(--elev-1)}
+.sect-h{padding:14px 20px 12px;border-bottom:1px solid var(--border)}
+.sect-h h2{font-size:14px;letter-spacing:.06em;color:var(--text)}
+.sect-h p{font-size:11px;color:var(--text2);line-height:1.5;margin-top:3px}
+.sect-b{padding:18px 20px}
+
+/* ── SIDE-BY-SIDE REVIEW PANELS ── */
+.sides{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.side-panel{border:1px solid var(--border);border-radius:var(--radius);background:var(--bg3);overflow:hidden}
+.side-panel .sp-h{padding:9px 14px;font-size:11px;font-weight:700;letter-spacing:.1em}
+.side-panel.blue .sp-h{background:var(--blue-dim);color:var(--blue-bright);border-bottom:1px solid var(--blue)}
+.side-panel.red  .sp-h{background:var(--red-dim);color:var(--red-bright);border-bottom:1px solid var(--red)}
+.side-panel .sp-b{padding:14px}
+@media(max-width:860px){.sides{grid-template-columns:1fr}}
+
+/* Compact repeatable rows inside side panels */
+.to-row{display:grid;grid-template-columns:1fr 1.4fr 1fr 1fr auto;gap:6px;margin-bottom:6px;align-items:center}
+.to-row input{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 7px;font-family:var(--font);font-size:11px;border-radius:var(--radius);outline:none;width:100%}
+.to-row input:focus{border-color:var(--blue)}
+.to-row input::placeholder{color:var(--text3)}
+.to-head{display:grid;grid-template-columns:1fr 1.4fr 1fr 1fr auto;gap:6px;font-size:9px;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-bottom:4px;padding-right:28px}
+.as-row{display:grid;grid-template-columns:1fr 1.4fr auto;gap:6px;margin-bottom:6px;align-items:center}
+.as-row input{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 7px;font-family:var(--font);font-size:11px;border-radius:var(--radius);outline:none;width:100%}
+.as-row input:focus{border-color:var(--blue)}
+.ao-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.ao-row input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 7px;font-family:var(--font);font-size:11px;border-radius:var(--radius);outline:none}
+.ao-row .ao-num{font-size:10px;color:var(--text3);width:18px;flex-shrink:0}
+.row-del{background:transparent;border:1px solid var(--border);cursor:pointer;color:var(--text3);font-size:12px;border-radius:var(--radius);padding:3px 7px;line-height:1;flex-shrink:0}
+.row-del:hover{color:var(--danger);border-color:var(--danger)}
+
+/* ── PASSCODE GATE (same pattern as dashboard.html) ── */
+#passcode-gate{position:fixed;inset:0;z-index:10000;background:var(--bg);display:flex;align-items:center;justify-content:center}
+.gate-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:36px 40px;display:flex;flex-direction:column;align-items:center;gap:18px;min-width:300px}
+.gate-diamond{width:18px;height:18px;background:var(--gold-bright);transform:rotate(45deg);margin-bottom:4px}
+.gate-title{font-size:13px;font-weight:700;letter-spacing:0.18em;color:var(--gold-bright);text-transform:uppercase}
+.gate-sub{font-size:10px;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase}
+.gate-input{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:10px 14px;font-family:var(--font);font-size:14px;letter-spacing:0.18em;border-radius:var(--radius);outline:none;text-align:center;transition:border-color .15s}
+.gate-input:focus{border-color:var(--gold-bright)}
+.gate-btn{width:100%;background:var(--gold-dim);border:1px solid var(--gold-bright);color:var(--gold-bright);padding:9px;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;border-radius:var(--radius);cursor:pointer;transition:all .15s}
+.gate-btn:hover{background:var(--gold-bright);color:var(--bg)}
+.gate-error{font-size:10px;color:var(--red-bright);letter-spacing:0.08em;min-height:14px}
+
+/* ── MISC ── */
+.notif{position:fixed;bottom:20px;right:20px;z-index:999;background:var(--bg4);border:1px solid var(--green);color:var(--green);padding:9px 15px;font-size:11px;border-radius:var(--radius);letter-spacing:.05em;transition:opacity .3s;pointer-events:none}
+.progress-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:500;display:none;align-items:center;justify-content:center}
+.progress-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:28px 36px;text-align:center;min-width:280px;box-shadow:var(--elev-2)}
+.pb-title{font-size:12px;color:var(--gold);letter-spacing:.1em;margin-bottom:14px}
+.pbo{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:12px}
+.pbi{height:100%;background:var(--gold);transition:width .3s;width:0%}
+.pb-msg{font-size:11px;color:var(--text2)}
+
+@media(max-width:640px){
+  .page{padding:14px 12px 50px}
+  .sect-b{padding:14px 12px}
+  .fr{grid-template-columns:1fr}
+  .btn{min-height:36px}
+  .gen-btn{min-height:44px;font-size:12px}
+  .field input,.field select,.field textarea{font-size:16px}
+  .to-row,.to-head{grid-template-columns:1fr 1fr;padding-right:0}
+  .gate-box{min-width:0;width:90%;max-width:360px;padding:28px 24px}
+}
+</style>
+</head>
+<body>
+
+<div id="passcode-gate">
+  <div class="gate-box">
+    <div class="gate-diamond"></div>
+    <div class="gate-title">Scenario Generator</div>
+    <div class="gate-sub">Director / Cadre Access Only</div>
+    <input class="gate-input" id="gate-input" type="password" placeholder="Enter passcode" maxlength="32" onkeydown="if(event.key==='Enter')gateSubmit()">
+    <button class="gate-btn" onclick="gateSubmit()">Authenticate &rarr;</button>
+    <div class="gate-error" id="gate-error"></div>
+  </div>
+</div>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="diamond"></div>
+    <span class="brand-label">AMWC — Scenario Generator &nbsp;|&nbsp; Director Tool</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span id="sessionLabel" style="font-size:10px;color:var(--text3);letter-spacing:.06em">NO SESSION</span>
+    <button class="btn sm" onclick="saveSession()" title="Save all current inputs (including generated content) to browser storage.">Save Session</button>
+    <button class="btn sm" onclick="loadSession()" title="Restore the previously saved session.">Load Session</button>
+    <button class="btn sm danger" onclick="clearSession()" title="Clear the saved session.">Clear Saved</button>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="class-banner">
+    UNCLASSIFIED // FOR TRAINING USE ONLY — this tool must never be prompted with real operational, deployment, or classified information. Use fictional or exercise data only.
+  </div>
+
+  <!-- ── 1. SCENARIO PARAMETERS ── -->
+  <div class="sect">
+    <div class="sect-h"><h2>01 — Scenario Parameters</h2>
+      <p>Describe the scenario in plain-language parameters. AI drafts the paired Blue and Red Situation Handouts into the review panels below — nothing becomes a document until you review it and click Generate Documents. This tool is standalone: it does not read from or write into the team Doc Tool. Players receive the printed handout and build their own products from it.</p>
+    </div>
+    <div class="sect-b">
+      <div class="fr">
+        <div class="field"><label>Exercise / Game Name</label><input id="p-exercise" placeholder="e.g. SPARTAN EAGLE 26-1"></div>
+        <div class="field"><label>Classification Marking</label>
+          <select id="p-class">
+            <option>UNCLASSIFIED // FOR TRAINING ONLY</option>
+            <option>UNCLASSIFIED</option>
+          </select>
+        </div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Blue Unit Designation</label><input id="p-unit" placeholder="e.g. 2d Battalion, 8th Marines (V28)"></div>
+        <div class="field"><label>Blue Higher HQ</label><input id="p-hhq" placeholder="e.g. RLT-2"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Area of Operations — Name</label><input id="p-ao-name" placeholder="e.g. AO South"></div>
+        <div class="field"><label>Adversary Profile</label>
+          <select id="p-adversary">
+            <option value="A">Threat A — Russian BTG</option>
+            <option value="C" selected>Threat C — PLA Medium Combined Arms Bn</option>
+            <option value="CL">Threat C — PLA Light Combined Arms Bn</option>
+            <option value="CA">Threat C — PLA Amphibious Combined Arms Bn</option>
+          </select>
+        </div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Scenario Date/Time Reference</label><input id="p-dtg" placeholder="e.g. D+2, 1900L"></div>
+        <div class="field"><label>Calendar Month</label>
+          <select id="p-month">
+            <option>January</option><option>February</option><option>March</option>
+            <option>April</option><option>May</option><option selected>June</option>
+            <option>July</option><option>August</option><option>September</option>
+            <option>October</option><option>November</option><option>December</option>
+          </select>
+        </div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Force Status / Attrition State</label>
+          <select id="p-status">
+            <option value="fresh">Fresh</option>
+            <option value="attrited">Attrited</option>
+            <option value="reinforced">Reinforced</option>
+            <option value="attrited-reinforced">Attrited + Reinforced</option>
+          </select>
+        </div>
+        <div class="field"><label>Status Detail (attrition % / reinforcing asset)</label><input id="p-status-detail" placeholder="e.g. rifle companies at 2 platoons; +1 ACV company"></div>
+      </div>
+      <div class="field"><label>Reinforcement / Attachment State</label><input id="p-attach" placeholder="e.g. reinforced with 1 x LAR Plt; DS M777 Battery (-)"></div>
+      <div class="field"><label>Primary Learning Objective — drives mission framing AND the attachment mix</label>
+        <textarea id="p-objective" class="prose" placeholder="e.g. battalion defense in sector; combined-arms breach of a defended obstacle"></textarea>
+      </div>
+
+      <div class="slabel">Blue AO Boundary — Numbered Grid Points <span style="text-transform:none;letter-spacing:0">— optional; AI invents consistent boxes for both sides if left empty</span></div>
+      <button class="btn primary sm" onclick="addAOPoint('p-ao-list')" style="margin-bottom:10px">+ Add Grid Point</button>
+      <div id="p-ao-list"></div>
+
+      <div class="slabel">Weather / Environment <span style="text-transform:none;letter-spacing:0">— AI derives from month and region; override anything below</span></div>
+      <div class="fr">
+        <div class="field"><label>Temperature — completes "Temperatures …"</label><input id="p-w-temp" placeholder="e.g. are mild, ranging from 60 – 78 degrees F"></div>
+        <div class="field"><label>Sky / Precipitation — completes "Skies …"</label><input id="p-w-sky" placeholder="e.g. are clear with no rain forecast for the next six days"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Wind — completes "Winds …"</label><input id="p-w-wind" placeholder="e.g. are not forecast to exceed 5 mph"></div>
+        <div class="field"><label>Ground Condition — full sentence</label><input id="p-w-ground" placeholder="e.g. Unimproved roads are dry and dusty from lack of rainfall"></div>
+      </div>
+
+      <div style="margin-top:18px;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--elev-1)">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.6">
+          Generates Blue and Red content together in one request so AO, timeline, weather, and the intelligence picture stay consistent across both handouts. Task Organization comes back as a flat asset list (organic structure plus mission-appropriate attachments) — organizing it into a scheme of maneuver is the players' job, not the generator's.
+        </div>
+        <button class="gen-btn" id="scen-gen-btn" onclick="generateScenario()">✦ Generate Scenario (AI)</button>
+        <div id="scen-status" style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.5"></div>
+        <div style="margin-top:10px;text-align:right">
+          <button class="btn sm" onclick="loadSampleScenario()" title="Populates the review panels from a built-in example response — works offline, no API call. Use to preview the round trip before the Cloud Function is deployed.">Load example (no API)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 2. REVIEW & EDIT ── -->
+  <div class="sect">
+    <div class="sect-h"><h2>02 — Review &amp; Edit</h2>
+      <p>Every field is editable. Review both sides before generating — the generated asset list is the input data for the graded exercise, so doctrinal correctness matters. Task Organization rows: Group names the organic parent (leave empty for battalion-level lines); repeat the same Group on consecutive rows to nest them under one header on the handout.</p>
+    </div>
+    <div class="sect-b">
+      <div class="sides">
+
+        <!-- BLUE -->
+        <div class="side-panel blue">
+          <div class="sp-h">BLUE FORCE — SITUATION HANDOUT</div>
+          <div class="sp-b">
+            <div class="field"><label>Handout Title — after "Blue Forces – "</label><input id="b-title" placeholder="e.g. V28 (AO South)"></div>
+            <div class="field"><label>Timeline Reference</label><input id="b-dtg" placeholder="e.g. D+2, 1900L"></div>
+            <div class="field"><label>General Situation — one bullet per line</label>
+              <textarea id="b-gensit" class="prose" style="min-height:130px" placeholder="It is now D+2 at 1900L. You are the staff of …"></textarea></div>
+            <div class="field"><label>Higher HQ Mission</label>
+              <textarea id="b-hhqmission" class="prose" placeholder="RLT-2 defends in sector to prevent …"></textarea></div>
+            <div class="field"><label>Commander's Intent — Purpose</label>
+              <textarea id="b-purpose" class="prose" placeholder="The overarching purpose of our operation is …"></textarea></div>
+            <div class="field"><label>Commander's Intent — Method</label>
+              <textarea id="b-method" class="prose" placeholder="Having defeated enemy forces in zone, …"></textarea></div>
+            <div class="field"><label>Commander's Intent — End State</label>
+              <textarea id="b-endstate" class="prose" placeholder="The enemy is unable to penetrate …"></textarea></div>
+            <div class="field"><label>Unit Mission</label>
+              <textarea id="b-mission" class="prose" placeholder="Upon contact, defeat the adversary in your sector IOT …"></textarea></div>
+
+            <div class="slabel">AO Boundary Grid Points</div>
+            <button class="btn primary sm" onclick="addAOPoint('b-ao-list')" style="margin-bottom:8px">+ Add Grid Point</button>
+            <div id="b-ao-list"></div>
+
+            <div class="slabel">Task Organization — flat, organic-grouped</div>
+            <div class="to-head"><span>Group (organic parent)</span><span>Unit / line</span><span>Qty / composition</span><span>Loadout</span><span></span></div>
+            <div id="b-to-list"></div>
+            <button class="btn primary sm" onclick="addTORow('b-to-list')" style="margin-top:2px;margin-bottom:8px">+ Add Line</button>
+
+            <div class="slabel">Additional Assets — external enablers</div>
+            <div id="b-assets-list"></div>
+            <button class="btn primary sm" onclick="addAssetRow('b-assets-list')" style="margin-top:2px">+ Add Asset</button>
+          </div>
+        </div>
+
+        <!-- RED -->
+        <div class="side-panel red">
+          <div class="sp-h">RED FORCE — SITUATION HANDOUT</div>
+          <div class="sp-b">
+            <div class="field"><label>Handout Title — after "Red Forces – "</label><input id="r-title" placeholder="e.g. 4th MCA Bn (AO South)"></div>
+            <div class="field"><label>Timeline Reference</label><input id="r-dtg" placeholder="e.g. expecting to enter AO in 24 hours"></div>
+            <div class="field"><label>General Situation — one bullet per line (include approach direction and start box)</label>
+              <textarea id="r-gensit" class="prose" style="min-height:130px" placeholder="You are the 4th PLA Medium Combined Arms Battalion …"></textarea></div>
+            <div class="field"><label>Commander's Intent — opening paragraph</label>
+              <textarea id="r-purpose" class="prose" placeholder="We must disrupt enemy offensive preparations …"></textarea></div>
+            <div class="field"><label>Intent Assessment Bullets — one per line</label>
+              <textarea id="r-method" class="prose" placeholder="Identify and secure critical objectives …&#10;US forces in your AO are assessed to be …"></textarea></div>
+            <div class="field"><label>Further Assessment / End State Bullets — one per line</label>
+              <textarea id="r-endstate" class="prose" placeholder="US forces will attempt to create choke points …"></textarea></div>
+            <div class="field"><label>Mission Statement — first line is the statement; extra lines become bullets (e.g. key terrain)</label>
+              <textarea id="r-mission" class="prose" placeholder="NLT 48 hours, seize key GLOCs IVO … IOT …"></textarea></div>
+
+            <div class="slabel">AO Boundary Grid Points</div>
+            <button class="btn primary sm" onclick="addAOPoint('r-ao-list')" style="margin-bottom:8px">+ Add Grid Point</button>
+            <div id="r-ao-list"></div>
+
+            <div class="slabel">Task Organization — flat, organic-grouped</div>
+            <div class="to-head"><span>Group (organic parent)</span><span>Unit / line</span><span>Qty / composition</span><span>Loadout</span><span></span></div>
+            <div id="r-to-list"></div>
+            <button class="btn primary sm" onclick="addTORow('r-to-list')" style="margin-top:2px;margin-bottom:8px">+ Add Line</button>
+
+            <div class="slabel">Additional Assets — external enablers</div>
+            <div id="r-assets-list"></div>
+            <button class="btn primary sm" onclick="addAssetRow('r-assets-list')" style="margin-top:2px">+ Add Asset</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 3. GENERATE DOCUMENTS ── -->
+  <div class="sect">
+    <div class="sect-h"><h2>03 — Generate Documents</h2>
+      <p>Two .docx files matching the course Situation Handout layout — one Blue, one Red — zipped together. Distribute them separately: each side sees only its own handout.</p>
+    </div>
+    <div class="sect-b">
+      <div class="doc-card"><div class="doc-info"><span style="font-size:16px;color:var(--text3)">◼</span><div><div class="doc-title">Blue Force Situation Handout</div><div class="doc-sub">Portrait · baseline handout format</div></div></div><span class="doc-status" id="st-blue" style="color:var(--text3)">PENDING</span></div>
+      <div class="doc-card"><div class="doc-info"><span style="font-size:16px;color:var(--text3)">◼</span><div><div class="doc-title">Red Force Situation Handout</div><div class="doc-sub">Portrait · baseline handout format</div></div></div><span class="doc-status" id="st-red" style="color:var(--text3)">PENDING</span></div>
+      <div style="margin-top:16px;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius)">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.6">All document generation runs in the browser. No server required.</div>
+        <button class="gen-btn" onclick="generateDocs()">▲ Generate Situation Handouts</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="progress-overlay" id="progress-overlay">
+  <div class="progress-box">
+    <div class="pb-title">GENERATING DOCUMENTS</div>
+    <div class="pbo"><div class="pbi" id="progress-bar"></div></div>
+    <div class="pb-msg" id="progress-msg">Initializing…</div>
+  </div>
+</div>
+
+<!-- OUTPUT MODAL -->
+<div id="output-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:600;align-items:center;justify-content:center">
+  <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:28px 32px;min-width:320px;max-width:520px;box-shadow:var(--elev-2)">
+    <div style="font-size:11px;letter-spacing:.12em;color:var(--gold);margin-bottom:18px;text-transform:uppercase">Documents Ready</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:6px">Package:</div>
+    <div id="om-filename" style="font-size:13px;color:var(--text);font-weight:700;margin-bottom:20px;word-break:break-all"></div>
+    <button id="om-download" class="gen-btn">⬇ Download ZIP</button>
+    <div style="margin-top:14px;font-size:10px;color:var(--text3);line-height:1.6">
+      Contains the Blue and Red handouts as separate .docx files. Print or distribute each side's file to that side only.
+    </div>
+    <div style="text-align:right;margin-top:18px">
+      <button class="btn" onclick="document.getElementById('output-modal').style.display='none'">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// LIBRARY READINESS
+// ══════════════════════════════════════════════════════════
+let docxReady=false;
+(function w(){ (window.docx&&window.JSZip) ? (docxReady=true) : setTimeout(w,100); })();
+
+// ══════════════════════════════════════════════════════════
+// CLOUD FUNCTION ENDPOINT
+// Deploy-ready — us-central1 is the default Functions region.
+// If the function is deployed elsewhere, update the region segment.
+// ══════════════════════════════════════════════════════════
+const SCENARIO_FN_URL='https://us-central1-amwc-wargame.cloudfunctions.net/generateScenario';
+
+// Fields the AI populates — shimmer these while the request is in flight
+const SCEN_TARGET_IDS=[
+  'b-title','b-dtg','b-gensit','b-hhqmission','b-purpose','b-method','b-endstate','b-mission',
+  'r-title','r-dtg','r-gensit','r-purpose','r-method','r-endstate','r-mission',
+  'p-w-temp','p-w-sky','p-w-wind','p-w-ground',
+];
+
+const $v=id=>document.getElementById(id)?.value||'';
+const setV=(id,val)=>{const el=document.getElementById(id); if(el) el.value=val==null?'':val;};
+
+// ══════════════════════════════════════════════════════════
+// REPEATABLE ROWS — AO points, Task Org lines, Assets
+// ══════════════════════════════════════════════════════════
+function addAOPoint(listId,val){
+  const list=document.getElementById(listId);
+  const d=document.createElement('div'); d.className='ao-row';
+  d.innerHTML=`<span class="ao-num">${list.children.length+1}.</span>
+    <input placeholder="4-digit grid, e.g. 52T BK 99 46" value="${esc(val||'')}">
+    <button class="row-del" onclick="const l=this.closest('div').parentNode;this.closest('.ao-row').remove();renumberAO(l)" title="Remove">✕</button>`;
+  list.appendChild(d);
+}
+function renumberAO(list){ list.querySelectorAll('.ao-num').forEach((s,i)=>s.textContent=(i+1)+'.'); }
+function collectAOPoints(listId){
+  return Array.from(document.querySelectorAll('#'+listId+' input')).map(i=>i.value.trim()).filter(Boolean);
+}
+function setAOPoints(listId,points){
+  document.getElementById(listId).innerHTML='';
+  (points||[]).forEach(p=>addAOPoint(listId,p));
+}
+
+function addTORow(listId,entry){
+  const e=entry||{};
+  const d=document.createElement('div'); d.className='to-row';
+  d.innerHTML=`<input class="to-group" placeholder="e.g. Weapons Company" value="${esc(e.group||'')}">
+    <input class="to-desig" placeholder="e.g. 81mm Mortar Section" value="${esc(e.desig||'')}">
+    <input class="to-qty" placeholder="e.g. 4 x tubes, 10 x JLTVs" value="${esc(e.qty||'')}">
+    <input class="to-loadout" placeholder="e.g. 800 HE, 200 RP" value="${esc(e.loadout||'')}">
+    <button class="row-del" onclick="this.closest('.to-row').remove()" title="Remove">✕</button>`;
+  document.getElementById(listId).appendChild(d);
+}
+function collectTaskOrg(listId){
+  return Array.from(document.getElementById(listId).children).map(c=>({
+    group:c.querySelector('.to-group')?.value.trim()||'',
+    desig:c.querySelector('.to-desig')?.value.trim()||'',
+    qty:c.querySelector('.to-qty')?.value.trim()||'',
+    loadout:c.querySelector('.to-loadout')?.value.trim()||'',
+  })).filter(e=>e.desig||e.group);
+}
+function setTaskOrg(listId,entries){
+  document.getElementById(listId).innerHTML='';
+  (entries||[]).forEach(e=>addTORow(listId,e));
+}
+
+function addAssetRow(listId,a){
+  const e=a||{};
+  const d=document.createElement('div'); d.className='as-row';
+  d.innerHTML=`<input class="a-name" placeholder="e.g. 1 x MQ-9 (unarmed)" value="${esc(e.name||'')}">
+    <input class="a-details prose" placeholder="e.g. 24 hours TOS" value="${esc(e.details||'')}">
+    <button class="row-del" onclick="this.closest('.as-row').remove()" title="Remove">✕</button>`;
+  document.getElementById(listId).appendChild(d);
+}
+function collectAssets(listId){
+  return Array.from(document.getElementById(listId).children).map(c=>({
+    name:c.querySelector('.a-name')?.value.trim()||'',
+    details:c.querySelector('.a-details')?.value.trim()||'',
+  })).filter(a=>a.name);
+}
+function setAssets(listId,assets){
+  document.getElementById(listId).innerHTML='';
+  (assets||[]).forEach(a=>addAssetRow(listId,a));
+}
+
+// ══════════════════════════════════════════════════════════
+// THE GENERATION CALL
+// ══════════════════════════════════════════════════════════
+// Stable per-browser identity for the Cloud Function's rate limiter.
+// Classroom Wi-Fi puts many directors' devices behind one shared public
+// IP (NAT), so the function can't tell directors apart by IP alone; this
+// localStorage ID, generated once, lets it rate-limit per director/browser
+// instead of per network. See functions/index.js clientKey().
+function getClientId(){
+  let id=localStorage.getItem('amwc-client-id');
+  if(!id){
+    id='c-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);
+    localStorage.setItem('amwc-client-id', id);
+  }
+  return id;
+}
+
+function collectParams(){
+  return {
+    exercise:$v('p-exercise'), classification:$v('p-class'),
+    unit:$v('p-unit'), hhq:$v('p-hhq'),
+    aoName:$v('p-ao-name'), aoPoints:collectAOPoints('p-ao-list'),
+    dtg:$v('p-dtg'), month:$v('p-month'),
+    adversary:$v('p-adversary')||'C',
+    status:$v('p-status'), statusDetail:$v('p-status-detail'),
+    attachments:$v('p-attach'), objective:$v('p-objective'),
+    weatherOverride:{temp:$v('p-w-temp'), sky:$v('p-w-sky'), wind:$v('p-w-wind'), ground:$v('p-w-ground')},
+    clientId:getClientId(),
+  };
+}
+
+// Apply one side's package to its review panel
+function applySide(prefix, side){
+  setV(prefix+'-title',   side.title);
+  setV(prefix+'-dtg',     side.dtg);
+  setV(prefix+'-gensit',  side.gensit);
+  if(prefix==='b') setV('b-hhqmission', side.hhqMission);
+  setV(prefix+'-purpose', side.purpose);
+  setV(prefix+'-method',  side.method);
+  setV(prefix+'-endstate',side.endstate);
+  setV(prefix+'-mission', side.mission);
+  setAOPoints(prefix+'-ao-list', side.aoPoints);
+  setTaskOrg(prefix+'-to-list', side.taskOrg);
+  setAssets(prefix+'-assets-list', side.assets);
+}
+
+function applyScenarioResponse(data){
+  const sh=data.shared||{};
+  if(sh.aoName) setV('p-ao-name', sh.aoName);
+  if(sh.dtg)    setV('p-dtg', sh.dtg);
+  if(sh.month)  setV('p-month', sh.month);
+  if(sh.adversary) setV('p-adversary', sh.adversary);
+  const w=sh.weather||{};
+  setV('p-w-temp',w.temp); setV('p-w-sky',w.sky); setV('p-w-wind',w.wind); setV('p-w-ground',w.ground);
+  applySide('b', data.blue||{});
+  applySide('r', data.red||{});
+}
+
+async function generateScenario(){
+  const btn=document.getElementById('scen-gen-btn');
+  const status=document.getElementById('scen-status');
+  const p=collectParams();
+  if(!p.aoName&&!p.objective){
+    notify('Give the scenario at least an AO name or a learning objective first.','warn'); return;
+  }
+  btn.disabled=true; btn.dataset.label=btn.textContent; btn.textContent='GENERATING — PAIRED BLUE + RED…';
+  status.innerHTML='Calling scenario generator<span class="ai-dots"><span>.</span><span>.</span><span>.</span></span> A paired generation typically takes 30–90 seconds.';
+  SCEN_TARGET_IDS.forEach(id=>document.getElementById(id)?.classList.add('skeleton'));
+  try{
+    const res=await fetch(SCENARIO_FN_URL,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(p),
+    });
+    if(!res.ok){
+      let msg='HTTP '+res.status;
+      try{ const j=await res.json(); msg=j.error||msg; }catch(_){}
+      throw new Error(msg);
+    }
+    const data=await res.json();
+    if(!data||!data.shared||!data.blue||!data.red)
+      throw new Error('response missing shared/blue/red sections');
+    applyScenarioResponse(data);
+    status.textContent=`Generated ${new Date().toLocaleTimeString()}. Review and edit every field in both panels, then Generate Situation Handouts.`;
+    notify('Scenario drafted into the review panels — check every field.','ok');
+  }catch(e){
+    const notDeployed = e instanceof TypeError; // network-level: function likely not deployed yet
+    status.textContent='Generation failed: '+e.message+(notDeployed
+      ? ' — if the Cloud Function has not been deployed yet, see 10_Deployment_Checklist.md. "Load example (no API)" works offline.'
+      : '');
+    notify('Scenario generation failed: '+e.message,'warn');
+  }finally{
+    SCEN_TARGET_IDS.forEach(id=>document.getElementById(id)?.classList.remove('skeleton'));
+    btn.disabled=false; btn.textContent=btn.dataset.label||'✦ Generate Scenario (AI)';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// BUILT-IN EXAMPLE — offline round-trip test. Mirrors the Cloud
+// Function output contract and the South baseline pair, in the
+// redesigned flat organic-grouped Task Organization shape.
+// ══════════════════════════════════════════════════════════
+const SAMPLE_SCENARIO={
+  shared:{
+    aoName:'AO South', dtg:'D+2, 1900L', month:'June', adversary:'C',
+    weather:{temp:'are mild, ranging from 60 – 78 degrees F',
+             sky:'are clear with no rain forecast for the next six days',
+             wind:'are not forecast to exceed 5 mph',
+             ground:'Unimproved roads are dry and dusty from lack of rainfall'},
+  },
+  blue:{
+    title:'V28 (AO South)',
+    dtg:'D+2, 1900L',
+    aoPoints:['52T BK 99 46','52S BK 99 17','52S CK 30 17','52T CK 30 46'],
+    gensit:'It is now D+2 at 1900L. You are the staff of 2d Battalion 8th Marines.\nOver the past 48 hours, V28 completed a resupply of Class I, III and V. Due to casualties from the initial offensive actions, each rifle company is down to two platoons, one section of 81mm Mortars was destroyed, and 2 M777s were destroyed. Regiment has reinforced your battalion with an additional ACV company.\n2d MARDIV G-2 received intelligence that a PRC reinforced mechanized battalion will attack from the west into V28\'s AO within 24 – 48 hours. The adversary has limited close air support they can employ — we do not have air superiority at this time.',
+    hhqMission:'RLT-2 defends in sector to prevent enemy interference with logistics operations south and east of the RLT area of operations.',
+    mission:'Upon contact, defeat the adversary in your sector IOT prevent adversary penetration east of your AO. BPT resume the attack to the west.',
+    purpose:'The overarching purpose of our operation is protection of joint logistics operations IVO SPODs and APODs on the coast to the south and east, as well as the GLOCs connecting those sites to the ground forces fighting decisive actions in the west. We must prevent the enemy from interfering in any way with logistics operations until 2d MARDIV is prepared to resume the attack inland.',
+    method:'Having defeated enemy forces in zone, RLT-2 will defend in sector in four dispersed non-contiguous battalion areas of operation focused on major mobility corridors and recently opened GLOCs and APODs.',
+    endstate:'The enemy is unable to penetrate, infiltrate elements larger than platoon size, or emplace indirect fire systems that can range south/east of the regimental AO boundary. RLT-2 is prepared to conduct a RIP with coalition forces and transition to follow-on offensive operations.',
+    taskOrg:[
+      {group:'H&S Company', desig:'1 x RQ-20 Puma ground control station', qty:'2 x Air Vehicles', loadout:''},
+      {group:'H&S Company', desig:'Motor Transport Section Reinforced', qty:'can motorize 1 x rifle company', loadout:''},
+      {group:'', desig:'3 x Rifle Companies (reduced)', qty:'2 platoons each', loadout:''},
+      {group:'', desig:'1 x LAAD Section', qty:'4 x Firing Teams', loadout:''},
+      {group:'Weapons Company', desig:'CAAT Platoon', qty:'8 x HMG, 4 x TOW JLTVs', loadout:''},
+      {group:'Weapons Company', desig:'12 x Hunter Killer Teams', qty:'1 x UTV, 1 x CLU per team', loadout:'4 x missiles per team'},
+      {group:'Weapons Company', desig:'81mm Mortar Section', qty:'4 x tubes, 10 x JLTVs', loadout:'800 HE, 200 RP, 40 Illum, 40 IR Illum'},
+      {group:'Weapons Company', desig:'Scout Sniper Platoon', qty:'3 x Teams', loadout:''},
+      {group:'', desig:'1 x Combat Engineer Platoon', qty:'', loadout:'can construct 2 x turn or disrupt obstacles, and 1 x fix or block obstacle'},
+      {group:'', desig:'2 x ACV Companies', qty:'can transport 2 x rifle companies', loadout:''},
+      {group:'', desig:'1 x ACV-30', qty:'6 vehicles, max 8 pax per', loadout:''},
+      {group:'', desig:'1 x SIGINT Support Team', qty:'CESAS II mounted in 1 x JLTV', loadout:''},
+      {group:'', desig:'1 x LAR Platoon', qty:'4 x LAV-25', loadout:''},
+      {group:'', desig:'1 x Ground Sensor Platoon', qty:'3 x sensor strings', loadout:''},
+      {group:'', desig:'1 x M777 Battery (-) DS', qty:'', loadout:'324 HE, 150 DPICM, 42 Illum, 42 Smoke, 60 WP, 90 RAP, 24 EXCAL'},
+      {group:'', desig:'CBR located with Battery', qty:'', loadout:''},
+    ],
+    assets:[
+      {name:'1 x MQ-9 (unarmed)', details:'24 hours TOS'},
+      {name:'2 x RQ-21A Blackjack sorties', details:'10 hour TOS, no less than 4 hours between sorties, can range entire AO'},
+      {name:'2 x Sections of AH-1Z', details:'1 hour TOS; 8 x AGM-114K2, 16 x 2.75" rockets per section'},
+      {name:'Capability to air insert scout sniper teams via MV-22', details:'time now'},
+    ],
+  },
+  red:{
+    title:'4th MCA Bn (AO South)',
+    dtg:'expecting to enter AO in 24 hours',
+    aoPoints:['52T BK 91 44','52T CK 24 45','52T CK 30 40','52S CK 29 28','52S CK 13 14','52S BK 91 11'],
+    gensit:'You are the 4th PLA Medium Combined Arms Battalion (4th MCA Bn). American forces have advanced beyond the coast and are conducting offensive operations northwest. An American regiment of four battalions has fortified a defense in depth around key terrain in order to build combat power.\nYou are currently west of the AO moving east; you are expecting to enter your AO in 24 hours.\nThe 4th MCA Bn\'s start box is to the West of the 91 Easting. You must enter your AO from it.',
+    hhqMission:'',
+    mission:'NLT 48 hours, seize key GLOCs IVO Taehung (52T CK 24 40) IOT prevent US sustainment operations.',
+    purpose:'We must disrupt enemy offensive preparations and drive enemy forces from staging areas. The overarching purpose of our operation is to prevent US forces from being able to employ long range aerial and precision fires and extend their operational reach.',
+    method:'Identify and secure critical objectives in your AO to accomplish the above intent.\nUS forces in your AO are assessed to be arrayed in an area defense, holding key terrain in order to build combat power for follow on operations.',
+    endstate:'US forces will attempt to create choke points along the high-speed avenues of approach to halt the advancement of our forces in order to bring close air support and precision fires before the objectives can be engaged.',
+    taskOrg:[
+      {group:'', desig:'3 x Mechanized Infantry Companies', qty:'10 x IFVs per Co (ZBL-08/09)', loadout:''},
+      {group:'', desig:'1 x Assault Gun Company', qty:'14 x SP Assault Guns (ZTL-11)', loadout:''},
+      {group:'', desig:'1 x Firepower Company', qty:'6–9 x SP Mortars PLL-05', loadout:'MANPADS, ATGMs, AGLs, anti-materiel rifles'},
+      {group:'', desig:'1 x Operations Support Company', qty:'1 x Comm Plt, 1 x EW Plt, 1 x Engineer Plt, 1 x CBRN Plt', loadout:''},
+    ],
+    assets:[
+      {name:'4 x CH-802 UAS', details:''},
+      {name:'1 x Golden Ray EW Truck', details:'high-powered jamming HF/VHF/UHF, direction finding'},
+      {name:'1 x Tank Platoon', details:'4 x ZTQ-15 Light Tank'},
+      {name:'1 x Section of J-10s', details:'1 hour TOS; 7 x PGMs, 4 x AAMs, 150 rds 30mm per J-10'},
+    ],
+  },
+};
+
+function loadSampleScenario(){
+  applyScenarioResponse(JSON.parse(JSON.stringify(SAMPLE_SCENARIO)));
+  document.getElementById('scen-status').textContent=
+    'Example scenario loaded (no API call). Both panels are populated exactly as a live generation would populate them — edit fields and Generate Situation Handouts to test the full round trip.';
+  notify('Example scenario loaded into the review panels.','ok');
+}
+
+// ══════════════════════════════════════════════════════════
+// DOCX GENERATION — Situation Handouts (Blue + Red)
+// Same docx.js pattern as doc-tool-teams.html generateDocs(),
+// including the try/catch/finally overlay contract.
+// ══════════════════════════════════════════════════════════
+function setP(pct,msg){document.getElementById('progress-bar').style.width=pct+'%';document.getElementById('progress-msg').textContent=msg;}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+function collectSide(prefix){
+  return {
+    title:$v(prefix+'-title'), dtg:$v(prefix+'-dtg'), gensit:$v(prefix+'-gensit'),
+    hhqMission:prefix==='b'?$v('b-hhqmission'):'',
+    purpose:$v(prefix+'-purpose'), method:$v(prefix+'-method'), endstate:$v(prefix+'-endstate'),
+    mission:$v(prefix+'-mission'),
+    aoPoints:collectAOPoints(prefix+'-ao-list'),
+    taskOrg:collectTaskOrg(prefix+'-to-list'),
+    assets:collectAssets(prefix+'-assets-list'),
+  };
+}
+
+function buildSituationDoc(isBlue, side, G, weather){
+  const {Document,Paragraph,TextRun,Header,Footer,AlignmentType,BorderStyle}=window.docx;
+  const FONT='Arial';
+  const strip=s=>String(s||'').trim().replace(/[.\s]+$/,'');
+  const t=(txt,{sz=18,bold=false,color='111111',italics=false}={})=>new TextRun({text:String(txt||''),font:FONT,size:sz,bold,color,italics});
+  const p=(txt,{sz=18,bold=false,color='111111',align=AlignmentType.LEFT,sb=0,sa=40,italics=false}={})=>new Paragraph({children:[t(txt,{sz,bold,color,italics})],alignment:align,spacing:{before:sb,after:sa}});
+  const bdr=(c='AAAAAA',sz=3)=>({style:BorderStyle.SINGLE,size:sz,color:c});
+  const classLine=()=>p(G.classification,{sz:17,bold:true,color:'006400',align:AlignmentType.CENTER,sa:40});
+  const mkHdr=()=>new Header({children:[classLine(),p(G.exercise?`${G.exercise}`:'',{sz:16,color:'333333',align:AlignmentType.CENTER})]});
+  const mkFtr=()=>new Footer({children:[new Paragraph({children:[t(`Situation Handout  |  ${isBlue?'BLUE':'RED'} FORCE`,{sz:15,color:'555555'})],alignment:AlignmentType.CENTER,spacing:{before:40,after:0},border:{top:bdr()}}),classLine()]});
+  const uline=txt=>new Paragraph({spacing:{before:200,after:80},
+    children:[new TextRun({text:txt,font:FONT,size:20,bold:true,underline:{}})]});
+  const bullet=(txt,level)=>new Paragraph({children:[t(txt,{sz:18})],bullet:{level:level||0},spacing:{before:0,after:70}});
+  const bodyP=txt=>new Paragraph({children:[t(txt,{sz:18})],spacing:{before:0,after:90}});
+  const labeled=(label,txt)=>new Paragraph({spacing:{before:40,after:90},children:[
+    new TextRun({text:label,font:FONT,size:18,underline:{}}),
+    new TextRun({text:': ',font:FONT,size:18}),
+    t(txt,{sz:18})]});
+  const lines=s=>String(s||'').split('\n').map(x=>x.trim()).filter(Boolean);
+
+  // Weather bullet — same clause structure as all four baseline documents
+  const wParts=[`It is ${G.month||'—'}.`];
+  if(weather.temp)   wParts.push(`Temperatures ${strip(weather.temp)}.`);
+  if(weather.sky)    wParts.push(`Skies ${strip(weather.sky)}.`);
+  if(weather.ground) wParts.push(`${strip(weather.ground)}.`);
+  if(weather.wind)   wParts.push(`Winds ${strip(weather.wind)}.`);
+
+  const kids=[
+    new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:140},
+      children:[new TextRun({text:'***Do not write on handout. Return at completion.***',font:FONT,size:20,bold:true})]}),
+    new Paragraph({spacing:{before:0,after:140},
+      children:[new TextRun({text:`${isBlue?'Blue':'Red'} Forces – ${side.title||(isBlue?'Blue Force':'Red Force')}`,font:FONT,size:24,bold:true})]}),
+    new Paragraph({spacing:{before:0,after:80},
+      children:[new TextRun({text:'General Situation:',font:FONT,size:20,bold:true})]}),
+  ];
+  lines(side.gensit).forEach(line=>kids.push(bullet(line)));
+  kids.push(bullet(wParts.join(' ')));
+  if(side.aoPoints.length){
+    const unitShort=side.title?side.title.split(' (')[0]:'The unit';
+    // Baseline phrasing: Blue "V28's AO is bounded by:", Red "The 4th MCA Bn's AO is bounded by:"
+    kids.push(bullet(`${isBlue?'':'The '}${unitShort}'s AO is bounded by: (4 digit grid)`));
+    side.aoPoints.forEach((pt,i)=>kids.push(bullet(`${i+1}. ${pt}`,1)));
+  }
+  if(isBlue){
+    // Blue pattern: HHQ mission → labeled Commander's Intent → unit mission
+    if(side.hhqMission){ kids.push(uline(`${G.hhq||'Higher HQ'} Mission:`)); kids.push(bodyP(side.hhqMission)); }
+    if(side.purpose||side.method||side.endstate){
+      kids.push(new Paragraph({spacing:{before:200,after:80},children:[new TextRun({text:"Commander's Intent:",font:FONT,size:20,bold:true})]}));
+      if(side.purpose)  kids.push(labeled('Purpose',  side.purpose));
+      if(side.method)   kids.push(labeled('Method',   side.method));
+      if(side.endstate) kids.push(labeled('Endstate', side.endstate));
+    }
+    if(side.mission){ kids.push(uline(`${side.title?side.title.split(' (')[0]:'Unit'} Mission:`)); kids.push(bodyP(side.mission)); }
+  } else {
+    // Red pattern: intent paragraph + assessment bullets → mission statement.
+    // No HHQ-mission section — the baseline Red handouts carry none.
+    if(side.purpose||side.method||side.endstate){
+      kids.push(uline("Commander's Intent:"));
+      if(side.purpose) kids.push(bodyP(side.purpose));
+      lines(side.method).forEach(l=>kids.push(bullet(l)));
+      lines(side.endstate).forEach(l=>kids.push(bullet(l)));
+    }
+    if(side.mission){
+      kids.push(uline('Mission Statement:'));
+      const ml=lines(side.mission);
+      if(ml.length){ kids.push(bodyP(ml[0])); ml.slice(1).forEach(l=>kids.push(bullet(l))); }
+    }
+  }
+  if(side.taskOrg.length){
+    kids.push(uline('Task Organization:'));
+    let lastGroup=null;
+    side.taskOrg.forEach(e=>{
+      let line=e.desig||'';
+      if(e.qty)     line+=` (${e.qty})`;
+      if(e.loadout) line+=` (${e.loadout})`;
+      if(e.group){
+        if(e.group!==lastGroup) kids.push(bullet(e.group));
+        if(line) kids.push(bullet(line,1));
+      } else if(line){
+        kids.push(bullet(line));
+      }
+      lastGroup=e.group||null;
+    });
+  }
+  if(side.assets.length){
+    kids.push(uline('Additional assets:'));
+    side.assets.forEach(a=>kids.push(bullet(a.details?`${a.name} (${a.details})`:a.name)));
+  }
+  return new Document({sections:[{
+    properties:{page:{size:{width:12240,height:15840},margin:{top:720,right:720,bottom:720,left:720}}},
+    headers:{default:mkHdr()},footers:{default:mkFtr()},
+    children:kids,
+  }]});
+}
+
+async function generateDocs(){
+  if(!docxReady){notify('Libraries still loading — try again in a moment','warn');return;}
+  const G={
+    exercise:$v('p-exercise'), classification:$v('p-class')||'UNCLASSIFIED // FOR TRAINING ONLY',
+    hhq:$v('p-hhq'), month:$v('p-month'),
+  };
+  const weather={temp:$v('p-w-temp'), sky:$v('p-w-sky'), wind:$v('p-w-wind'), ground:$v('p-w-ground')};
+  const blue=collectSide('b'), red=collectSide('r');
+  const hasBlue=!!(blue.gensit||blue.taskOrg.length||blue.mission||blue.title);
+  const hasRed =!!(red.gensit ||red.taskOrg.length ||red.mission ||red.title);
+  if(!hasBlue&&!hasRed){notify('Nothing to generate — fill in or generate scenario content first.','warn');return;}
+
+  document.getElementById('progress-overlay').style.display='flex';
+  setP(0,'Initializing…');
+  ['blue','red'].forEach(k=>{const e=document.getElementById('st-'+k);if(e){e.textContent='GENERATING…';e.style.color='var(--amber)';}});
+
+  // Any failure below must not strand the progress overlay — see finally
+  try{
+    const {Packer}=window.docx;
+    const px=(G.exercise||'AMWC').replace(/[^A-Za-z0-9]/g,'_');
+    const docFiles=[];
+    setP(15,'Building Blue Situation Handout…'); await sleep(30);
+    if(hasBlue) docFiles.push({doc:buildSituationDoc(true, blue,G,weather), fname:`${px}_Situation_BLUE.docx`, sid:'st-blue'});
+    else {const e=document.getElementById('st-blue'); if(e){e.textContent='SKIPPED — no content'; e.style.color='var(--text3)';}}
+    setP(45,'Building Red Situation Handout…'); await sleep(30);
+    if(hasRed) docFiles.push({doc:buildSituationDoc(false,red, G,weather), fname:`${px}_Situation_RED.docx`,  sid:'st-red'});
+    else {const e=document.getElementById('st-red'); if(e){e.textContent='SKIPPED — no content'; e.style.color='var(--text3)';}}
+
+    setP(70,'Packing documents…'); await sleep(30);
+    const zipEntries=[];
+    for(const {doc,fname,sid} of docFiles){
+      const blob=await Packer.toBlob(doc);
+      const buf=await blob.arrayBuffer();
+      zipEntries.push({name:fname, data:new Uint8Array(buf)});
+      const e=document.getElementById(sid);
+      if(e){e.textContent='✓ READY'; e.style.color='var(--green)';}
+    }
+    setP(90,'Zipping…'); await sleep(30);
+    const _z=new JSZip(); zipEntries.forEach(e=>_z.file(e.name,e.data));
+    const zipBlob=await _z.generateAsync({type:'blob'});
+    const zipName=`${px}_Situation_Handouts.zip`;
+    setP(100,'Complete.'); await sleep(300);
+
+    document.getElementById('output-modal').style.display='flex';
+    document.getElementById('om-filename').textContent=zipName;
+    document.getElementById('om-download').textContent=`⬇ Download ZIP (${docFiles.length} .docx file${docFiles.length!==1?'s':''})`;
+    document.getElementById('om-download').onclick=function(){
+      const url=URL.createObjectURL(zipBlob);
+      const a=document.createElement('a');
+      a.href=url; a.download=zipName; a.style.display='none';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+      notify('ZIP downloaded — extract to get the .docx files.');
+    };
+  }catch(err){
+    console.error('[AMWC] Situation Handout generation failed:', err);
+    ['blue','red'].forEach(k=>{
+      const e=document.getElementById('st-'+k);
+      if(e&&e.textContent.indexOf('GENERATING')===0){e.textContent='FAILED';e.style.color='var(--red)';}
+    });
+    notify('Document generation failed: '+err.message,'warn');
+  }finally{
+    document.getElementById('progress-overlay').style.display='none';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// UTILITY
+// ══════════════════════════════════════════════════════════
+function notify(msg,type='ok'){
+  const el=document.createElement('div');el.className='notif';
+  el.style.borderColor=type==='warn'?'var(--amber)':'var(--green)';
+  el.style.color=type==='warn'?'var(--amber)':'var(--green)';
+  el.textContent=msg;document.body.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),400);},3800);
+}
+
+// ══════════════════════════════════════════════════════════
+// SESSION PERSISTENCE — localStorage (generated content costs
+// real API money to reproduce, so it must survive a refresh)
+// ══════════════════════════════════════════════════════════
+const SESSION_KEY='amwc-scenario-tool-session';
+const FIELD_IDS=['p-exercise','p-class','p-unit','p-hhq','p-ao-name','p-adversary','p-dtg','p-month',
+  'p-status','p-status-detail','p-attach','p-objective','p-w-temp','p-w-sky','p-w-wind','p-w-ground',
+  'b-title','b-dtg','b-gensit','b-hhqmission','b-purpose','b-method','b-endstate','b-mission',
+  'r-title','r-dtg','r-gensit','r-purpose','r-method','r-endstate','r-mission'];
+
+function captureSession(){
+  const fields={};
+  FIELD_IDS.forEach(id=>{const el=document.getElementById(id); if(el) fields[id]=el.value;});
+  return {
+    fields,
+    pAoPoints:collectAOPoints('p-ao-list'),
+    bAoPoints:collectAOPoints('b-ao-list'), rAoPoints:collectAOPoints('r-ao-list'),
+    bTaskOrg:collectTaskOrg('b-to-list'),   rTaskOrg:collectTaskOrg('r-to-list'),
+    bAssets:collectAssets('b-assets-list'), rAssets:collectAssets('r-assets-list'),
+    savedAt:new Date().toISOString(),
+  };
+}
+function restoreSession(data){
+  if(!data) return;
+  Object.entries(data.fields||{}).forEach(([id,val])=>{const el=document.getElementById(id); if(el) el.value=val;});
+  setAOPoints('p-ao-list',data.pAoPoints);
+  setAOPoints('b-ao-list',data.bAoPoints); setAOPoints('r-ao-list',data.rAoPoints);
+  setTaskOrg('b-to-list',data.bTaskOrg);   setTaskOrg('r-to-list',data.rTaskOrg);
+  setAssets('b-assets-list',data.bAssets); setAssets('r-assets-list',data.rAssets);
+}
+function saveSession(){
+  try{
+    const data=captureSession();
+    localStorage.setItem(SESSION_KEY, JSON.stringify(data));
+    const tm=new Date(data.savedAt).toLocaleTimeString();
+    document.getElementById('sessionLabel').textContent=`SAVED ${tm}`;
+    notify('Session saved — you can close the tool and restore it later.','ok');
+  }catch(e){ notify('Save failed: '+e.message,'warn'); }
+}
+function loadSession(){
+  try{
+    const raw=localStorage.getItem(SESSION_KEY);
+    if(!raw){ notify('No saved session found.','warn'); return; }
+    const data=JSON.parse(raw);
+    if(!confirm(`Restore session saved at ${new Date(data.savedAt).toLocaleString()}?\nThis will overwrite your current inputs.`)) return;
+    restoreSession(data);
+    document.getElementById('sessionLabel').textContent=`RESTORED ${new Date(data.savedAt).toLocaleTimeString()}`;
+    notify('Session restored.','ok');
+  }catch(e){ notify('Load failed: '+e.message,'warn'); }
+}
+function clearSession(){
+  if(!confirm('Clear the saved session? This cannot be undone.')) return;
+  localStorage.removeItem(SESSION_KEY);
+  document.getElementById('sessionLabel').textContent='NO SESSION';
+  notify('Saved session cleared.','warn');
+}
+// Auto-save every 60 seconds if there is any input
+setInterval(()=>{
+  const hasInput=['p-exercise','p-ao-name','p-objective','b-gensit','r-gensit']
+    .some(id=>document.getElementById(id)?.value.trim());
+  if(hasInput){
+    try{
+      localStorage.setItem(SESSION_KEY, JSON.stringify(captureSession()));
+      document.getElementById('sessionLabel').textContent='AUTO-SAVED '+new Date().toLocaleTimeString();
+    }catch(e){}
+  }
+},60000);
+</script>
+
+<script>
+// ── PASSCODE GATE — same client-side latch pattern as dashboard.html.
+// Not real security (the source is public); the real protection is that
+// this page holds no game data and the Cloud Function rate-limits itself.
+const GATE_KEY='amwc_scen_auth';
+const PASSCODE='amwc-dev';
+
+function gateSubmit(){
+  const val=document.getElementById('gate-input').value;
+  if(val===PASSCODE){
+    sessionStorage.setItem(GATE_KEY,'1');
+    document.getElementById('passcode-gate').style.display='none';
+  } else {
+    document.getElementById('gate-error').textContent='Incorrect passcode.';
+  }
+}
+(function(){
+  if(sessionStorage.getItem(GATE_KEY)==='1'){
+    document.getElementById('passcode-gate').style.display='none';
+  }
+})();
+</script>
+</body>
+</html>

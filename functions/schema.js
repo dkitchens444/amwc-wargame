@@ -1,86 +1,68 @@
 /* =============================================================
    AMWC Scenario Generator — response JSON schema (Spec §6
    "Output contract"). Enforced server-side via the Claude API's
-   structured-outputs feature, so the client can parse the reply
-   into form fields without freeform-prose failure modes.
+   structured-outputs feature, so the client (scenario-tool.html)
+   can parse the reply into review fields without freeform-prose
+   failure modes.
 
-   The `type` enums below MUST stay in lockstep with the values
-   in doc-tool-teams.html's #o-type option list — that is what
-   keeps every generated Order of Battle entry renderable as a
-   MIL-STD-2525E symbol (Spec §6 "Grounding").
+   Redesign (July 2026): Task Organization is a FLAT asset list
+   grouped by organic unit — never a maneuver scheme. Deciding
+   main effort / supporting efforts / reserve, with task and
+   purpose per element, is explicitly the skill players are
+   evaluated on, so the generator must not do it for them.
+   Accordingly there is no `element` field and no unit-type
+   vocabulary lock (generated content no longer feeds the ORBAT
+   builder or MIL-STD-2525E symbol rendering). Doctrinal
+   plausibility comes from the prompt modules' grounding, not
+   from an enum.
    ============================================================= */
 
-// Blue Force unit vocabulary — mirrors the non-threat optgroups in #o-type
-const BLUE_UNIT_TYPES = [
-  'inf|16|', 'inf|15|', 'inf|14|', 'inf-amphib|15|', 'inf-mech|15|', 'inf-mech|14|',
-  'inf-mech-acv|15|', 'inf|15|helo', 'inf|15|airborne', 'inf|15|motorized',
-  'armor|15|', 'armor|14|', 'acv30|14|', 'armor-amphib|15|', 'armor-amphib|14|',
-  'lar|15|', 'lar|14|', 'recon|14|', 'recon|11|',
-  'arty|15|', 'arty|13|', 'aad|11|', 'himars|15|', 'mortar-med|14|', 'mortar-med|13|',
-  'opf-l|11|', 'opf-m|11|', 'gsp|11|', 'javelin|11|', 'hk|11|',
-  'rw|13|', 'fw|13|',
-  'engr|14|', 'engr|12|', 'uas|11|', 'ew|11|', 'chd|11|', 'log|15|',
-  'psy|11|', 'cag|11|', 'caat|14|', 'caat|13|', 'rrt|11|',
-  'med|16|hq', 'med|17|hq', 'med|15|hq',
-];
+// Adversary profile codes — must stay in lockstep with the profile
+// registry in prompts/system.js and the Adversary Profile <select>
+// in scenario-tool.html.
+const ADVERSARY_CODES = ['A', 'C', 'CL', 'CA'];
 
-// Red Force / Threat unit vocabulary — mirrors the red-optgroup in #o-type
-const RED_UNIT_TYPES = [
-  'inf-mech|15|', 'inf-mech|16|', 'inf-mech-amphib|15|',
-  'arm-recon|14|', 'arm-recon|11|',
-  'sp-arty|15|', 'sp-arty|13|', 'sp-mortar|14|', 'sp-mortar|13|',
-  'sp-assault|15|', 'sp-assault|14|',
-  'armor|15|', 'armor|16|', 'aad|14|', 'engr|14|',
-  'uas|11|', 'ew|11|', 'log|15|',
-  'med|16|hq', 'med|15|hq',
-];
-
-// Element groupings — mirror BLUE_EL / RED_A_EL / RED_C_EL in the client
-const BLUE_ELEMENTS  = ['ME', 'SE1', 'SE2', 'SE3', 'SE4', 'SE5', 'HQ', 'Reserve'];
-const RED_A_ELEMENTS = ['Recon', 'CSO', 'AG', '1st Ech', '2nd Ech', 'Bonagrupa', 'HQ'];
-const RED_C_ELEMENTS = ['AG', 'FRAG', 'DAG', 'TMG', 'Reserve', 'CG', 'FDG', 'DDG', 'FPG', 'HQ'];
-
-function sideSchema({ unitTypes, elements }) {
+function sideSchema() {
   return {
     type: 'object',
     additionalProperties: false,
-    required: ['dtg', 'aoPoints', 'gensit', 'hhqMission', 'mission',
+    required: ['title', 'dtg', 'aoPoints', 'gensit', 'hhqMission', 'mission',
                'purpose', 'method', 'endstate', 'taskOrg', 'assets'],
     properties: {
+      title: { type: 'string', description: "Handout title line after the force label, e.g. 'V28 (AO South)' for Blue or '4th MCA Bn (AO South)' for Red — unit designation plus AO name in parentheses." },
       dtg: { type: 'string', description: "This side's timeline reference, e.g. 'D+2, 1900L' or 'expecting to enter AO in 24 hours'. Must align with the other side's timeline." },
       aoPoints: {
         type: 'array',
-        description: "Numbered AO boundary as 4-digit grid points with grid zone designator, e.g. '52T BK 99 46'. 4-6 points forming a closed box. The two sides' boxes must overlap the same terrain.",
+        description: "Numbered AO boundary as 4-digit grid points with grid zone designator, e.g. '52T BK 99 46'. 4-7 points forming a closed box. The two sides' boxes must overlap the same terrain. For Red, this is the AO box (the start box, if any, belongs in gensit).",
         items: { type: 'string' },
       },
       gensit: {
         type: 'string',
-        description: 'General Situation status update. One bullet per line (separate with \\n). Covers: who the player is and current time; last 24-48h of activity, casualties/resupply per the force status parameter; intelligence picture of the enemy. Do NOT repeat the weather or AO boundary here - they are rendered separately.',
+        description: 'General Situation status update. One bullet per line (separate with \\n). Covers: who the player is and current time; last 24-48h of activity, casualties/resupply per the force status parameter; intelligence picture of the enemy; for Red, the approach direction and start box. Do NOT repeat the weather or the AO boundary list here — the document template renders those separately.',
       },
-      hhqMission: { type: 'string', description: 'Higher HQ mission statement. Empty string for the Red side (the baseline Red handout carries none).' },
-      mission: { type: 'string', description: "This unit's mission statement (task + purpose, doctrinal format)." },
-      purpose: { type: 'string', description: "Commander's Intent - Purpose paragraph." },
-      method: { type: 'string', description: "Commander's Intent - Method / key tasks." },
-      endstate: { type: 'string', description: "Commander's Intent - End state." },
+      hhqMission: { type: 'string', description: "Higher HQ mission statement (e.g. the RLT mission). Empty string for the Red side — the baseline Red handouts carry none." },
+      mission: { type: 'string', description: "This unit's mission statement (task + purpose, doctrinal format). May include a BPT clause or, for Red, an NLT time and key-terrain list (one item per line after the statement)." },
+      purpose: { type: 'string', description: "Commander's Intent — Purpose. For Red this becomes the opening intent paragraph." },
+      method: { type: 'string', description: "Commander's Intent — Method / key tasks. For Red this becomes the intent assessment bullets (one per line)." },
+      endstate: { type: 'string', description: "Commander's Intent — End state. For Red this continues the assessment bullets." },
       taskOrg: {
         type: 'array',
-        description: 'Grouped capability roster matching the baseline handout format.',
+        description: "FLAT Task Organization roster grouped by ORGANIC unit, matching the baseline handouts. Never assign maneuver roles (no main effort, no supporting efforts, no reserve, no attack-group labels) — organizing these assets into a scheme of maneuver is the player's graded task. Order: organic companies first (H&S, rifle/mech companies, weapons/firepower company, ops support), then battalion-level and attached ground assets.",
         items: {
           type: 'object',
           additionalProperties: false,
-          required: ['element', 'type', 'desig', 'qty', 'loadout'],
+          required: ['group', 'desig', 'qty', 'loadout'],
           properties: {
-            element: { type: 'string', enum: elements },
-            type: { type: 'string', enum: unitTypes, description: 'Unit type code from the tool vocabulary - determines the MIL-STD-2525E symbol.' },
-            desig: { type: 'string', description: "Roster line designation, e.g. '81mm Mortar Section'." },
+            group: { type: 'string', description: "Organic parent this line sits under, e.g. 'H&S Company', 'Weapons Company', '3 x Rifle Companies'. Empty string for a battalion-level standalone line (e.g. 'Scout Platoon', an attached LAR platoon). Repeat the same group string verbatim for every line under that parent." },
+            desig: { type: 'string', description: "Roster line, e.g. '81mm Mortar Section' or '1 x Combat Engineer Platoon'." },
             qty: { type: 'string', description: "Quantity/composition detail, e.g. '4 x tubes, 10 x JLTVs'. Empty string if none." },
-            loadout: { type: 'string', description: "Ordnance/capability loadout, e.g. '800 HE, 200 RP, 40 Illum'. Empty string if none." },
+            loadout: { type: 'string', description: "Ordnance/capability loadout, e.g. '800 HE, 200 RP, 40 Illum' or 'can construct 2 x turn or disrupt obstacles'. Empty string if none." },
           },
         },
       },
       assets: {
         type: 'array',
-        description: 'Additional attached assets (external enablers) - NOT organic task organization.',
+        description: 'Additional assets — external enablers not on the ground task organization (air sorties, UAS, strikes, insert capability), with time-on-station and loadout constraints, matching the baseline handouts.',
         items: {
           type: 'object',
           additionalProperties: false,
@@ -112,7 +94,7 @@ const SCENARIO_SCHEMA = {
           enum: ['January','February','March','April','May','June','July','August',
                  'September','October','November','December'],
         },
-        adversary: { type: 'string', enum: ['A', 'C'] },
+        adversary: { type: 'string', enum: ADVERSARY_CODES },
         weather: {
           type: 'object',
           additionalProperties: false,
@@ -127,18 +109,9 @@ const SCENARIO_SCHEMA = {
         },
       },
     },
-    blue: sideSchema({ unitTypes: BLUE_UNIT_TYPES, elements: BLUE_ELEMENTS }),
-    // Red element enum is the union of both threat structures; the prompt
-    // module constrains generation to the correct set for the chosen threat.
-    red: sideSchema({
-      unitTypes: RED_UNIT_TYPES,
-      elements: [...new Set([...RED_A_ELEMENTS, ...RED_C_ELEMENTS])],
-    }),
+    blue: sideSchema(),
+    red: sideSchema(),
   },
 };
 
-module.exports = {
-  SCENARIO_SCHEMA,
-  BLUE_UNIT_TYPES, RED_UNIT_TYPES,
-  BLUE_ELEMENTS, RED_A_ELEMENTS, RED_C_ELEMENTS,
-};
+module.exports = { SCENARIO_SCHEMA, ADVERSARY_CODES };

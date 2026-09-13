@@ -2,6 +2,8 @@
 
 *The code in this repo is deploy-ready but NOT deployed. These are the manual steps only Daniel can run (Firebase login + billing + API key). Estimated time: 20–30 minutes.*
 
+*Updated July 2, 2026 for the standalone redesign: the Scenario Generator now lives at **`scenario-tool.html`** (director-gated, linked from the portal's Tools grid) — not inside `doc-tool-teams.html`. Four adversary profiles: `A` (Russian BTG), `C` (PLA Medium), `CL` (PLA Light), `CA` (PLA Amphibious).*
+
 ## 0. Prerequisites (one-time, local machine)
 
 - [ ] Node.js 20+ installed (`node --version`)
@@ -43,7 +45,7 @@ firebase deploy --only functions
 First deploy takes a few minutes (creates the Cloud Run service, grants the secret). Note the printed URL — it should be:
 `https://us-central1-amwc-wargame.cloudfunctions.net/generateScenario`
 
-If the region or URL differ, update the `SCENARIO_FN_URL` constant near the top of the scenario-generator section in `doc-tool-teams.html`.
+If the region or URL differ, update the `SCENARIO_FN_URL` constant near the top of the main script in `scenario-tool.html`.
 
 ## 6. Verify with a test call
 
@@ -55,8 +57,8 @@ curl.exe -X POST "https://us-central1-amwc-wargame.cloudfunctions.net/generateSc
   -d '{\"adversary\":\"C\",\"month\":\"June\",\"aoName\":\"AO Test\",\"objective\":\"battalion defense in sector\"}'
 ```
 
-- [ ] Expect a JSON body with `shared`, `blue`, `red` keys (30–90 s).
-- [ ] Then the real test: open `doc-tool-teams.html?force=blue` on the live site, Scenario tab, fill AO name + objective, **Generate Scenario (AI)** — fields should shimmer, then populate. Check `firebase functions:log` if anything fails.
+- [ ] Expect a JSON body with `shared`, `blue`, `red` keys (30–90 s). (`adversary` accepts `A`, `C`, `CL`, or `CA`.)
+- [ ] Then the real test: open `scenario-tool.html` on the live site, pass the director gate, fill AO name + objective, **Generate Scenario (AI)** — both review panels should shimmer, then populate. Check `firebase functions:log` if anything fails.
 - [ ] Confirm rate limiting: the 11th call from one machine within an hour should return HTTP 429. Counters are visible in the Realtime Database under `scenarioGen/usage/` (console view; clients can't read them).
 
 ## 7. Post-deploy configuration knobs (all in `functions/index.js`)
@@ -64,7 +66,7 @@ curl.exe -X POST "https://us-central1-amwc-wargame.cloudfunctions.net/generateSc
 | Knob | Where | Current value |
 |---|---|---|
 | Model | `MODEL` | `claude-sonnet-5` (POA&M's pinned `claude-sonnet-4-20250514` is deprecated, retires June 15 2026) |
-| Rate caps | `LIMITS` | 10/hour/client, 40/day global — deliberate first guesses, revisit with real usage |
+| Rate caps | `LIMITS` | 10/hour/client, 60/hour/IP (abuse backstop), 150/day global — deliberate first guesses, revisit with real usage |
 | Allowed origins | `ALLOWED_ORIGINS` | GitHub Pages + localhost |
 | Timeout / instances | `onRequest` options | 300 s, max 2 instances |
 
@@ -72,10 +74,10 @@ Any change: edit → `firebase deploy --only functions`.
 
 ## 8. What does NOT need deploying
 
-- The client (`doc-tool-teams.html`, `shared/components.css`) ships through the normal GitHub Pages push — no build step, unchanged workflow.
-- The **"Load example (no API)"** button on the Scenario tab works with zero infrastructure — use it to demo the full round trip (fields → review → Situation Handout docx) before or without deploying the function.
+- The client (`scenario-tool.html`, the stripped `doc-tool-teams.html`, `index.html` portal link, `shared/components.css`) ships through the normal GitHub Pages push — no build step, unchanged workflow.
+- The **"Load example (no API)"** button on `scenario-tool.html` works with zero infrastructure — use it to demo the full round trip (parameters → review panels → Blue + Red Situation Handout docx zip) before or without deploying the function.
 
 ## Rollback
 
-- Disable the feature without a deploy: delete the function (`firebase functions:delete generateScenario`) — the client shows a clean "generation failed / not deployed" message and everything else in the tool keeps working.
+- Disable the feature without a deploy: delete the function (`firebase functions:delete generateScenario`) — `scenario-tool.html` shows a clean "generation failed / not deployed" message, its offline example and DOCX generation keep working, and nothing else in FORGE is affected (the tool is fully standalone).
 - Revoke the API key from the Anthropic console at any time; the function then returns a server-side error without affecting the rest of FORGE.

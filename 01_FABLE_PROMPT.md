@@ -1,73 +1,58 @@
-RUN THIS IN: Claude Code, with a local clone of `dkitchens444/amwc-wargame` open as the working directory.
+RUN THIS IN: Claude Code, in your existing local clone of `dkitchens444/amwc-wargame`, on the `scenario-generator` branch.
 
-Recommended because this project needs you to actually read and edit five large HTML files with full context, add new files (a Cloud Function), and produce diffs Daniel can review and push — not just return code blocks. If you're on Claude Code, `cd` into the repo before starting. If the repo isn't cloned locally yet, run:
-`git clone https://github.com/dkitchens444/amwc-wargame.git && cd amwc-wargame`
+This branch already has real work on it from a first build pass, plus separate security-hardening work done directly (not by you) after that pass. Read Section 0 before touching anything — it tells you what to keep, what to remove, and what changed since the first build. This is a redesign of an existing in-progress feature, not a fresh start, and it's easy to waste time re-deriving things that are already decided or already built.
 
-Before starting, copy the files from the `Scenario Generator - Fable Kickoff` folder (this prompt plus 02–07) into the repo root or another path you can read from — they aren't part of the deployed site and won't be in the clone.
+Copy the kickoff folder's files (this prompt plus 02–14) into the repo root or another path you can read from if they aren't already there — they aren't part of the deployed site.
 
 ---
 
-# Mission: FORGE Scenario Generator — Review, Reconcile, Build
+# Mission: FORGE Scenario Generator — Redesign to a Standalone Tool
 
-You're picking up FORGE, the AMWC Wargame System — a live, deployed, unclassified browser-based wargaming platform for the Advanced Maneuver Warfare Course. Phases 1 and 2 (digitization, document automation) are functionally complete and in use. You have four jobs this session, in this order:
+FORGE is AMWC's live, deployed wargaming platform. The Scenario Generator feature — AI-assisted generation of Blue/Red Situation Handouts for directors — went through a first build, then a design review that changed its shape significantly. Your job this session is to bring the branch in line with the corrected design, not to build the original design further.
 
-1. **Code review** — audit the existing codebase for errors, security issues, and improvement opportunities, with particular attention to whatever you touch while building the new feature.
-2. **Gap analysis** — reconcile the POA&M against the Scenario Generator Spec and the actual code, and call out what's missing, inconsistent, or under-specified.
-3. **Implementation** — build the Scenario Generator feature end to end, per the Spec, as far as code can take it without live infrastructure access.
-4. **UX modernization, scoped** — extract a shared, polished component system and apply it to the new Scenario panel (see `07_UX_Modernization_Recommendations.md`). This is deliberately scoped to new work only this round, not a rewrite of the other four live pages — see §3.5 below.
+## 0. Required reading, in this order
 
-Read everything in Section 0 before touching code. This is a real system used by an active course — preserve everything that currently works.
+1. `03_Scenario_Generator_Spec.md` — original feature spec. Still correct on doctrine-grounding approach, the Firebase Cloud Function architecture, and most field definitions. Wrong on integration point (see next item).
+2. **`14_Redesign_Decisions.md` — read this in full before writing or removing any code. This supersedes the Spec wherever they conflict**, and it tells you exactly what changed: the Scenario Generator is now a standalone, director-only tool that produces the Situation Handout DOCX and nothing else — it does not integrate with `doc-tool-teams.html` in any way, not even a small field prefill. It also tells you precisely what existing code to remove, what existing code to keep and build on (including security-hardening work already done directly on this branch), how the Task Organization data model changed (flat asset list, not a maneuver scheme — this is the single most consequential field-level change), and what's still an open decision (where the new tool lives, how many adversary profiles to support).
+3. `04_Blue_South_Exemplar.md`, `05_Red_South_Exemplar.md`, `11_Central_Exemplar.md`, `12_East_Exemplar.md`, `13_West_Exemplar.md` — four paired scenarios now, not one. Read all four. The goal is a generator grounded in the pattern common across all of them, not one implicitly tuned to AO South. `12_East_Exemplar.md` has a data-provenance note at its top worth reading — the source docx's automated extraction failed twice; the exemplar text was transcribed from chat instead.
+4. `06_POAM_Phase2_Excerpt.md` — roadmap/milestone context (2.SG1–2.SG5).
+5. `02_Gap_Analysis_and_Code_Map.md`, `08_Code_Review.md`, `09_Gap_Analysis.md` — outputs from the first build pass. Still valuable for the code map and for the bug fixes that remain correct (see Redesign Decisions §2 for exactly which fixes to keep vs. which integration code to remove) — but their Scenario-Generator-specific content (the old integrated design) is superseded.
+6. `10_Deployment_Checklist.md` — still broadly correct (Blaze upgrade, secret provisioning, deploy steps). Revisit once you know where the new standalone tool lives and what its deployed URL/entry point is.
+7. `07_UX_Modernization_Recommendations.md` — still applies, now to the new standalone tool's UI instead of a tab inside `doc-tool-teams.html`.
+8. Then read the current state of `doc-tool-teams.html`, `functions/`, `shared/firebase.js`, and `database.rules.json` on this branch directly — don't trust the documents alone to tell you what's actually there. The security-hardening work (`claimGameRole()`, the per-game database rules, the game-ID random suffix in `index.html`) is real, tested, working code — build on it, don't redo it.
 
-## 0. Required reading, in order
+## 1. Remove the obsolete integration
 
-1. `03_Scenario_Generator_Spec.md` — the feature spec. This is your primary build target. Read it in full before writing anything.
-2. `04_Blue_South_Exemplar.md` and `05_Red_South_Exemplar.md` — the two baseline handout documents the generated output must match in structure, tone, and level of detail. These are the ground truth for "what good output looks like."
-3. `06_POAM_Phase2_Excerpt.md` — the roadmap context and milestone numbering (2.SG1–2.SG5) this feature maps to.
-4. `02_Gap_Analysis_and_Code_Map.md` — a pre-read someone did on this codebase before handing it to you: known discrepancies between the POA&M and the Spec, confirmed-absent infrastructure, and a line-numbered map of the exact functions and field IDs in `doc-tool-teams.html` you'll be extending. Use it to skip re-discovery, but verify the line numbers yourself since the file may have moved since that map was made.
-5. `07_UX_Modernization_Recommendations.md` — Daniel wants FORGE to look like a polished, modern product without becoming heavier to run. This document audits the current `shared/theme.css` system, names what's dated about it, and gives concrete, scoped recommendations (typography split, semantic color tokens, elevation scale, shared components, an AI-generation loading state, etc.) along with hard guardrails: no CSS/JS framework, no web fonts, no icon-font libraries, no new build step. Read it before styling any new UI.
-6. Then read `doc-tool-teams.html` in full, and skim `index.html`, `director.html`, `dashboard.html`, `feedback.html`, and the three `shared/` files to understand what a change here could break elsewhere.
+Per Redesign Decisions §2: strip the Scenario tab/panel and all its supporting code (`applyScenarioSide()`, `applyScenarioResponse()`, `collectScenario()`, `generateScenario()`, `getClientId()`, `SCEN_TARGET_IDS` and its skeleton-loading wiring) out of `doc-tool-teams.html`. That file should end up with zero references to scenario generation — it goes back to being exactly the four-document builder it was before this feature existed, still carrying the unrelated bug fixes from the first code review (session-restore threat persistence, `generateDocs()` error handling, auto-save actually being called, the duplicate-function cleanup) since those are correct regardless of this redesign.
 
-## 1. Code review
+`getClientId()`'s rate-limiting purpose still matters — the new standalone tool needs its own equivalent, generating and sending a `clientId` the same way, so the Cloud Function's per-browser rate limiting (already implemented server-side, keyed off `clientId` with IP as a loose abuse backstop) keeps working for its new caller.
 
-Scope: the whole repo, but weight your effort toward `doc-tool-teams.html` and anything shared (`shared/firebase.js`, `shared/utils.js`, `shared/theme.css`) since that's where new code is landing. For each issue you find, note file, approximate location, what's wrong, why it matters, and a suggested fix — don't just fix silently, since Daniel needs to see what changed and why in code this hasn't been reviewed before.
+## 2. Decide where the new tool lives
 
-Specifically check:
-- Whether `shared/firebase.js`'s current Realtime Database rules match `security-update-baseline.txt`, or whether that file is a drafted-but-unapplied proposal (see Gap Analysis §5). This affects whether the new Cloud Function is the most exposed surface or one of several.
-- Error handling and loading states across the existing four document-generation flows — the new fifth (Situation Handout) needs to match whatever pattern is idiomatic here, good or bad.
-- Whether `localStorage`-based session persistence (`captureSession`/`restoreSession`, ~line 1668) has any existing gaps that a new field-heavy panel would make worse.
-- Anything else that stands out — this codebase has never had a security or architecture review, so don't limit yourself to only what's adjacent to the new feature if you spot something serious.
+Redesign Decisions §5 has a recommendation (a new standalone HTML file, director-gated the same way `dashboard.html` is) but this isn't locked in — confirm it makes sense, or propose something that fits the existing five-file architecture more naturally, before building. Whatever you land on, reuse the existing `docx.js`-based generation pattern from `doc-tool-teams.html`'s `generateDocs()` (including its `try/catch/finally` error handling) rather than inventing a new generation approach — factor it into a shared module if that keeps things from being duplicated.
 
-## 2. Gap analysis
+## 3. Build the standalone Scenario Generator tool
 
-Read `02_Gap_Analysis_and_Code_Map.md` §1 first — it already flags the milestone-status mismatch (2.SG1–2.SG4 marked "In Progress" despite the Spec's Section 11 saying none of the prerequisites are done) and the Cloud Function vs. Cloudflare Worker architecture note conflict. Daniel has decided **not** to have the POA&M document edited this round — just produce a short, standalone gap-analysis write-up (a new markdown file is fine) that:
-- Confirms or corrects those two flagged items after you've read the code yourself.
-- Identifies any other gaps between what the Spec assumes exists in `doc-tool-teams.html` and what you actually find there (the Spec's own Section 5 table is a good starting checklist — verify each row against the real code).
-- Calls out anything in Section 9 (Limitations & Risks) or Section 11 (Open Items) of the Spec that your implementation doesn't fully close, and why.
+- **Parameter form** (Spec §4): all the fields described there, on the new tool, entirely disconnected from `doc-tool-teams.html`.
+- **Cloud Function** (`functions/`): the existing `index.js` mechanics (CORS, secrets, structured output, rate limiting) are still correct — update the caller to match wherever the new tool lives. Update `schema.js` per Redesign Decisions §3: drop `element` from `taskOrg` entries, drop the requirement that generated unit types match `doc-tool-teams.html`'s vocabulary (that constraint no longer serves a purpose since generated content never touches the ORBAT builder or symbol rendering). Update the prompt modules (`prompts/system.js`, `prompts/threat-a.js`, `prompts/threat-c.js`) per Redesign Decisions §4 to explicitly reason about typical attachments beyond organic T/O, grounded in the mission/objective parameters — and per §6/§7, generalize the grounding across all four exemplars rather than assuming AO South's specific pattern, while treating adversary-profile scope (Threat A/C only, vs. the Light/Amphibious variants found in West/East) as the open decision it is rather than silently expanding or silently ignoring it.
+- **Situation Handout DOCX template**: matching the structure common to all four exemplars — general situation, AO boundary, weather, mission statements, Commander's Intent, flat organic-grouped Task Organization, Additional Assets. Keep the UNCLASSIFIED guardrail in both UI copy and the system prompt (Spec §9).
+- **Keep "Load example (no API)"** — offline demo of the full round trip without requiring the Cloud Function deployed. Good idea from the first build, worth carrying forward regardless of where the tool lives.
+- **Validation**: confirm the round trip — parameters in, structured JSON out (stub a response if the function isn't deployed yet, same as before), DOCX matches the exemplar structure.
 
-## 3. Implementation
+## 3.5 UX
 
-Build per the Spec. In priority order:
+Same guardrails as before (no CSS/JS framework, no web fonts, no icon-font libraries, no new build step) — apply `07_UX_Modernization_Recommendations.md`'s shared component system, semantic tokens, and the AI-generation loading state to the new standalone tool's UI, extracted into `shared/theme.css` / `shared/components.css` the same way the first pass intended, just landing on a new page instead of a tab inside `doc-tool-teams.html`.
 
-**a. Scenario Parameter Form (Spec §4, POA&M 2.SG1).** New "Scenario" tab/panel in `doc-tool-teams.html` with the fields listed in Spec §4 — reuse existing fields/state where marked "Existing," add new ones where marked "New." Wire new fields into the existing session save/restore cycle (don't let this be the gap that only surfaces on refresh).
+## 4. Working process
 
-**b. New Situation fields and Task Organization extension (Spec §5).** Add the new field types (AO boundary grid-point list, weather block, general situation narrative, additional assets list) and extend the Order of Battle roster to carry quantity/loadout detail per the Spec's gap table. Match the Blue_South/Red_South structure exactly — that's the acceptance bar, not an approximation of it.
+Same as before: don't start writing code immediately. Produce a short written plan first — confirm the tool's location, confirm the adversary-profile scope decision (or explicitly flag it as still open and build for two profiles in a way that doesn't foreclose adding more), then implement. Self-check each piece against the Redesign Decisions doc as you go rather than building everything and reviewing at the end.
 
-**c. Cloud Function (Spec §7, POA&M 2.SG2–2.SG4).** Write the Firebase Cloud Function that accepts the parameter form as JSON, calls the Claude API server-side (API key as a function secret, never client-side), and returns structured JSON matching the field schema — not freeform prose (Spec §6, "Output contract" is a hard requirement). Include:
-- `firebase.json` / `.firebaserc` / `functions/` scaffolding (currently absent from the repo — confirmed in the Gap Analysis).
-- Paired generation: Blue and Red content from a single request, per Spec §6, so AO/timeline/weather stay consistent across both sides.
-- Separate prompt modules for Threat A (Russian BTG) and Threat C (PLA MCA Bn) per POA&M 2.SG3/2.SG4, grounded in the doctrine references already in the repo (MCDP 1, 1-0, 1-3, MCWP 3-10, 5-10, MCRP 2-10B.1) and constrained to the unit/equipment vocabulary already coded into `doc-tool-teams.html`'s Red Force option group, so generated units stay renderable as MIL-STD-2525E symbols.
-- Basic rate limiting / request caps (Spec §7) — API usage is shared across all directors using the tool.
-- An explicit guardrail, in both UI copy and the system prompt, that this tool is UNCLASSIFIED // FOR TRAINING USE ONLY and must never be prompted with real operational or classified content (Spec §9).
+## 5. Deliverables
 
-You cannot provision the actual infrastructure (Firebase Blaze upgrade, live API key, `firebase deploy`) from here — Daniel's confirmed neither has happened yet. Write the code to be deploy-ready and produce a short deployment checklist (Blaze upgrade → set the API key as a function secret → `firebase deploy --only functions` → verify with a test call) as a separate deliverable, rather than assuming deployment or silently skipping this part.
-
-**d. Situation Handout docx template (Spec §5, §3 step 7).** New template section in the existing document-generation pipeline (follow the pattern at `generateDocs()`, matching how the existing ORBAT/DSM/Collections/Fires templates are built), producing DOCX output matching Blue_South/Red_South layout exactly.
-
-**e. Validation.** The review-step decision (Spec §3) means generated content populates form fields for director review — it does not go straight to a document. Test that the round trip works: a synthetic Cloud Function response (you can stub one, since the live function won't be deployed yet) correctly populates every field named in Spec §5, survives a session save/restore, and produces a docx that matches the exemplar structure when the director clicks Generate.
-
-## 3.5 UX modernization — scoped to this build only
-
-Daniel's decision: don't restyle the four existing live pages (`index.html`, `director.html`, `dashboard.html`, `feedback.html`) in this pass — that's a separate follow-on with its own review, since it touches pages an active course depends on every day. What you should do now:
-
-- Read `07_UX_Modernization_Recommendations.md` in full.
-- Extract the shared button/card/field/panel styles it describes out of `doc-tool-teams.html`'s inline `<style>` block and into `shared/theme.css` (or a new `shared/components.css` if that file is getting unwieldy) — add the semant
+- A diff showing the Scenario Generator UI and its supporting code fully removed from `doc-tool-teams.html`, leaving only the unrelated bug fixes from the first pass.
+- The new standalone tool, wherever it lands, with the parameter form and generation flow.
+- Updated `functions/schema.js` and prompt modules per §3 above.
+- Situation Handout DOCX template, grounded across all four exemplars.
+- Updated deployment checklist reflecting the new tool's location/URL.
+- A short summary: what's done, what's still an open decision (tool location if you didn't get sign-off, adversary-profile scope), and anything from the exemplars worth Daniel's attention (e.g., West's reference to an external "Quad Chart" document for Threat Charlie that hasn't been supplied yet).
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        

@@ -3,7 +3,7 @@
    POA&M 2.SG2–2.SG4 · Spec §7 (Architecture)
 
    POST /generateScenario
-     body: the Scenario Parameter Form as JSON (see doc-tool-teams.html
+     body: the Scenario Parameter Form as JSON (see scenario-tool.html
            generateScenario() for the exact payload)
      returns: { shared, blue, red } matching schema.js — structured
               JSON, never freeform prose (Spec §6 output contract)
@@ -29,7 +29,7 @@ const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 const Anthropic = require('@anthropic-ai/sdk');
 
-const { SCENARIO_SCHEMA } = require('./schema');
+const { SCENARIO_SCHEMA, ADVERSARY_CODES } = require('./schema');
 const { buildSystemPrompt, buildUserPrompt } = require('./prompts/system');
 
 admin.initializeApp();
@@ -78,7 +78,7 @@ function ipKey(req) {
   return sanitizeKey(ip);
 }
 
-// Per-browser identity, NOT per-IP. doc-tool-teams.html's getClientId()
+// Per-browser identity, NOT per-IP. scenario-tool.html's getClientId()
 // generates a random ID once and persists it in localStorage, the same way
 // the tool already persists session state — so it identifies one director's
 // browser regardless of network. This matters because classroom Wi-Fi puts
@@ -132,7 +132,8 @@ async function checkRateLimit(req) {
 // ── Request validation ──────────────────────────────────────
 function validateParams(body) {
   if (!body || typeof body !== 'object') return 'missing JSON body';
-  if (body.adversary && !['A', 'C'].includes(body.adversary)) return 'adversary must be "A" or "C"';
+  if (body.adversary && !ADVERSARY_CODES.includes(body.adversary))
+    return `adversary must be one of ${ADVERSARY_CODES.join(', ')}`;
   // Everything else is optional free text — but bound the total size so a
   // hostile client can't stuff the prompt.
   if (JSON.stringify(body).length > 20000) return 'request too large';
@@ -175,7 +176,7 @@ exports.generateScenario = onRequest(
     if (!limit.ok) { res.status(429).json({ error: limit.why }); return; }
 
     const params = req.body;
-    const adversary = params.adversary === 'A' ? 'A' : 'C';
+    const adversary = ADVERSARY_CODES.includes(params.adversary) ? params.adversary : 'C';
 
     try {
       const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY.value() });
