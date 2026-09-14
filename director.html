@@ -207,6 +207,12 @@ body.role-red{
 .sub-row.fires-sub-row{grid-template-columns:1fr 1fr 1fr 1fr 1.2fr;}
 .sub-row span{overflow-wrap:break-word;word-break:break-word;white-space:normal;}
 .sub-row span:first-child{font-weight:700}
+/* Column labels over a submitted block. The director reads these rows without
+   the turn card's input labels in front of him, so an unlabeled grid leaves him
+   inferring which column is the NAI and which is the SIR. Same treatment as
+   .col-head on the turn card, so the two views read as one system. */
+.sub-row.sub-head{font-size:10px;color:var(--page-text-muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--page-border)}
+.sub-row.sub-head span,.sub-row.sub-head span:first-child{font-weight:700}
 .no-submission{font-size:12px;color:var(--page-text-muted);font-style:italic;padding:4px 0}
 .feedback-block{background:var(--page-surface2);border:1px solid var(--page-border);border-radius:3px;padding:12px 14px;margin-bottom:10px;line-height:1.6;font-size:13px;color:var(--page-text);max-height:260px;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
 .feedback-block.empty{color:var(--page-text-muted);font-style:italic}
@@ -309,7 +315,7 @@ body.role-red{
 .efst-chip-empty{font-size:12px;color:var(--page-text-muted);font-style:italic;margin-bottom:14px}
 .adj-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .entry-row{display:grid;gap:10px;margin-bottom:10px;align-items:start}
-.entry-row.collections-row{grid-template-columns:1.2fr 1fr 1fr 2fr 28px}
+.entry-row.collections-row{grid-template-columns:1.2fr 1fr .95fr .95fr 1.8fr 28px}
 .entry-row.maneuver-row{grid-template-columns:1fr 1.6fr 1.8fr 28px}
 .entry-row.fires-row{grid-template-columns:1fr 1fr 1fr 1.4fr 1.2fr 28px}
 .col-head{font-size:10px;color:var(--page-text-muted);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding-bottom:4px}
@@ -384,8 +390,11 @@ body.role-red{
 @media (max-width:768px){
   .app{padding:1rem 1rem 3rem}
   .sub-row{grid-template-columns:1fr 1fr;gap:6px}
+  /* Collapsed to two columns, so column labels no longer line up with their
+     values — hide them, exactly as .col-head is hidden on the turn card. */
+  .sub-row.sub-head{display:none}
   .sub-row.fires-sub-row{grid-template-columns:1fr 1fr}
-  .entry-row.collections-row{grid-template-columns:1fr 1fr 1fr 1fr}
+  .entry-row.collections-row{grid-template-columns:1fr 1fr 1fr}
   .entry-row.fires-row{grid-template-columns:1fr 1fr 1fr 1fr 1fr}
   .doc-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
 }
@@ -505,7 +514,11 @@ if (GAME_ID) {
 // CONSTANTS
 // ─────────────────────────────────────────────
 const EFFECTS      = ['Suppress','Destroy','Neutralize','Obscure','Illuminate','Interdict'];
-const BOX_SIZES    = ['1 x 1km','2 x 2km','4 x 4km','6 x 6km','8 x 8km','Custom'];
+// BOX_SIZES removed July 2026: a collection task's NAI already carries its
+// extent, and what players actually needed to state was WHEN an asset is on
+// station, not how big the box is. Replaced by the Time on / Time off pair
+// built from window.TIME_SLOTS (shared/utils.js), the same vocabulary the
+// planning tool uses, so a published plan pre-fills the turn card directly.
 const SEED_BLUE    = [{unit:'Co A (-)'},{unit:'Co B (-)'},{unit:'Co C (-)'},{unit:'Wpns Co / CAAT'}];
 const SEED_RED     = [{unit:'1st Mech Co'},{unit:'2nd Mech Co'},{unit:'Assault Gun Co'},{unit:'Firepower Co'}];
 const INJECT_TYPES = ['Intelligence update','Early contact — mid-turn','Weather / environment change','Higher HQ order','Asset availability change','Force structure change','Other'];
@@ -552,6 +565,27 @@ const pad = n => String(n).padStart(2, '0');
 const mkSel = (opts, ph, val='') => {
   let s = `<select><option value="" disabled ${val?'':'selected'}>${ph}</option>`;
   opts.forEach(o => s += `<option${o===val?' selected':''}>${o}</option>`);
+  return s + '</select>';
+};
+
+// One collections row's on-station window, for read-only display. Games
+// recorded before July 2026 carry a box size in c.box where newer ones carry
+// a window, so old submissions and old AARs keep rendering what they have.
+const collWin = c => (c.timeOn || c.timeOff) ? fmtCollWindow(c.timeOn, c.timeOff) : (c.box || '');
+
+// Time-slot select for a collection task's on-station window. Unlike mkSel,
+// the empty option is SELECTABLE and carries meaning: blank on both ends is a
+// continuous task (ground sensor, persistent emitter), not an unfilled field.
+const mkTimeSel = (cls, val='') => {
+  const slots = window.TIME_SLOTS || [];
+  let s = `<select class="${cls}"><option value=""${val?'':' selected'}>—</option>`;
+  // Every option carries an EXPLICIT value attribute. TIME_SLOTS labels are
+  // padded for column alignment ("D    0000" has four spaces), and an option
+  // with no value attribute reports its text instead — which the DOM strips
+  // and collapses to "D 0000". That round-trips wrong: the value saved on
+  // submit no longer equals any label, so on the next turn nothing matches
+  // and both dropdowns render empty, losing the player's window.
+  slots.forEach(o => s += `<option value="${esc(o.label)}"${o.label===val?' selected':''}>${esc(o.label)}</option>`);
   return s + '</select>';
 };
 const fExt  = n => { const p = n.split('.'); return p.length>1 ? p[p.length-1].toLowerCase() : ''; };
@@ -1303,13 +1337,21 @@ function dirUpdateSubmissionZone(team) {
   // Update submission display zone
   const zone = document.getElementById('sub-zone-'+team); if(!zone) return;
 
-  const subRows = rows => {
+  // `heads` labels the columns above a submitted block. The turn card carries
+  // its own .col-head labels; this read-only view had none, leaving the
+  // director to infer which column was the NAI and which the SIR.
+  const subHead = (heads, cls='') =>
+    `<div class="sub-row sub-head ${cls}">${heads.map(h=>`<span>${esc(h)}</span>`).join('')}</div>`;
+
+  const subRows = (rows, heads) => {
     if (!rows||!rows.length) return '<div class="no-submission">No entries.</div>';
-    return rows.map(r => `<div class="sub-row">${r.map(c=>`<span>${esc(c||'—')}</span>`).join('')}</div>`).join('');
+    return (heads ? subHead(heads) : '') +
+      rows.map(r => `<div class="sub-row">${r.map(c=>`<span>${esc(c||'—')}</span>`).join('')}</div>`).join('');
   };
-  const subRowsFires = rows => {
+  const subRowsFires = (rows, heads) => {
     if (!rows||!rows.length) return '<div class="no-submission">No entries.</div>';
-    return rows.map(r => `<div class="sub-row fires-sub-row">${r.map(c=>`<span title="${esc(c||'—')}">${esc(c||'—')}</span>`).join('')}</div>`).join('');
+    return (heads ? subHead(heads,'fires-sub-row') : '') +
+      rows.map(r => `<div class="sub-row fires-sub-row">${r.map(c=>`<span title="${esc(c||'—')}">${esc(c||'—')}</span>`).join('')}</div>`).join('');
   };
 
   if (!sub) {
@@ -1317,9 +1359,14 @@ function dirUpdateSubmissionZone(team) {
     return;
   }
 
-  const collRows  = subRows((sub.collections||[]).map(c=>[c.asset,c.nai,c.box,c.sir]));
-  const manRows   = subRows((sub.maneuver||[]).map(m=>[m.element,m.task,m.purpose,m.order]));
-  const firesRows = subRowsFires((sub.fires||[]).map(f=>[f.asset,f.grid,f.desc,f.effect,f.timing]));
+  // Column labels mirror the turn card's .col-head text so the director is
+  // reading the same words the player filled in.
+  const collRows  = subRows((sub.collections||[]).map(c=>[c.asset,c.nai,collWin(c),c.sir]),
+                            ['Asset','NAI / center grid','On station','SIR / purpose']);
+  const manRows   = subRows((sub.maneuver||[]).map(m=>[m.element,m.task,m.purpose,m.order]),
+                            ['Element','Task','Purpose','Order this turn']);
+  const firesRows = subRowsFires((sub.fires||[]).map(f=>[f.asset,f.grid,f.desc,f.effect,f.timing]),
+                            ['Asset','Target grid','Target description','Desired effect','Timing / trigger']);
   const cmdNote   = sub.cmdNote || '—';
   const efstSetup = S.setup?.[team]?.efsts || [];
   const activeEfstNums = new Set((sub.activeEfsts||[]).map(String));
@@ -1561,7 +1608,7 @@ window.clearHistory = async () => {
 
 function renderHistRows(sub, fb) {
   let o = '';
-  if(sub.collections?.length) o+=`<div class="history-entry"><strong>Collections</strong>${sub.collections.map(c=>[c.asset,c.nai,c.box,c.sir].filter(Boolean).join(' / ')).join(' | ')}</div>`;
+  if(sub.collections?.length) o+=`<div class="history-entry"><strong>Collections</strong>${sub.collections.map(c=>[c.asset,c.nai,collWin(c),c.sir].filter(Boolean).join(' / ')).join(' | ')}</div>`;
   if(sub.maneuver?.length)    o+=`<div class="history-entry"><strong>Maneuver</strong>${sub.maneuver.map(m=>`${m.element}: ${m.order||'—'}`).join(' | ')}</div>`;
   if(sub.fires?.length)       o+=`<div class="history-entry"><strong>Fires</strong>${sub.fires.map(f=>`${f.asset} on ${f.grid} (${f.effect})`).join(' | ')}</div>`;
   if(sub.cmdNote)             o+=`<div class="history-entry"><strong>Cmd Note</strong>"${esc(sub.cmdNote)}"</div>`;
@@ -1670,7 +1717,10 @@ window.downloadPDF = () => {
       const sub=h[team], fb=h[team+'Fb'];
       c+=`<h3 style="font-family:monospace;font-size:12px;color:${team==='blue'?'#1A3A5C':'#6B1A1A'};margin:12px 0 6px">${team==='blue'?'BLUE':'RED'} FORCE</h3>`;
       if(sub){
-        if(sub.collections?.length) c+=`<p style="font-family:monospace;font-size:11px"><b>Collections:</b> ${sub.collections.map(c2=>[c2.asset,c2.nai,c2.box,c2.sir].filter(Boolean).join(' / ')).join(' | ')}</p>`;
+        // c2.box is legacy: games recorded before July 2026 carry a box size
+        // where newer ones carry an on-station window. Render whichever the
+        // row actually has so old AARs keep reading correctly.
+        if(sub.collections?.length) c+=`<p style="font-family:monospace;font-size:11px"><b>Collections:</b> ${sub.collections.map(c2=>[c2.asset,c2.nai,collWin(c2),c2.sir].filter(Boolean).join(' / ')).join(' | ')}</p>`;
         if(sub.maneuver?.length)    c+=`<p style="font-family:monospace;font-size:11px"><b>Maneuver:</b> ${sub.maneuver.map(m=>`${m.element}: ${m.order||'—'}`).join(' | ')}</p>`;
         if(sub.fires?.length)       c+=`<p style="font-family:monospace;font-size:11px"><b>Fires:</b> ${sub.fires.map(f=>`${f.asset} on ${f.grid} (${f.effect})`).join(' | ')}</p>`;
         if(sub.cmdNote)             c+=`<p style="font-family:monospace;font-size:11px"><b>Cmd Note:</b> "${sub.cmdNote}"</p>`;
@@ -1911,7 +1961,7 @@ function teamRenderFeedback(team) {
       // Submission summary
       let subHtml = '';
       if (sub && !sub._cleared) {
-        if(sub.collections?.length) subHtml+=`<div class="history-entry"><strong>Collections</strong>${sub.collections.map(c=>[c.asset,c.nai,c.box,c.sir].filter(Boolean).join(' / ')).join(' | ')}</div>`;
+        if(sub.collections?.length) subHtml+=`<div class="history-entry"><strong>Collections</strong>${sub.collections.map(c=>[c.asset,c.nai,collWin(c),c.sir].filter(Boolean).join(' / ')).join(' | ')}</div>`;
         if(sub.maneuver?.length)    subHtml+=`<div class="history-entry"><strong>Maneuver</strong>${sub.maneuver.map(m=>`${m.element}: ${m.order||'—'}`).join(' | ')}</div>`;
         if(sub.fires?.length)       subHtml+=`<div class="history-entry"><strong>Fires</strong>${sub.fires.map(f=>`${f.asset} on ${f.grid} (${f.effect})`).join(' | ')}</div>`;
         if(sub.cmdNote)             subHtml+=`<div class="history-entry"><strong>Cmd Note</strong>"${esc(sub.cmdNote)}"</div>`;
@@ -2040,7 +2090,8 @@ function teamRenderTurnCard(team) {
   const collSource = (prevSub && prevSub.collections)
     ? prevSub.collections
     : (setupColl && setupColl.length)
-      ? setupColl.map(c => ({asset:c.asset||'', nai:c.nai||'', box:'', sir:c.sir||''}))
+      ? setupColl.map(c => ({asset:c.asset||'', nai:c.nai||'', sir:c.sir||'',
+                             timeOn:c.timeOnLabel||'', timeOff:c.timeOffLabel||''}))
       : [];
 
   const firesSource = (prevSub && prevSub.fires) ? prevSub.fires : [];
@@ -2089,7 +2140,8 @@ function teamRenderTurnCard(team) {
     <div class="entry-row collections-row">
       <div class="field"><input type="text" class="coll-asset" value="${esc(c.asset||'')}"></div>
       <div class="field"><input type="text" class="coll-nai"   value="${esc(c.nai||'')}"></div>
-      <div class="field">${mkSel(BOX_SIZES,'select size',c.box||'')}</div>
+      <div class="field">${mkTimeSel('coll-on', c.timeOn||'')}</div>
+      <div class="field">${mkTimeSel('coll-off', c.timeOff||'')}</div>
       <div class="field"><input type="text" class="coll-sir"   value="${esc(c.sir||'')}"></div>
       <button class="remove-btn" onclick="this.parentElement.remove()">×</button>
     </div>`).join('');
@@ -2117,7 +2169,7 @@ function teamRenderTurnCard(team) {
     <div class="section-header"><span class="section-title">Collections</span><span class="section-tag">ISR tasking${S.turn===0?' — pre-filled from the published collections plan; adjust as needed':''}</span></div>
     <div class="section-body">
       <div class="entry-row collections-row" style="margin-bottom:4px">
-        <div class="col-head">Asset</div><div class="col-head">NAI / center grid</div><div class="col-head">Box size</div><div class="col-head">SIR / purpose</div><div></div>
+        <div class="col-head">Asset</div><div class="col-head">NAI / center grid</div><div class="col-head">Time on</div><div class="col-head">Time off</div><div class="col-head">SIR / purpose</div><div></div>
       </div>
       <div id="tc-coll-rows">${collRowsHtml}</div>
       <button class="add-btn" onclick="tcAddRow('coll')">+ add asset</button>
@@ -2169,7 +2221,7 @@ window.teamForceReopenCard = async team => {
 window.tcAddRow = type => {
   if(type==='coll') {
     const d=document.createElement('div'); d.className='entry-row collections-row';
-    d.innerHTML=`<div class="field"><input type="text" class="coll-asset" placeholder="RQ-20, MQ-9…"></div><div class="field"><input type="text" class="coll-nai" placeholder="BK 0512 4231"></div><div class="field">${mkSel(BOX_SIZES,'select size')}</div><div class="field"><input type="text" class="coll-sir" placeholder="Confirm enemy axis IVO…"></div><button class="remove-btn" onclick="this.parentElement.remove()">×</button>`;
+    d.innerHTML=`<div class="field"><input type="text" class="coll-asset" placeholder="RQ-20, MQ-9…"></div><div class="field"><input type="text" class="coll-nai" placeholder="BK 0512 4231"></div><div class="field">${mkTimeSel('coll-on')}</div><div class="field">${mkTimeSel('coll-off')}</div><div class="field"><input type="text" class="coll-sir" placeholder="Confirm enemy axis IVO…"></div><button class="remove-btn" onclick="this.parentElement.remove()">×</button>`;
     document.getElementById('tc-coll-rows').appendChild(d);
   } else if(type==='man') {
     const d=document.createElement('div'); d.className='entry-row maneuver-row';
@@ -2192,7 +2244,10 @@ window.tcSubmit = async team => {
   if(!note) { showTcStatus("Commander's note is required.", 'warn'); return; }
   const collections = [...document.querySelectorAll('#tc-coll-rows .entry-row')].map(r=>({
     asset:r.querySelector('.coll-asset')?.value||'', nai:r.querySelector('.coll-nai')?.value||'',
-    box:r.querySelector('select')?.value||'',        sir:r.querySelector('.coll-sir')?.value||'',
+    // Class selectors, not querySelector('select') — there are two selects on
+    // a collections row now and positional lookup would return Time on twice.
+    timeOn:r.querySelector('.coll-on')?.value||'',   timeOff:r.querySelector('.coll-off')?.value||'',
+    sir:r.querySelector('.coll-sir')?.value||'',
   }));
   const maneuver = [...document.querySelectorAll('#tc-man-rows .entry-row')].map(r=>({
     element:r.querySelector('.man-element')?.value||'',

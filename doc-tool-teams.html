@@ -583,22 +583,12 @@ function getElMeta() { return S.elMeta[S.force]; }
 
 // Time slots for Collections (D-1 to D+2, 2-hr increments)
 // Each slot labeled as "D-1 0000", "D-1 0200", ... "D 0000", ... "D+1 0000" ... "D+2 0000"
-function buildTimeSlots(){
-  const sl=[];
-  // D-1 day: 0000 through 2200 (12 slots)
-  for(let h=0;h<24;h+=2)
-    sl.push({label:`D-1  ${String(h).padStart(2,'0')}00`, val:sl.length});
-  // D day: 0000 through 2200 (12 slots)
-  for(let h=0;h<24;h+=2)
-    sl.push({label:`D    ${String(h).padStart(2,'0')}00`, val:sl.length});
-  // D+1 day: 0000 through 2200 (12 slots)
-  for(let h=0;h<24;h+=2)
-    sl.push({label:`D+1  ${String(h).padStart(2,'0')}00`, val:sl.length});
-  // D+2 0000 — end boundary
-  sl.push({label:`D+2  0000`, val:sl.length});
-  return sl;
-}
-const TIME_SLOTS=buildTimeSlots();
+// Collections timeline vocabulary. Moved to shared/utils.js so the director's
+// turn card speaks the same slot list — the turn card now confirms or changes
+// an asset's on-station window in game, and a private copy here would diverge
+// from it the first time the timeline changed. Local alias kept so the rest of
+// this file reads unchanged.
+const TIME_SLOTS=window.TIME_SLOTS;
 
 // ══════════════════════════════════════════════════════════
 // MILSYMBOL — SIDC construction (20-digit, 2525E)
@@ -1223,7 +1213,13 @@ async function publishToGame(){
     const payload={
       orbat:       collectOrbatGroups().map(g=>({element:g.element, task:g.task, purpose:g.purpose})),
       efsts:       collectEFST(),
-      collections: collectColl().map(c=>({asset:c.asset, nai:c.nai, sir:c.sir})),
+      // timeOnLabel/timeOffLabel ride along so the director's turn card can
+      // pre-fill each asset's planned on-station window (they replaced the
+      // old "box size" field there). Labels rather than indices: the turn
+      // card renders them directly, and a label survives a change to the
+      // slot list that an index would silently reinterpret.
+      collections: collectColl().map(c=>({asset:c.asset, nai:c.nai, sir:c.sir,
+                                          timeOnLabel:c.timeOnLabel, timeOffLabel:c.timeOffLabel})),
       publishedAt: new Date().toISOString(),
     };
     await set(ref(db,`games/${gid}/setup/${S.force}`), payload);
