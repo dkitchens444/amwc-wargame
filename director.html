@@ -1658,7 +1658,14 @@ window.downloadPDF = () => {
     injects.forEach(inj=>{c+=`<div style="margin-bottom:12px;padding:10px;border-left:4px solid #C8B84A;background:#fdfaf0;font-family:monospace;font-size:11px"><p style="margin:0 0 4px;color:#7A6A2A;font-weight:bold">⚡ ${inj.type} — Turn ${inj.turn} · ${inj.gameTime} · ${inj.recipients}</p><p style="margin:0;white-space:pre-wrap">${inj.note}</p>${inj.struct?`<p style="margin:4px 0 0"><strong>Structural change:</strong> ${inj.struct}</p>`:''}</div>`;});
   }
   hist.forEach(h=>{
-    c+=`<h2 style="font-family:monospace;font-size:14px;border-bottom:2px solid #333;padding-bottom:6px;margin:24px 0 12px">TURN ${h.turn}${h.blueFb?` — ${h.blueFb.gameTime}`:''}</h2>`;
+    // Game time for the turn header. Adjudication feedback is the preferred
+    // source, but a turn the director never adjudicated (end-of-game verbal
+    // brief, or a turn still in progress) has no feedback at all — previously
+    // that rendered a bare "TURN 2" with no time. Every submission carries its
+    // own gameTime (see tcSubmit), so fall through to those before giving up.
+    const _turnGt = h.blueFb?.gameTime || h.redFb?.gameTime
+                 || h.blue?.gameTime   || h.red?.gameTime   || '';
+    c+=`<h2 style="font-family:monospace;font-size:14px;border-bottom:2px solid #333;padding-bottom:6px;margin:24px 0 12px">TURN ${h.turn}${_turnGt?` — ${_turnGt}`:''}</h2>`;
     ['blue','red'].forEach(team=>{
       const sub=h[team], fb=h[team+'Fb'];
       c+=`<h3 style="font-family:monospace;font-size:12px;color:${team==='blue'?'#1A3A5C':'#6B1A1A'};margin:12px 0 6px">${team==='blue'?'BLUE':'RED'} FORCE</h3>`;

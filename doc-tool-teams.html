@@ -443,7 +443,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
     <!-- 4. DSM -->
     <div class="panel" id="panel-dsm">
-      <div class="ph"><h2>04 — Decision Support Matrix</h2><p>DP · NAI · PIR (If) · FFIR (Then) · Decision</p></div>
+      <div class="ph"><h2>04 — Decision Support Matrix</h2><p>DP · NAI · PIR (If) · FFIR (And) · Decision (Then)</p></div>
       <div class="pb">
         <button class="btn primary" onclick="addDSM()" style="margin-bottom:14px">+ Add Decision Point</button>
         <div id="dsm-list"></div>
@@ -1110,8 +1110,8 @@ function addDSM(){
       <div class="mf"><label>DP Label</label><input placeholder="${(window._ph||{}).dpLabel||'DP-1: Commit Reserve'}"></div>
       <div class="mf"><label>NAI</label><input placeholder="${(window._ph||{}).nai||'NAI 2'}"></div>
       <div class="mf"><label>PIR (If…)</label><input placeholder="${(window._ph||{}).pir||'Enemy reserve confirmed at NAI 2'}"></div>
-      <div class="mf"><label>FFIR (Then…)</label><input placeholder="${(window._ph||{}).ffir||'Alpha Co degraded below 60%'}"></div>
-      <div class="mf"><label>Decision</label><textarea placeholder="${(window._ph||{}).decision||'Commit Charlie Co along Axis HAMMER…'}"></textarea></div>
+      <div class="mf"><label>FFIR (And…)</label><input placeholder="${(window._ph||{}).ffir||'Alpha Co degraded below 60%'}"></div>
+      <div class="mf"><label>Decision (Then…)</label><textarea placeholder="${(window._ph||{}).decision||'Commit Charlie Co along Axis HAMMER…'}"></textarea></div>
     </div>`;
   document.getElementById('dsm-list').appendChild(d);
 }
@@ -1376,7 +1376,7 @@ async function generateDocs(){
     headers:{default:mkHdr()},footers:{default:mkFtr('Decision Support Matrix')},
     children:[...coverLnd('Decision Support Matrix'),
       new Table({width:{size:12960,type:WidthType.DXA},columnWidths:cDSM,rows:[
-        new TableRow({tableHeader:true,children:[hC('DP',cDSM[0]),hC('NAI',cDSM[1]),hC('PIR (If)',cDSM[2]),hC('FFIR (Then)',cDSM[3]),hC('Decision',cDSM[4])]}),
+        new TableRow({tableHeader:true,children:[hC('DP',cDSM[0]),hC('NAI',cDSM[1]),hC('PIR (If)',cDSM[2]),hC('FFIR (And)',cDSM[3]),hC('Decision (Then)',cDSM[4])]}),
         ...dsmData.map((r,i)=>new TableRow({children:[
           dC(r.dp,cDSM[0],{bold:true,align:AlignmentType.CENTER,fill:i%2?'FFFFFF':ALT}),
           dC(r.nai,cDSM[1],{sz:16,fill:i%2?'FFFFFF':ALT}),
